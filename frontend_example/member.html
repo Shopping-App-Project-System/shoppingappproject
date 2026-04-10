@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員中心｜My Store</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial,sans-serif}
+        body{background:linear-gradient(180deg,#f7f9ff 0%,#eef3fb 100%);color:#1f2937}
+        a{text-decoration:none;color:inherit}
+        .container{width:min(1320px,92%);margin:auto}
+
+        .topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e5e7eb}
+        .topbar-inner{min-height:78px;display:flex;justify-content:center;align-items:center;position:relative}
+        .logo{font-size:1.4rem;font-weight:800;display:flex;gap:12px;align-items:center;position:absolute;left:0;top:50%;transform:translateY(-50%)}
+        .logo-badge{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1d4ed8,#60a5fa);color:#fff;display:grid;place-items:center}
+        .nav-links{display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap}
+        .nav-links a{padding:0;border-radius:0;background:none;color:#6b7280;font-weight:700;position:relative}
+        .nav-links a.active,.nav-links a:hover{color:#1d4ed8}
+        .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:#1d4ed8;transition:.2s}
+        .nav-links a.active::after,.nav-links a:hover::after{width:100%}
+
+        .btn{display:inline-block;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer}
+        .btn-primary{background:#1d4ed8;color:#fff}
+        .btn-light{background:#fff;border:1px solid #d1d5db}
+        .btn-danger{background:#fee2e2;color:#b91c1c}
+
+        .panel-page{padding:36px 0 48px}
+        .member-layout{display:grid;grid-template-columns:400px 1fr;gap:28px}
+
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;box-shadow:0 12px 35px rgba(15,23,42,.08)}
+        .sidebar-card{padding:28px}
+        .content-section{padding:28px}
+        .content-section + .content-section{margin-top:20px}
+
+        .profile-top{text-align:center;padding-bottom:24px;border-bottom:1px solid #e5e7eb}
+        .avatar{
+            width:96px;height:96px;border-radius:50%;
+            background:linear-gradient(135deg,#1d4ed8,#60a5fa);
+            color:#fff;display:grid;place-items:center;
+            font-size:2rem;font-weight:800;margin:0 auto 16px;
+            box-shadow:0 10px 25px rgba(29,78,216,.25)
+        }
+        .profile-top h2{font-size:1.4rem;margin-bottom:8px}
+        .profile-top p{color:#6b7280;line-height:1.7}
+
+        .side-menu{padding-top:22px;display:flex;flex-direction:column;gap:12px}
+        .side-menu a{
+            padding:14px 16px;border-radius:16px;
+            background:#f8fafc;color:#374151;font-weight:700;
+            border:1px solid #edf2f7
+        }
+        .side-menu a.active,
+        .side-menu a:hover{
+            background:#eef4ff;color:#1d4ed8;border-color:#dbeafe
+        }
+
+        .section-title{margin-bottom:18px}
+        .section-title h3{font-size:1.35rem;margin-bottom:8px}
+        .section-title p{color:#6b7280;line-height:1.7}
+
+        /* 改這裡：由卡片式改成排列式 */
+        .info-list{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .info-row{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            padding:14px 16px;
+            background:#f8fafc;
+            border:1px solid #e5e7eb;
+            border-radius:14px;
+        }
+        .info-row .label{
+            color:#6b7280;
+            font-weight:700;
+            white-space:nowrap;
+        }
+        .info-row .value{
+            font-size:1.02rem;
+            font-weight:800;
+            text-align:right;
+            word-break:break-word;
+        }
+
+        .address-box{
+            background:#f8fafc;border:1px solid #e5e7eb;border-radius:18px;
+            padding:20px;line-height:1.8
+        }
+
+        .order-table-wrap{
+            overflow:auto;
+            border:1px solid #e5e7eb;
+            border-radius:18px;
+        }
+        .order-table{width:100%;border-collapse:collapse;background:#fff}
+        .order-table th,.order-table td{
+            padding:16px 14px;
+            border-bottom:1px solid #e5e7eb;
+            text-align:left;
+            white-space:nowrap;
+        }
+        .order-table th{
+            background:#f8fafc;
+            color:#6b7280;
+            font-size:.95rem;
+            font-weight:800;
+        }
+        .status{
+            display:inline-block;
+            padding:8px 12px;
+            border-radius:999px;
+            font-size:.85rem;
+            font-weight:800;
+        }
+        .status.done{background:#dcfce7;color:#15803d}
+        .status.pending{background:#fef3c7;color:#b45309}
+        .status.cancel{background:#fee2e2;color:#b91c1c}
+
+        .quick-actions{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-top:18px;
+        }
+
+        @media (max-width:980px){
+            .member-layout{grid-template-columns:1fr}
+            .info-row{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+            .info-row .value{
+                text-align:left;
+            }
+        }
+
+        @media (max-width:768px){
+            .topbar-inner{flex-direction:column;padding:14px 0;gap:14px}
+            .nav-links{gap:18px}
+        }
+        @media (max-width:900px){
+            .topbar-inner{flex-direction:column;padding:14px 0;gap:14px}
+            .logo{position:static;transform:none}
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo"><div class="logo-badge">購</div><span>My Store</span></div>
+            <nav class="nav-links">
+                <a href="index.html">主頁</a>
+                <a href="member.html" class="active">會員中心</a>
+                <a href="cart.html">購物車</a>               
+            </nav>
+        </div>
+    </header>
+
+    <main class="panel-page">
+        <div class="container member-layout">
+
+            <!-- 左側會員資訊 -->
+            <aside class="card sidebar-card">
+                <div class="profile-top">
+                    <div class="avatar">王</div>
+                    <h2>王小明</h2>
+                    <p>一般會員</p>
+                </div>
+
+                <div class="side-menu">
+                    <div class="section-title">
+                        <h3>基本資料</h3>
+                        <p>這裡放會員資料、帳號資訊、聯絡方式。後面你直接讓後端資料吐進來就行。</p>
+                    </div>
+
+                    <!-- 只把這塊改成排列式 -->
+                    <div class="info-list">
+                        <div class="info-row">
+                            <div class="label">姓名</div>
+                            <div class="value">王小明</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="label">帳號</div>
+                            <div class="value">ming_store_user</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="label">電子信箱</div>
+                            <div class="value">ming@example.com</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="label">手機號碼</div>
+                            <div class="value">0912-345-678</div>
+                        </div>
+                    </div>
+
+                    <!-- 原本按鈕保留 -->
+                    <div class="quick-actions">
+                        <button class="btn btn-primary">修改資料</button>
+                        <button class="btn btn-light">修改密碼</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 右側內容，完全保留 -->
+            <section>
+
+                <div class="card content-section">
+                    <div class="section-title">
+                        <h3>預設收件資訊</h3>
+                        <p>這塊很適合放預設地址、收件人、配送偏好。不要等結帳時才突然失憶。</p>
+                    </div>
+
+                    <div class="address-box">
+                        <strong>收件人：</strong>王小明<br>
+                        <strong>聯絡電話：</strong>0912-345-678<br>
+                        <strong>收件地址：</strong>新竹縣竹北市光明六路 100 號 8 樓<br>
+                        <strong>配送方式偏好：</strong>宅配
+                    </div>
+
+                    <div class="quick-actions">
+                        <button class="btn btn-primary">編輯收件資訊</button>
+                    </div>
+                </div>
+
+                <div class="card content-section">
+                    <div class="section-title">
+                        <h3>訂單紀錄</h3>
+                        <p>後面你可以直接把資料庫訂單資料迴圈吐進這張表。這頁才是會員中心該有的靈魂。</p>
+                    </div>
+
+                    <div class="order-table-wrap">
+                        <table class="order-table">
+                            <thead>
+                                <tr>
+                                    <th>訂單編號</th>
+                                    <th>日期</th>
+                                    <th>金額</th>
+                                    <th>狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ORD20260409001</td>
+                                    <td>2026-04-09</td>
+                                    <td>NT$ 2,980</td>
+                                    <td><span class="status done">已完成</span></td>
+                                </tr>
+                                <tr>
+                                    <td>ORD20260408007</td>
+                                    <td>2026-04-08</td>
+                                    <td>NT$ 10,400</td>
+                                    <td><span class="status pending">處理中</span></td>
+                                </tr>
+                                <tr>
+                                    <td>ORD20260401003</td>
+                                    <td>2026-04-01</td>
+                                    <td>NT$ 1,280</td>
+                                    <td><span class="status cancel">已取消</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+</body>
+</html>

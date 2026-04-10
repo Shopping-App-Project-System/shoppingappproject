@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>付款頁｜My Store</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial,sans-serif}
+        body{background:linear-gradient(180deg,#f7f9ff 0%,#eef3fb 100%);color:#1f2937}
+        a{text-decoration:none;color:inherit}
+        .container{width:min(1280px,92%);margin:auto}
+        .topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e5e7eb}
+        .topbar-inner{min-height:78px;display:flex;justify-content:center;align-items:center;position:relative}
+        .logo{font-size:1.4rem;font-weight:800;display:flex;gap:12px;align-items:center;position:absolute;left:0;top:50%;transform:translateY(-50%)}
+        .logo-badge{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1d4ed8,#60a5fa);color:#fff;display:grid;place-items:center}
+        .nav-links{display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap}
+        .nav-links a{padding:0;border-radius:0;background:none;color:#6b7280;font-weight:700;position:relative}
+        .nav-links a.active,.nav-links a:hover{color:#1d4ed8}
+        .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:#1d4ed8;transition:.2s}
+        .nav-links a.active::after,.nav-links a:hover::after{width:100%}
+        .panel-page{padding:40px 0}
+        .page-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:28px}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;box-shadow:0 12px 35px rgba(15,23,42,.08);padding:28px}
+        .card-header h2,.card-header h3{margin-bottom:8px}
+        .card-header p{color:#6b7280;line-height:1.7;margin-bottom:18px}
+        .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+        .form-group{display:flex;flex-direction:column;gap:8px}
+        .full{grid-column:1/-1}
+        .form-group label{font-weight:800}
+        .form-group input,.form-group select{border:1px solid #d1d5db;background:#f9fafb;border-radius:14px;padding:14px}
+        .btn{display:inline-block;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer}
+        .btn-primary{background:#1d4ed8;color:#fff}
+        .btn-light{background:#fff;border:1px solid #d1d5db}
+        .form-footer{display:flex;justify-content:flex-end;gap:12px;margin-top:20px;flex-wrap:wrap}
+        .summary-line{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed #d1d5db}
+        .summary-line.total{font-size:1.15rem;font-weight:800;border-bottom:none;padding-top:20px}
+        @media (max-width:900px){.page-grid,.form-grid{grid-template-columns:1fr}}
+            @media (max-width:900px){.topbar-inner{flex-direction:column;padding:14px 0;gap:14px}.logo{position:static;transform:none}}
+            @media (max-width:768px){.nav-links{gap:18px}}
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo"><div class="logo-badge">購</div><span>My Store</span></div>
+            <nav class="nav-links">
+                <a href="index.html">主頁</a>
+                <a href="member.html">會員中心</a>
+                <a href="cart.html">購物車</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="panel-page">
+        <div class="container page-grid">
+            <section class="card">
+                <div class="card-header">
+                    <h2>付款與收件資訊</h2>
+                    <p>這頁先做操作版面。你之後再接金流、建立訂單、扣庫存。</p>
+                </div>
+
+                <form>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>收件人姓名</label>
+                            <input type="text" placeholder="請輸入姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>聯絡電話</label>
+                            <input type="text" placeholder="請輸入電話">
+                        </div>
+                        <div class="form-group full">
+                            <label>收件地址</label>
+                            <input type="text" placeholder="請輸入完整地址">
+                        </div>
+                        <div class="form-group">
+                            <label>付款方式</label>
+                            <select>
+                                <option>信用卡</option>
+                                <option>ATM 轉帳</option>
+                                <option>貨到付款</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>配送方式</label>
+                            <select>
+                                <option>宅配</option>
+                                <option>超商取貨</option>
+                            </select>
+                        </div>
+                        <div class="form-group full">
+                            <label>備註</label>
+                            <input type="text" placeholder="可填寫收件時段或其他需求">
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <a href="cart.html" class="btn btn-light">返回購物車</a>
+                        <button type="submit" class="btn btn-primary">確認付款</button>
+                    </div>
+                </form>
+            </section>
+
+            <aside class="card">
+                <div class="card-header">
+                    <h3>訂單摘要</h3>
+                    <p>付款前再確認一次，不要下完單才跟自己翻臉。</p>
+                </div>
+
+                <div class="summary-line"><span>智慧手錶 × 1</span><span>NT$ 2,980</span></div>
+                <div class="summary-line"><span>運動鞋 × 2</span><span>NT$ 7,360</span></div>
+                <div class="summary-line"><span>運費</span><span>NT$ 60</span></div>
+                <div class="summary-line total"><span>應付總額</span><span>NT$ 10,400</span></div>
+            </aside>
+        </div>
+    </main>
+</body>
+</html>

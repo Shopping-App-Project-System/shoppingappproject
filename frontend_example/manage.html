@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上架/下架｜My Store</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial,sans-serif}
+        body{background:linear-gradient(180deg,#f7f9ff 0%,#eef3fb 100%);color:#1f2937}
+        a{text-decoration:none;color:inherit}
+        .container{width:min(1320px,92%);margin:auto}
+
+        .topbar{
+            background:rgba(255,255,255,.92);
+            backdrop-filter:blur(10px);
+            border-bottom:1px solid #e5e7eb
+        }
+        .topbar-inner{
+            min-height:78px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            position:relative
+        }
+        .logo{
+            font-size:1.4rem;
+            font-weight:800;
+            display:flex;
+            gap:12px;
+            align-items:center;
+            position:absolute;
+            left:0;
+            top:50%;
+            transform:translateY(-50%)
+        }
+        .logo-badge{
+            width:44px;
+            height:44px;
+            border-radius:14px;
+            background:linear-gradient(135deg,#1d4ed8,#60a5fa);
+            color:#fff;
+            display:grid;
+            place-items:center
+        }
+        .nav-links{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            gap:28px;
+            flex-wrap:wrap
+        }
+        .nav-links a{
+            padding:0;
+            border-radius:0;
+            background:none;
+            color:#6b7280;
+            font-weight:700;
+            position:relative
+        }
+        .nav-links a::after{
+            content:"";
+            position:absolute;
+            left:0;
+            bottom:-6px;
+            width:0;
+            height:2px;
+            background:#1d4ed8;
+            transition:.2s
+        }
+        .nav-links a.active,.nav-links a:hover{color:#1d4ed8}
+        .nav-links a.active::after,.nav-links a:hover::after{width:100%}
+
+        .panel-page{padding:40px 0}
+        .manage-layout{
+            display:flex;
+            justify-content:center;
+        }
+
+        .card{
+            width:100%;
+            max-width:720px;
+            background:#fff;
+            border:1px solid #e5e7eb;
+            border-radius:24px;
+            box-shadow:0 12px 35px rgba(15,23,42,.08);
+            padding:28px
+        }
+
+        .card-header h2,.card-header h3{margin-bottom:8px}
+        .card-header p{color:#6b7280;line-height:1.7;margin-bottom:18px}
+
+        .form-grid{
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:16px
+        }
+        .form-group{
+            display:flex;
+            flex-direction:column;
+            gap:8px
+        }
+        .full{grid-column:1/-1}
+        .form-group label{font-weight:800}
+        .form-group input,.form-group select,.form-group textarea{
+            border:1px solid #d1d5db;
+            background:#f9fafb;
+            border-radius:14px;
+            padding:14px;
+            font-size:1rem;
+            outline:none
+        }
+        .form-group textarea{
+            resize:vertical;
+            min-height:120px
+        }
+
+        .btn{
+            display:inline-block;
+            border:none;
+            border-radius:14px;
+            padding:12px 18px;
+            font-weight:800;
+            cursor:pointer
+        }
+        .btn-primary{background:#1d4ed8;color:#fff}
+        .btn-danger{background:#fee2e2;color:#b91c1c}
+
+        .form-footer{
+            display:flex;
+            justify-content:flex-end;
+            gap:12px;
+            margin-top:20px;
+            flex-wrap:wrap
+        }
+
+        .image-preview-box{
+            margin-top:12px;
+            min-height:240px;
+            border:1px dashed #cbd5e1;
+            border-radius:18px;
+            background:#f8fafc;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            overflow:hidden;
+            padding:16px
+        }
+
+        .image-preview-box span{
+            color:#6b7280;
+            font-weight:700
+        }
+
+        .image-preview-box img{
+            max-width:100%;
+            max-height:320px;
+            display:none;
+            border-radius:14px;
+            object-fit:cover
+        }
+
+        @media (max-width:900px){
+            .form-grid{grid-template-columns:1fr}
+            .topbar-inner{
+                flex-direction:column;
+                padding:14px 0;
+                gap:14px
+            }
+            .logo{
+                position:static;
+                transform:none
+            }
+        }
+
+        @media (max-width:768px){
+            .nav-links{gap:18px}
+            .card{padding:22px}
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo">
+                <div class="logo-badge">購</div>
+                <span>My Store</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="index.html">主頁</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="panel-page">
+        <div class="container manage-layout">
+            <section class="card">
+                <div class="card-header">
+                    <h2>商品管理</h2>
+                    <p>這頁就是你後台操作用的骨架。前台別亂冒出管理味，使用者不是來看你內臟的。</p>
+                </div>
+
+                <form enctype="multipart/form-data" method="post">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>商品名稱</label>
+                            <input type="text" name="productName" placeholder="請輸入商品名稱">
+                        </div>
+
+                        <div class="form-group">
+                            <label>商品價格</label>
+                            <input type="text" name="productPrice" placeholder="請輸入價格">
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="productImage">上傳商品圖片</label>
+                            <input type="file" id="productImage" name="productImage" accept="image/*">
+
+                            <div class="image-preview-box" id="imagePreviewBox">
+                                <span id="previewText">尚未選擇圖片</span>
+                                <img id="previewImage" src="" alt="圖片預覽">
+                            </div>
+                        </div>
+
+                        <div class="form-group full">
+                            <label>商品描述</label>
+                            <textarea name="productDescription" placeholder="請輸入商品描述"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-danger">下架</button>
+                        <button type="submit" class="btn btn-primary">上架</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const productImageInput = document.getElementById("productImage");
+        const previewImage = document.getElementById("previewImage");
+        const previewText = document.getElementById("previewText");
+
+        productImageInput.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (!file) {
+                previewImage.src = "";
+                previewImage.style.display = "none";
+                previewText.style.display = "block";
+                previewText.textContent = "尚未選擇圖片";
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                previewImage.src = event.target.result;
+                previewImage.style.display = "block";
+                previewText.style.display = "none";
+            };
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>

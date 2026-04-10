@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Store｜主頁</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial,sans-serif}
+        body{background:linear-gradient(180deg,#f7f9ff 0%,#eef3fb 100%);color:#1f2937}
+        a{text-decoration:none;color:inherit}
+        .container{width:min(1380px,92%);margin:auto}
+        .topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e5e7eb}
+        .topbar-inner{min-height:78px;display:flex;justify-content:center;align-items:center;position:relative}
+        .logo{font-size:1.4rem;font-weight:800;display:flex;gap:12px;align-items:center;position:absolute;left:0;top:50%;transform:translateY(-50%)}
+        .logo-badge{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1d4ed8,#60a5fa);color:#fff;display:grid;place-items:center}
+        .nav-links{display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap}
+        .nav-links a{padding:0;border-radius:0;background:none;color:#6b7280;font-weight:700;position:relative}
+        .nav-links a.active,.nav-links a:hover{color:#1d4ed8}
+        .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:#1d4ed8;transition:.2s}
+        .nav-links a.active::after,.nav-links a:hover::after{width:100%}
+                .btn{display:inline-block;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer}
+        .btn-primary{background:#1d4ed8;color:#fff}
+        .btn-light{background:#fff;border:1px solid #d1d5db}
+        .hero{padding:34px 0 24px}
+        .hero-banner{min-height:320px;border-radius:28px;padding:44px;display:grid;align-items:center;background:
+            linear-gradient(120deg,rgba(15,23,42,.76),rgba(29,78,216,.62)),
+            url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1600&q=80') center/cover;
+            color:#fff;box-shadow:0 20px 45px rgba(15,23,42,.12)}
+        .hero h1{font-size:3rem;line-height:1.15;margin-bottom:14px}
+        .hero p{max-width:720px;line-height:1.8;color:rgba(255,255,255,.88);margin-bottom:22px}
+        .hero-chip-group{display:flex;gap:10px;flex-wrap:wrap}
+        .hero-chip{padding:10px 16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);border-radius:999px}
+        .section{padding:10px 0 42px}
+        .section-title-row{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:22px}
+        .section-title h2{font-size:1.9rem;margin-bottom:6px}
+        .section-title p{color:#6b7280}
+        .product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+        .product-card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;overflow:hidden;box-shadow:0 12px 35px rgba(15,23,42,.08);transition:.2s}
+        .product-card:hover{transform:translateY(-4px)}
+        .product-image{height:280px;background:#f3f4f6}
+        .product-image img{width:100%;height:100%;object-fit:cover;display:block}
+        .product-body{padding:20px}
+        .product-tag{display:inline-block;padding:7px 12px;border-radius:999px;background:#eef4ff;color:#1d4ed8;font-size:.85rem;font-weight:800;margin-bottom:12px}
+        .product-title{font-size:1.2rem;font-weight:800;margin-bottom:10px}
+        .product-desc{color:#6b7280;line-height:1.7;min-height:54px;margin-bottom:16px}
+        .product-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
+        .price{font-size:1.35rem;font-weight:800}
+        .footer{padding:30px 0 50px;color:#6b7280;text-align:center}
+        @media (max-width:1200px){.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media (max-width:768px){
+            .topbar-inner{flex-direction:column;padding:14px 0;gap:14px}
+            .nav-links{gap:18px}
+            .hero-banner{padding:28px;min-height:auto}
+            .hero h1{font-size:2.2rem}
+            .product-grid{grid-template-columns:1fr}
+        }
+            @media (max-width:900px){.topbar-inner{flex-direction:column;padding:14px 0;gap:14px}.logo{position:static;transform:none}}
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo"><div class="logo-badge">購</div><span>My Store</span></div>
+            <nav class="nav-links">
+                <a href="index.html" class="active">主頁</a>
+                <a href="member.html">會員中心</a>
+                <a href="cart.html">購物車</a>
+                <a href="login.html">登入</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-banner">
+                    <div>
+                        <h1>你的購物平台首頁，<br>先做得像真的平台。</h1>
+                        <p>
+                            主頁直接展示商品、登入註冊入口、購物車導流。
+                            商品卡只有加入購物車，不直接購買。真正購買流程集中在購物車頁與付款頁。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="section-title-row">
+                    <div class="section-title">
+                        <h2>精選商品</h2>
+                        <p>商品卡只保留加入購物車，購買流程不要散得到處都是。</p>
+
+                <div class="product-grid">
+                    <article class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80" alt="商品圖">
+                        </div>
+                        <div class="product-body">
+                            <span class="product-tag">熱銷商品</span>
+                            <div class="product-title">極簡風智慧手錶</div>
+                            <div class="product-desc">商品資訊先擺主頁，讓使用者一進來就看得到，不要像躲債一樣藏起來。</div>
+                            <div class="product-bottom">
+                                <span class="price">NT$ 2,980</span>
+                                <button class="btn btn-primary">加入購物車</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80" alt="商品圖">
+                        </div>
+                        <div class="product-body">
+                            <span class="product-tag">人氣推薦</span>
+                            <div class="product-title">城市機能運動鞋</div>
+                            <div class="product-desc">商品框有做大，圖片主視覺也撐起來，這樣平台味道才會出來。</div>
+                            <div class="product-bottom">
+                                <span class="price">NT$ 3,680</span>
+                                <button class="btn btn-primary">加入購物車</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80" alt="商品圖">
+                        </div>
+                        <div class="product-body">
+                            <span class="product-tag">本月新品</span>
+                            <div class="product-title">無線降噪耳機</div>
+                            <div class="product-desc">前端負責顯示與動線，資料交給後端吐。各司其職，才不會前後端互相毆打。</div>
+                            <div class="product-bottom">
+                                <span class="price">NT$ 4,290</span>
+                                <button class="btn btn-primary">加入購物車</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80" alt="商品圖">
+                        </div>
+                        <div class="product-body">
+                            <span class="product-tag">限時活動</span>
+                            <div class="product-title">品牌純棉上衣</div>
+                            <div class="product-desc">前台就是前台，不要把一堆管理功能按鈕丟來嚇使用者。</div>
+                            <div class="product-bottom">
+                                <span class="price">NT$ 1,280</span>
+                                <button class="btn btn-primary">加入購物車</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">購物平台操作版面示意</div>
+    </footer>
+</body>
+</html>
