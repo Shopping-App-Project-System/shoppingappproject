@@ -1,85 +1,155 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登入｜My Store</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial,sans-serif}
-        body{background:linear-gradient(180deg,#f7f9ff 0%,#eef3fb 100%);color:#1f2937}
-        a{text-decoration:none;color:inherit}
-        .container{width:min(1180px,92%);margin:auto}
-        .topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e5e7eb}
-        .topbar-inner{min-height:78px;display:flex;justify-content:center;align-items:center;position:relative}
-        .logo{font-size:1.4rem;font-weight:800;display:flex;gap:12px;align-items:center;position:absolute;left:0;top:50%;transform:translateY(-50%)}
-        .logo-badge{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1d4ed8,#60a5fa);color:#fff;display:grid;place-items:center}
-        .nav-links{display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap}
-        .nav-links a{padding:0;border-radius:0;background:none;color:#6b7280;font-weight:700;position:relative}
-        .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:#1d4ed8;transition:.2s}
-        .nav-links a.active,.nav-links a:hover{color:#1d4ed8}
-        .nav-links a.active::after,.nav-links a:hover::after{width:100%}
-        .btn{display:inline-block;border:none;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer}
-        .btn-primary{background:#1d4ed8;color:#fff}
-        .btn-light{background:#fff;border:1px solid #d1d5db}
-        .auth-layout{min-height:calc(100vh - 78px);display:grid;place-items:center;padding:40px 0}
-        .auth-card{width:min(1080px,95%);display:grid;grid-template-columns:1fr .95fr;background:#fff;border:1px solid #e5e7eb;border-radius:28px;overflow:hidden;box-shadow:0 20px 45px rgba(15,23,42,.1)}
-        .auth-visual{padding:42px;background:linear-gradient(135deg,rgba(15,23,42,.8),rgba(29,78,216,.65)),url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=80') center/cover;color:#fff;display:flex;flex-direction:column;justify-content:end}
-        .auth-visual h2{font-size:2.2rem;margin-bottom:12px}
-        .auth-visual p{line-height:1.8;color:rgba(255,255,255,.9)}
-        .auth-form-wrap{padding:38px}
-        .card-header h1{margin-bottom:10px}
-        .card-header p{color:#6b7280;line-height:1.7;margin-bottom:20px}
-        .form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-        .form-group label{font-weight:800}
-        .form-group input{border:1px solid #d1d5db;background:#f9fafb;border-radius:14px;padding:14px}
-        .form-footer{display:flex;justify-content:flex-end;gap:12px;margin-top:20px;flex-wrap:wrap}
-        @media (max-width:900px){.topbar-inner{flex-direction:column;padding:14px 0;gap:14px}.logo{position:static;transform:none}.auth-card{grid-template-columns:1fr}}
-            @media (max-width:768px){.nav-links{gap:18px}}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>登入｜{{ store_name or 'My Store' }}</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial}
+body{background:linear-gradient(180deg,#f7f9ff,#eef3fb)}
+
+.container{width:min(1100px,92%);margin:auto}
+
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb}
+.topbar-inner{min-height:70px;display:flex;align-items:center;justify-content:center;position:relative}
+.logo{position:absolute;left:0;font-weight:800}
+
+.nav-links{display:flex;gap:25px}
+.nav-links a{color:#6b7280;font-weight:700}
+
+.auth-layout{
+    min-height:calc(100vh - 70px);
+    display:grid;
+    place-items:center;
+}
+
+.auth-card{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:#fff;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.1);
+}
+
+.auth-visual{
+    padding:40px;
+    background:linear-gradient(135deg,#1d4ed8,#60a5fa);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    justify-content:end;
+}
+
+.auth-form{
+    padding:40px;
+}
+
+.form-group{
+    margin-bottom:15px;
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group input{
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:10px;
+}
+
+.btn{
+    background:#1d4ed8;
+    color:#fff;
+    padding:12px;
+    border-radius:10px;
+    font-weight:700;
+}
+
+.form-footer{
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+}
+
+.flash{
+    margin-bottom:15px;
+    padding:12px;
+    border-radius:10px;
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+@media(max-width:800px){
+    .auth-card{grid-template-columns:1fr}
+}
+</style>
 </head>
+
 <body>
-    <header class="topbar">
-        <div class="container topbar-inner">
-            <div class="logo"><div class="logo-badge">購</div><span>My Store</span></div>
-            <nav class="nav-links">
-                <a href="index.html">主頁</a>
-                <a href="member.html">會員中心</a>
-                <a href="cart.html">購物車</a>
-            </nav>
-        </div>
-    </header>
 
-    <main class="auth-layout">
-        <div class="auth-card">
-            <section class="auth-visual">
-                <h2>歡迎回來</h2>
-                <p>登入後可查看個人購物車、會員資訊與訂單流程。這樣才像平台，不像裸奔表單。</p>
-            </section>
+<header class="topbar">
+<div class="container topbar-inner">
 
-            <section class="auth-form-wrap">
-                <div class="card-header">
-                    <h1>會員登入</h1>
-                    <p>輸入帳號與密碼進入平台。</p>
-                </div>
+<div class="logo">{{ store_name or 'My Store' }}</div>
 
-                <form>
-                    <div class="form-group">
-                        <label>帳號</label>
-                        <input type="text" placeholder="請輸入帳號">
-                    </div>
+<nav class="nav-links">
+<a href="{{ home_url or 'index.html' }}">主頁</a>
+<a href="{{ member_url or 'member.html' }}">會員中心</a>
+<a href="{{ cart_url or 'cart.html' }}">購物車</a>
+</nav>
 
-                    <div class="form-group">
-                        <label>密碼</label>
-                        <input type="password" placeholder="請輸入密碼">
-                    </div>
+</div>
+</header>
 
-                    <div class="form-footer">
-                        <a href="register.html" class="btn btn-light">前往註冊</a>
-                        <button type="submit" class="btn btn-primary">登入</button>
-                    </div>
-                </form>
-            </section>
-        </div>
-    </main>
+<main class="auth-layout">
+
+<div class="auth-card">
+
+<!-- 左側視覺 -->
+<div class="auth-visual">
+<h2>{{ visual_title or '歡迎回來' }}</h2>
+<p>{{ visual_text or '登入後可查看購物車與訂單' }}</p>
+</div>
+
+<!-- 右側表單 -->
+<div class="auth-form">
+
+<h1 style="margin-bottom:10px">會員登入</h1>
+<p style="margin-bottom:20px;color:#6b7280">請輸入帳號與密碼</p>
+
+<!-- 錯誤訊息 -->
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="flash">
+{{ messages[0] }}
+</div>
+{% endif %}
+{% endwith %}
+
+<form method="POST" action="{{ submit_url or '/login' }}">
+
+<div class="form-group">
+<input type="text" name="account" placeholder="帳號">
+</div>
+
+<div class="form-group">
+<input type="password" name="password" placeholder="密碼">
+</div>
+
+<div class="form-footer">
+<a href="{{ register_url or 'register.html' }}">前往註冊</a>
+<button type="submit" class="btn">登入</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</main>
+
 </body>
 </html>
