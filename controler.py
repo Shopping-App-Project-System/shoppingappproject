@@ -36,7 +36,5 @@ app = Flask(__name__)
 
     
 if __name__ == "__main__":
-    """
-    先於settings.py中設定APP_PORT
-    """
+    """先於settings.py中設定APP_PORT"""
     app.run(debug=True,use_reloader=False,port=settings.APP_PORT)
