@@ -88,115 +88,97 @@ body{background:linear-gradient(180deg,#f7f9ff,#eef3fb)}
 }
 </style>
 </head>
-
 <body>
 
 <header class="topbar">
-<div class="container topbar-inner">
-
-<div class="logo">{{ store_name or 'My Store' }}</div>
-
-<nav class="nav-links">
-<a href="{{ home_url or 'index.html' }}">主頁</a>
-<a href="{{ member_url or 'member.html' }}" class="active">會員中心</a>
-<a href="{{ cart_url or 'cart.html' }}">購物車</a>
-</nav>
-
-</div>
+    <div class="container topbar-inner">
+        <div class="logo">{{ store_name or 'My Store' }}</div>
+        <nav class="nav-links">
+            <a href="{{ home_url or '/' }}">主頁</a>
+            <a href="{{ member_url or url_for('order_list') }}" class="active">會員中心</a>
+            <a href="{{ cart_url or url_for('cart') }}">購物車</a>
+        </nav>
+    </div>
 </header>
 
 <main class="panel">
+    <div class="container layout">
 
-<div class="container layout">
+        <!-- 左側 -->
+        <div class="card">
+            <div class="profile">
+                <div class="avatar">
+                    {{ user.name[0] if user and user.name else "?" }}
+                </div>
+                <h3>{{ user.name or '使用者' }}</h3>
+                <p>{{ user.level or '一般會員' }}</p>
+            </div>
+            <hr style="margin:20px 0">
+            <div class="info-row">
+                <span>帳號</span>
+                <span>{{ user.account or '' }}</span>
+            </div>
+            <div class="info-row">
+                <span>Email</span>
+                <span>{{ user.email or '' }}</span>
+            </div>
+            <div class="info-row">
+                <span>電話</span>
+                <span>{{ user.phone or '' }}</span>
+            </div>
+        </div>
 
-<!-- 左側 -->
-<div class="card">
+        <!-- 右側 -->
+        <div>
 
-<div class="profile">
-<div class="avatar">
-{{ user.name[0] if user and user.name else "?" }}
-</div>
+            <!-- 地址 -->
+            <div class="card">
+                <div class="section-title">收件資訊</div>
+                {% if address %}
+                    <p>{{ address.name }}</p>
+                    <p>{{ address.phone }}</p>
+                    <p>{{ address.full }}</p>
+                {% else %}
+                    <div class="empty">尚未設定收件資料</div>
+                {% endif %}
+            </div>
 
-<h3>{{ user.name or '使用者' }}</h3>
-<p>{{ user.level or '一般會員' }}</p>
-</div>
+            <!-- 訂單 -->
+            <div class="card" style="margin-top:20px">
+                <div class="section-title">訂單紀錄</div>
+                {% if orders %}
+                    <table class="table">
+                        <tr>
+                            <th>訂單編號</th>
+                            <th>金額</th>
+                            <th>狀態</th>
+                        </tr>
+                        {% for o in orders %}
+                        <tr>
+                            <td>{{ o.id }}</td>
+                            <td>NT$ {{ o.total | int }}</td>
+                            <td>
+                                {% if o.status == '已完成' %}
+                                    <span class="status done">{{ o.status }}</span>
+                                {% elif o.status == '處理中' %}
+                                    <span class="status pending">{{ o.status }}</span>
+                                {% elif o.status == '已取消' %}
+                                    <span class="status cancel">{{ o.status }}</span>
+                                {% else %}
+                                    <span class="status">{{ o.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% else %}
+                    <div class="empty">目前沒有訂單</div>
+                {% endif %}
+            </div>
 
-<hr style="margin:20px 0">
+        </div>
 
-<div class="info-row">
-<span>帳號</span>
-<span>{{ user.account or '' }}</span>
-</div>
-
-<div class="info-row">
-<span>Email</span>
-<span>{{ user.email or '' }}</span>
-</div>
-
-<div class="info-row">
-<span>電話</span>
-<span>{{ user.phone or '' }}</span>
-</div>
-
-</div>
-
-<!-- 右側 -->
-<div>
-
-<!-- 地址 -->
-<div class="card">
-<div class="section-title">收件資訊</div>
-
-{% if address %}
-<p>{{ address.name }}</p>
-<p>{{ address.phone }}</p>
-<p>{{ address.full }}</p>
-{% else %}
-<div class="empty">尚未設定收件資料</div>
-{% endif %}
-
-</div>
-
-<!-- 訂單 -->
-<div class="card" style="margin-top:20px">
-
-<div class="section-title">訂單紀錄</div>
-
-{% if orders %}
-
-<table class="table">
-<tr>
-<th>訂單編號</th>
-<th>金額</th>
-<th>狀態</th>
-</tr>
-
-{% for o in orders %}
-<tr>
-<td>{{ o.id }}</td>
-<td>NT$ {{ o.total | int }}</td>
-<td>
-<span class="status {{ o.status }}">
-{{ o.status }}
-</span>
-</td>
-</tr>
-{% endfor %}
-
-</table>
-
-{% else %}
-
-<div class="empty">目前沒有訂單</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-</div>
-
+    </div>
 </main>
 
 </body>

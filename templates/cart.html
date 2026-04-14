@@ -63,9 +63,9 @@
             <span>{{ store_name or 'My Store' }}</span>
         </div>
         <nav class="nav-links">
-            <a href="index.html">主頁</a>
-            <a href="member.html">會員中心</a>
-            <a href="cart.html" class="active">購物車</a>
+            <a href="/">主頁</a>
+            <a href="{{ url_for('order_list') }}">會員中心</a>
+            <a href="{{ url_for('cart') }}" class="active">購物車</a>
         </nav>
     </div>
 </header>
@@ -107,7 +107,7 @@
                     <h3>購物車還沒有商品</h3>
                     <p>去逛逛，把喜歡的東西帶回來吧</p>
                     <div style="margin-top:20px">
-                        <a href="index.html" class="btn btn-primary">前往購物</a>
+                        <a href="/" class="btn btn-primary">前往購物</a>
                     </div>
                 </div>
 
