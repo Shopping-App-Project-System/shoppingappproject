@@ -1,155 +1,381 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>登入｜{{ store_name or 'My Store' }}</title>
+    <title>登入｜{{ store_name or 'My Store' }}</title>
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial}
-body{background:linear-gradient(180deg,#f7f9ff,#eef3fb)}
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Microsoft JhengHei', Arial, sans-serif;
+      }
 
-.container{width:min(1100px,92%);margin:auto}
+      body {
+        background: linear-gradient(180deg, #f7f9ff, #eef3fb);
+        color: #111827;
+      }
 
-.topbar{background:#fff;border-bottom:1px solid #e5e7eb}
-.topbar-inner{min-height:70px;display:flex;align-items:center;justify-content:center;position:relative}
-.logo{position:absolute;left:0;font-weight:800}
+      a {
+        text-decoration: none;
+      }
 
-.nav-links{display:flex;gap:25px}
-.nav-links a{color:#6b7280;font-weight:700}
+      button,
+      input {
+        border: none;
+        outline: none;
+      }
 
-.auth-layout{
-    min-height:calc(100vh - 70px);
-    display:grid;
-    place-items:center;
-}
+      .container {
+        width: min(1100px, 92%);
+        margin: auto;
+      }
 
-.auth-card{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    background:#fff;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 10px 30px rgba(0,0,0,.1);
-}
+      .topbar {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+      }
 
-.auth-visual{
-    padding:40px;
-    background:linear-gradient(135deg,#1d4ed8,#60a5fa);
-    color:#fff;
-    display:flex;
-    flex-direction:column;
-    justify-content:end;
-}
+      .topbar-inner {
+        min-height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
 
-.auth-form{
-    padding:40px;
-}
+      .logo {
+        position: absolute;
+        left: 0;
+        font-weight: 800;
+        color: #111827;
+      }
 
-.form-group{
-    margin-bottom:15px;
-    display:flex;
-    flex-direction:column;
-}
+      .nav-links {
+        display: flex;
+        gap: 25px;
+      }
 
-.form-group input{
-    padding:12px;
-    border:1px solid #ccc;
-    border-radius:10px;
-}
+      .nav-links a {
+        color: #6b7280;
+        font-weight: 700;
+        transition: 0.2s ease;
+      }
 
-.btn{
-    background:#1d4ed8;
-    color:#fff;
-    padding:12px;
-    border-radius:10px;
-    font-weight:700;
-}
+      .nav-links a:hover {
+        color: #1d4ed8;
+      }
 
-.form-footer{
-    display:flex;
-    justify-content:space-between;
-    margin-top:20px;
-}
+      .auth-layout {
+        min-height: calc(100vh - 70px);
+        display: grid;
+        place-items: center;
+        padding: 30px 0;
+      }
 
-.flash{
-    margin-bottom:15px;
-    padding:12px;
-    border-radius:10px;
-    background:#fee2e2;
-    color:#b91c1c;
-}
+      .auth-card {
+        width: min(960px, 100%);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #fff;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.1);
+      }
 
-@media(max-width:800px){
-    .auth-card{grid-template-columns:1fr}
-}
-</style>
-</head>
+      .auth-visual {
+        padding: 42px;
+        background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
 
-<body>
+      .auth-visual h2 {
+        font-size: 32px;
+        margin-bottom: 12px;
+        line-height: 1.3;
+      }
 
-<header class="topbar">
-<div class="container topbar-inner">
+      .auth-visual p {
+        font-size: 15px;
+        line-height: 1.9;
+        color: rgba(255, 255, 255, 0.92);
+      }
 
-<div class="logo">{{ store_name or 'My Store' }}</div>
+      .auth-form {
+        padding: 42px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
 
-<nav class="nav-links">
-<a href="{{ home_url or 'index.html' }}">主頁</a>
-<a href="{{ member_url or 'member.html' }}">會員中心</a>
-<a href="{{ cart_url or 'cart.html' }}">購物車</a>
-</nav>
+      .form-title {
+        font-size: 30px;
+        margin-bottom: 10px;
+        color: #111827;
+      }
 
-</div>
-</header>
+      .form-subtitle {
+        margin-bottom: 24px;
+        color: #6b7280;
+        line-height: 1.8;
+        font-size: 15px;
+      }
 
-<main class="auth-layout">
+      .flash {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 14px;
+        line-height: 1.6;
+      }
 
-<div class="auth-card">
+      .form-group {
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+      }
 
-<!-- 左側視覺 -->
-<div class="auth-visual">
-<h2>{{ visual_title or '歡迎回來' }}</h2>
-<p>{{ visual_text or '登入後可查看購物車與訂單' }}</p>
-</div>
+      .form-group label {
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 700;
+      }
 
-<!-- 右側表單 -->
-<div class="auth-form">
+      .form-group input {
+        padding: 13px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        font-size: 15px;
+        transition: 0.2s ease;
+        background: #fff;
+      }
 
-<h1 style="margin-bottom:10px">會員登入</h1>
-<p style="margin-bottom:20px;color:#6b7280">請輸入帳號與密碼</p>
+      .form-group input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+      }
 
-<!-- 錯誤訊息 -->
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="flash">
-{{ messages[0] }}
-</div>
-{% endif %}
-{% endwith %}
+      .btn {
+        cursor: pointer;
+      }
 
-<form method="POST" action="{{ submit_url or '/login' }}">
+      .btn-main {
+        width: 100%;
+        margin-top: 6px;
+        background: #1d4ed8;
+        color: #fff;
+        padding: 13px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        transition: 0.2s ease;
+      }
 
-<div class="form-group">
-<input type="text" name="account" placeholder="帳號">
-</div>
+      .btn-main:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(29, 78, 216, 0.2);
+      }
 
-<div class="form-group">
-<input type="password" name="password" placeholder="密碼">
-</div>
+      .helper-panel {
+        margin-top: 22px;
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+      }
 
-<div class="form-footer">
-<a href="{{ register_url or 'register.html' }}">前往註冊</a>
-<button type="submit" class="btn">登入</button>
-</div>
+      .helper-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #374151;
+        margin-bottom: 12px;
+      }
 
-</form>
+      .helper-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
 
-</div>
+      .helper-links a {
+        display: block;
+        text-align: center;
+        padding: 11px 12px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        color: #4b5563;
+        font-size: 14px;
+        font-weight: 700;
+        transition: 0.2s ease;
+      }
 
-</div>
+      .helper-links a:hover {
+        background: #eff6ff;
+        border-color: #93c5fd;
+        color: #1d4ed8;
+      }
 
-</main>
+      .register-row {
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        color: #6b7280;
+        font-size: 14px;
+      }
 
-</body>
+      .register-row a {
+        color: #1d4ed8;
+        font-weight: 700;
+      }
+
+      .register-row a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 800px) {
+        .auth-card {
+          grid-template-columns: 1fr;
+        }
+
+        .auth-visual {
+          min-height: 240px;
+          padding: 32px 24px;
+        }
+
+        .auth-form {
+          padding: 32px 24px;
+        }
+
+        .helper-links {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar-inner {
+          justify-content: flex-end;
+          padding-left: 110px;
+        }
+
+        .nav-links {
+          gap: 16px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .form-title {
+          font-size: 26px;
+        }
+
+        .auth-visual h2 {
+          font-size: 28px;
+        }
+
+        .nav-links {
+          font-size: 14px;
+          gap: 12px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <div class="logo">{{ store_name or 'My Store' }}</div>
+
+        <nav class="nav-links">
+          <a href="/">主頁</a>
+          <a href="/member">會員中心</a>
+          <a href="/cart">購物車</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="auth-layout">
+      <div class="auth-card">
+        <!-- 左側視覺 -->
+        <div class="auth-visual">
+          <h2>{{ visual_title or '歡迎回來' }}</h2>
+          <p>{{ visual_text or '登入後可查看購物車、會員資料與訂單紀錄，若登入時遇到問題，也可以透過下方登入協助快速處理。' }}</p>
+        </div>
+
+        <!-- 右側表單 -->
+        <div class="auth-form">
+          <h1 class="form-title">會員登入</h1>
+          <p class="form-subtitle">請輸入帳號、密碼與註冊信箱完成登入</p>
+
+          <!-- 錯誤訊息 -->
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              <div class="flash">{{ messages.0 }}</div>
+            {% endif %}
+          {% endwith %}
+
+          <form method="POST" action="/login">
+            <div class="form-group">
+              <label for="account">帳號</label>
+              <input
+                type="text"
+                id="account"
+                name="account"
+                placeholder="請輸入帳號"
+                autocomplete="username"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">密碼</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="請輸入密碼"
+                autocomplete="current-password"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="email">信箱</label>
+              <input
+                type="text"
+                id="email"
+                name="email"
+                placeholder="請輸入註冊信箱"
+                autocomplete="email"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-main">登入</button>
+          </form>
+
+          <div class="helper-panel">
+            <div class="helper-title">登入協助</div>
+            <div class="helper-links">
+              <a href="/login/find/password">忘記密碼</a>
+              <a href="/login/find/account">忘記帳號</a>
+            </div>
+          </div>
+
+          <div class="register-row">
+            <span>還沒有帳號？</span>
+            <a href="/register">立即註冊</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
 </html>
