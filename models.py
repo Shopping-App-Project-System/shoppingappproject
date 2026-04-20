@@ -4,28 +4,31 @@ import settings
 
 """
 此為裝飾器 在撰寫程式碼中 可以不必理會
-功能 : 
+功能 :
     在類別方法中 使用此裝飾器 即可取得 -
         '自動建立consor 、 自動關閉 、 錯誤時自動回朔以避免資料毀損' 之效用
 """
 def start(fun):
     @wraps(fun)
-    def wrap(self,*args,**kwargs):
-        conn = mariadb.connect(host=self.HOST, port=self.PORT,
-                user=self.USER, password=self.PASSWORD,
-                database=self.DATABASE)
+    def wrap(self, *args, **kwargs):
+        conn = mariadb.connect(
+            host=self.HOST, port=self.PORT,
+            user=self.USER, password=self.PASSWORD,
+            database=self.DATABASE
+        )
         cursor = conn.cursor()
         try:
-            result = fun(self,cursor,*args,**kwargs)
+            result = fun(self, cursor, *args, **kwargs)
             conn.commit()
             return result
         except Exception as e:
-            conn.rollback()
+            conn.rollback()  # 發生錯誤時回滾，避免資料毀損
             raise e
         finally:
-            cursor.close()
+            cursor.close()   # 無論成敗皆關閉 cursor 與連線
             conn.close()
     return wrap
+
 """
 建立方式 : 先在settings.py中的DATABASE變數中 設定你的資料庫連線資訊
            在controler.py中 使用以下程式碼用於匯入模組
@@ -35,13 +38,13 @@ def start(fun):
 """
 class Models:
     def __init__(self):
-        self.HOST = settings.HOST
-        self.PORT = settings.PORT
-        self.USER = settings.USER
+        self.HOST     = settings.HOST
+        self.PORT     = settings.PORT
+        self.USER     = settings.USER
         self.PASSWORD = settings.PASSWORD
         self.DATABASE = settings.DATABASE
         self._init_db()
-    
+
     @start
     def _init_db(self, cursor):
         # 使用者表
@@ -121,7 +124,7 @@ class Models:
                             ...
                             ...
                             return ...
-                        
+
     """
     # _____________________________write into your code_____________________________________
 
@@ -130,26 +133,32 @@ class Models:
     # 新增使用者（不含 pic_path、token、code，待後續 updateUser 補上）
     @start
     def createUser(self, cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
-        cursor.execute(f"""
-                                INSERT INTO `{settings.BRANCH_A_TABLE}`
-                                (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
-                                VALUES (?,?,?,?,?,?)
-                            """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
+        cursor.execute(
+            f"""
+            INSERT INTO `{settings.BRANCH_A_TABLE}`
+            (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
+            VALUES (?,?,?,?,?,?)
+            """,
+            (user_name, user_account, user_password, user_mobile, user_email, user_address)
+        )
 
     # 動態更新使用者欄位：set_ 為要更新的欄位 dict，where 為條件 dict，自動組成 UPDATE SQL
     @start
     def updateUser(self, cursor, set_: dict, where: dict):
-        set_key, set_value = tuple(set_.keys()), tuple(set_.values())
-        where_key, where_value = tuple(where.keys()), tuple(where.values())
+        set_key,   set_value   = tuple(set_.keys()),   tuple(set_.values())
+        where_key, where_value = tuple(where.keys()),  tuple(where.values())
 
-        set_sql = ", ".join(f"`{key}` = ?" for key in set_key)
+        set_sql   = ", ".join(f"`{key}` = ?" for key in set_key)
         where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
 
-        cursor.execute(f"""
-                                UPDATE `{settings.BRANCH_A_TABLE}`
-                                SET {set_sql}
-                                WHERE {where_sql}
-                            """, set_value + where_value)
+        cursor.execute(
+            f"""
+            UPDATE `{settings.BRANCH_A_TABLE}`
+            SET {set_sql}
+            WHERE {where_sql}
+            """,
+            set_value + where_value
+        )
 
     # 查詢使用者：where 為條件 dict，selections 為欲取得的欄位（不傳則 SELECT *）
     # 回傳單筆，單欄位直接回傳值，多欄位回傳 tuple，查無資料回傳 None
@@ -164,11 +173,14 @@ class Models:
 
         where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
 
-        cursor.execute(f"""
-                                SELECT {selections}
-                                FROM `{settings.BRANCH_A_TABLE}`
-                                WHERE {where_sql}
-                            """, where_value)
+        cursor.execute(
+            f"""
+            SELECT {selections}
+            FROM `{settings.BRANCH_A_TABLE}`
+            WHERE {where_sql}
+            """,
+            where_value
+        )
 
         users = cursor.fetchall()
         if users != []:
@@ -185,8 +197,16 @@ class Models:
     def get_products(self, cursor):
         cursor.execute(f'SELECT id, name, price, image_path FROM `{settings.BRANCH_B_TABLE}`')
         rows = cursor.fetchall()
-        return [{'id': r[0], 'name': r[1], 'price': r[2], 'image_url': r[3],
-                 'cart_url': f"/cart/add?product_id={r[0]}"} for r in rows]
+        return [
+            {
+                'id'      : r[0],
+                'name'    : r[1],
+                'price'   : r[2],
+                'image_url': r[3],
+                'cart_url': f"/cart/add?product_id={r[0]}"
+            }
+            for r in rows
+        ]
 
     # ── Branch C：購物車 ──────────────────────────────────────────────────────────
 
@@ -196,10 +216,10 @@ class Models:
         # 回傳：list of dict，每筆含 id, product_id, quantity, name, price, image_path
         cursor.execute(
             f'''SELECT c.id, c.user_account, c.product_id, c.quantity,
-                      p.name, p.price, p.image_path
-               FROM `{settings.BRANCH_C_CART_TABLE}` c
-               JOIN `{settings.BRANCH_B_TABLE}` p ON c.product_id = p.id
-               WHERE c.user_account = ?''',
+                       p.name, p.price, p.image_path
+                FROM `{settings.BRANCH_C_CART_TABLE}` c
+                JOIN `{settings.BRANCH_B_TABLE}` p ON c.product_id = p.id
+                WHERE c.user_account = ?''',
             (user_account,)
         )
         rows = cursor.fetchall()
@@ -219,7 +239,7 @@ class Models:
     @start
     def add_cart_item(self, cursor, user_account, product_id):
         # 先確認商品存在，防止寫入孤立資料；不存在回傳 False
-        # 已有此商品則數量 +1，否則新增數量為 1 的記錄，回傳 True
+        # 已有此商品則數量 +1，否則新增數量為 1 的記錄，回傳商品名稱
         cursor.execute(
             f'SELECT id, name FROM `{settings.BRANCH_B_TABLE}` WHERE id=?',
             (product_id,)
@@ -228,6 +248,7 @@ class Models:
         if product is None:
             return False
         product_name = product[1]
+
         cursor.execute(
             f'SELECT id, quantity FROM `{settings.BRANCH_C_CART_TABLE}` WHERE user_account=? AND product_id=?',
             (user_account, product_id)
@@ -261,7 +282,6 @@ class Models:
             (user_account,)
         )
 
-
     # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
     @start
@@ -271,8 +291,8 @@ class Models:
         # 回傳：新訂單的 id（整數）
         cursor.execute(
             f'''INSERT INTO `{settings.BRANCH_C_ORDER_TABLE}`
-               (user_account, total, payment_method, delivery_method, address, note, status)
-               VALUES (?,?,?,?,?,?,'處理中')''',
+                (user_account, total, payment_method, delivery_method, address, note, status)
+                VALUES (?,?,?,?,?,?,'處理中')''',
             (user_account, total, payment_method, delivery_method, address, note)
         )
         order_id = cursor.lastrowid
@@ -289,10 +309,10 @@ class Models:
         # 回傳：list of dict
         cursor.execute(
             f'''SELECT id, total, payment_method, delivery_method,
-                      address, note, status, created_at
-               FROM `{settings.BRANCH_C_ORDER_TABLE}`
-               WHERE user_account=?
-               ORDER BY created_at DESC''',
+                       address, note, status, created_at
+                FROM `{settings.BRANCH_C_ORDER_TABLE}`
+                WHERE user_account=?
+                ORDER BY created_at DESC''',
             (user_account,)
         )
         rows = cursor.fetchall()
@@ -317,11 +337,11 @@ class Models:
         like_keyword = "%" + keyword + "%"
         cursor.execute(
             f'''SELECT id, total, payment_method, delivery_method,
-                      address, note, status, created_at
-               FROM `{settings.BRANCH_C_ORDER_TABLE}`
-               WHERE user_account = ?
-                 AND (address LIKE ? OR status LIKE ?)
-               ORDER BY created_at DESC''',
+                       address, note, status, created_at
+                FROM `{settings.BRANCH_C_ORDER_TABLE}`
+                WHERE user_account = ?
+                  AND (address LIKE ? OR status LIKE ?)
+                ORDER BY created_at DESC''',
             (user_account, like_keyword, like_keyword)
         )
         rows = cursor.fetchall()
@@ -338,9 +358,6 @@ class Models:
                 'created_at'     : row[7],
             })
         return result
-
-
-    
 
 
 """
