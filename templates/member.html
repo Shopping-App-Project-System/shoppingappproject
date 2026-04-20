@@ -95,7 +95,7 @@ body{background:linear-gradient(180deg,#f7f9ff,#eef3fb)}
         <div class="logo">{{ store_name or 'My Store' }}</div>
         <nav class="nav-links">
             <a href="{{ home_url or '/' }}">主頁</a>
-            <a href="{{ member_url or url_for('order_list') }}" class="active">會員中心</a>
+            <a href="{{ member_url or url_for('member') }}" class="active">會員中心</a>
             <a href="{{ cart_url or url_for('cart') }}">購物車</a>
         </nav>
     </div>
@@ -146,14 +146,14 @@ body{background:linear-gradient(180deg,#f7f9ff,#eef3fb)}
             <!-- 訂單 -->
             <div class="card" style="margin-top:20px">
                 <div class="section-title">訂單紀錄</div>
-                {% if orders %}
+                {% if members %}
                     <table class="table">
                         <tr>
                             <th>訂單編號</th>
                             <th>金額</th>
                             <th>狀態</th>
                         </tr>
-                        {% for o in orders %}
+                        {% for o in members %}
                         <tr>
                             <td>{{ o.id }}</td>
                             <td>NT$ {{ o.total | int }}</td>

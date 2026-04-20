@@ -19,8 +19,9 @@ def start(fun):
             result = fun(self,cursor,*args,**kwargs)
             conn.commit()
             return result
-        except:
+        except Exception as e:
             conn.rollback()
+            raise e
         finally:
             cursor.close()
             conn.close()
@@ -41,14 +42,27 @@ class Models:
         self.DATABASE = settings.DATABASE
         self._init_db()
     
-    def _init_db(self):
-        conn = mariadb.connect(host=self.HOST, port=self.PORT,
-                               user=self.USER, password=self.PASSWORD,
-                               database=self.DATABASE)
-        cursor = conn.cursor()
-        # 商品表（由其他 Branch 負責寫入，Branch C 只做 JOIN 讀取）
+    @start
+    def _init_db(self, cursor):
+        # 使用者表
         cursor.execute(
-            '''CREATE TABLE IF NOT EXISTS products (
+            f'''CREATE TABLE IF NOT EXISTS `{settings.BRANCH_A_TABLE}` (
+                id             INT AUTO_INCREMENT PRIMARY KEY,
+                user_name      VARCHAR(255) NOT NULL,
+                user_account   VARCHAR(255) NOT NULL UNIQUE,
+                user_password  VARCHAR(255) NOT NULL,
+                user_mobile    VARCHAR(50),
+                user_email     VARCHAR(255),
+                user_address   VARCHAR(255),
+                pic_path       VARCHAR(255),
+                token          VARCHAR(255),
+                code           VARCHAR(20),
+                verify_status  BOOLEAN DEFAULT FALSE
+            )'''
+        )
+        # 商品表
+        cursor.execute(
+            f'''CREATE TABLE IF NOT EXISTS `{settings.BRANCH_B_TABLE}` (
                 id         INT AUTO_INCREMENT PRIMARY KEY,
                 name       VARCHAR(255) NOT NULL,
                 price      DECIMAL(10,2) NOT NULL,
@@ -57,7 +71,7 @@ class Models:
         )
         # 購物車表
         cursor.execute(
-            '''CREATE TABLE IF NOT EXISTS cart_items (
+            f'''CREATE TABLE IF NOT EXISTS `{settings.BRANCH_C_CART_TABLE}` (
                 id           INT AUTO_INCREMENT PRIMARY KEY,
                 user_account VARCHAR(255) NOT NULL,
                 product_id   INT NOT NULL,
@@ -66,7 +80,7 @@ class Models:
         )
         # 訂單主檔
         cursor.execute(
-            '''CREATE TABLE IF NOT EXISTS orders (
+            f'''CREATE TABLE IF NOT EXISTS `{settings.BRANCH_C_ORDER_TABLE}` (
                 id              INT AUTO_INCREMENT PRIMARY KEY,
                 user_account    VARCHAR(255) NOT NULL,
                 total           DECIMAL(10,2) NOT NULL,
@@ -80,7 +94,7 @@ class Models:
         )
         # 訂單明細表
         cursor.execute(
-            '''CREATE TABLE IF NOT EXISTS order_items (
+            f'''CREATE TABLE IF NOT EXISTS `{settings.BRANCH_C_ORDER_ITEMS_TABLE}` (
                 id         INT AUTO_INCREMENT PRIMARY KEY,
                 order_id   INT NOT NULL,
                 product_id INT NOT NULL,
@@ -88,16 +102,6 @@ class Models:
                 price      DECIMAL(10,2) NOT NULL
             )'''
         )
-        # 若 products 是空的，插入測試商品（測試用，整合後由其他 Branch 管理）
-        cursor.execute("SELECT COUNT(*) FROM products")
-        if cursor.fetchone()[0] == 0:
-            cursor.executemany(
-                "INSERT INTO products (name, price, image_path) VALUES (?, ?, NULL)",
-                [("測試商品A", 100), ("測試商品B", 250), ("測試商品C", 500)]
-            )
-        conn.commit()
-        cursor.close()
-        conn.close()
 
     """
     範例:
@@ -121,18 +125,80 @@ class Models:
     """
     # _____________________________write into your code_____________________________________
 
+    # ── Branch A：使用者帳號相關方法 ────────────────────────────────────────────────────
 
-    # ── 購物車 (Branch C) ────────────────────────────────────────────────────────
+    # 新增使用者（不含 pic_path、token、code，待後續 updateUser 補上）
+    @start
+    def createUser(self, cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
+        cursor.execute(f"""
+                                INSERT INTO `{settings.BRANCH_A_TABLE}`
+                                (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
+                                VALUES (?,?,?,?,?,?)
+                            """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
+
+    # 動態更新使用者欄位：set_ 為要更新的欄位 dict，where 為條件 dict，自動組成 UPDATE SQL
+    @start
+    def updateUser(self, cursor, set_: dict, where: dict):
+        set_key, set_value = tuple(set_.keys()), tuple(set_.values())
+        where_key, where_value = tuple(where.keys()), tuple(where.values())
+
+        set_sql = ", ".join(f"`{key}` = ?" for key in set_key)
+        where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
+
+        cursor.execute(f"""
+                                UPDATE `{settings.BRANCH_A_TABLE}`
+                                SET {set_sql}
+                                WHERE {where_sql}
+                            """, set_value + where_value)
+
+    # 查詢使用者：where 為條件 dict，selections 為欲取得的欄位（不傳則 SELECT *）
+    # 回傳單筆，單欄位直接回傳值，多欄位回傳 tuple，查無資料回傳 None
+    @start
+    def getUser(self, cursor, where: dict, *selections):
+        where_key, where_value = tuple(where.keys()), tuple(where.values())
+
+        if selections == ():
+            selections = "*"
+        else:
+            selections = ",".join(f"`{selection}`" for selection in selections)
+
+        where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
+
+        cursor.execute(f"""
+                                SELECT {selections}
+                                FROM `{settings.BRANCH_A_TABLE}`
+                                WHERE {where_sql}
+                            """, where_value)
+
+        users = cursor.fetchall()
+        if users != []:
+            users = users[0]
+            if len(users) == 1:
+                return users[0]
+            return users
+        return None
+
+    # ── Branch B：商品相關方法 ────────────────────────────────────────────────────────
+
+    # 取得所有商品清單，每筆包含 id、名稱、價格、圖片路徑，以及加入購物車的 URL
+    @start
+    def get_products(self, cursor):
+        cursor.execute(f'SELECT id, name, price, image_path FROM `{settings.BRANCH_B_TABLE}`')
+        rows = cursor.fetchall()
+        return [{'id': r[0], 'name': r[1], 'price': r[2], 'image_url': r[3],
+                 'cart_url': f"/cart/add?product_id={r[0]}"} for r in rows]
+
+    # ── Branch C：購物車 ──────────────────────────────────────────────────────────
 
     @start
     def get_cart_items(self, cursor, user_account):
         # 查詢使用者購物車，JOIN products 取得商品名稱、價格、圖片路徑
         # 回傳：list of dict，每筆含 id, product_id, quantity, name, price, image_path
         cursor.execute(
-            '''SELECT c.id, c.user_account, c.product_id, c.quantity,
+            f'''SELECT c.id, c.user_account, c.product_id, c.quantity,
                       p.name, p.price, p.image_path
-               FROM cart_items c
-               JOIN products p ON c.product_id = p.id
+               FROM `{settings.BRANCH_C_CART_TABLE}` c
+               JOIN `{settings.BRANCH_B_TABLE}` p ON c.product_id = p.id
                WHERE c.user_account = ?''',
             (user_account,)
         )
@@ -152,29 +218,38 @@ class Models:
 
     @start
     def add_cart_item(self, cursor, user_account, product_id):
-        # 新增商品到購物車
-        # 若該使用者購物車已有此商品，則數量 +1；否則新增數量為 1 的記錄
+        # 先確認商品存在，防止寫入孤立資料；不存在回傳 False
+        # 已有此商品則數量 +1，否則新增數量為 1 的記錄，回傳 True
         cursor.execute(
-            'SELECT id, quantity FROM cart_items WHERE user_account=? AND product_id=?',
+            f'SELECT id, name FROM `{settings.BRANCH_B_TABLE}` WHERE id=?',
+            (product_id,)
+        )
+        product = cursor.fetchone()
+        if product is None:
+            return False
+        product_name = product[1]
+        cursor.execute(
+            f'SELECT id, quantity FROM `{settings.BRANCH_C_CART_TABLE}` WHERE user_account=? AND product_id=?',
             (user_account, product_id)
         )
         existing = cursor.fetchone()
         if existing:
             cursor.execute(
-                'UPDATE cart_items SET quantity=? WHERE id=?',
+                f'UPDATE `{settings.BRANCH_C_CART_TABLE}` SET quantity=? WHERE id=?',
                 (existing[1] + 1, existing[0])
             )
         else:
             cursor.execute(
-                'INSERT INTO cart_items (user_account, product_id, quantity) VALUES (?,?,1)',
+                f'INSERT INTO `{settings.BRANCH_C_CART_TABLE}` (user_account, product_id, quantity) VALUES (?,?,1)',
                 (user_account, product_id)
             )
+        return product_name
 
     @start
     def remove_cart_item(self, cursor, item_id, user_account):
         # 刪除購物車中指定項目，同時比對 user_account 確保只能刪除自己的項目
         cursor.execute(
-            'DELETE FROM cart_items WHERE id=? AND user_account=?',
+            f'DELETE FROM `{settings.BRANCH_C_CART_TABLE}` WHERE id=? AND user_account=?',
             (item_id, user_account)
         )
 
@@ -182,12 +257,12 @@ class Models:
     def clear_cart(self, cursor, user_account):
         # 清空指定使用者的整個購物車，通常在訂單建立成功後呼叫
         cursor.execute(
-            'DELETE FROM cart_items WHERE user_account=?',
+            f'DELETE FROM `{settings.BRANCH_C_CART_TABLE}` WHERE user_account=?',
             (user_account,)
         )
 
 
-    # ── 訂單 (Branch C) ──────────────────────────────────────────────────────────
+    # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
     @start
     def create_order(self, cursor, user_account, total, payment_method,
@@ -195,7 +270,7 @@ class Models:
         # 建立訂單主檔（status 預設「處理中」），再逐一寫入每筆訂單明細
         # 回傳：新訂單的 id（整數）
         cursor.execute(
-            '''INSERT INTO orders
+            f'''INSERT INTO `{settings.BRANCH_C_ORDER_TABLE}`
                (user_account, total, payment_method, delivery_method, address, note, status)
                VALUES (?,?,?,?,?,?,'處理中')''',
             (user_account, total, payment_method, delivery_method, address, note)
@@ -203,7 +278,7 @@ class Models:
         order_id = cursor.lastrowid
         for item in items:
             cursor.execute(
-                'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?,?,?,?)',
+                f'INSERT INTO `{settings.BRANCH_C_ORDER_ITEMS_TABLE}` (order_id, product_id, quantity, price) VALUES (?,?,?,?)',
                 (order_id, item['product_id'], item['quantity'], item['price'])
             )
         return order_id
@@ -213,9 +288,9 @@ class Models:
         # 查詢指定使用者的所有歷史訂單，依建立時間由新到舊排列
         # 回傳：list of dict
         cursor.execute(
-            '''SELECT id, total, payment_method, delivery_method,
+            f'''SELECT id, total, payment_method, delivery_method,
                       address, note, status, created_at
-               FROM orders
+               FROM `{settings.BRANCH_C_ORDER_TABLE}`
                WHERE user_account=?
                ORDER BY created_at DESC''',
             (user_account,)
@@ -241,9 +316,9 @@ class Models:
         # 使用 LIKE 搭配 % 萬用字元，比對收件地址或訂單狀態是否包含關鍵字
         like_keyword = "%" + keyword + "%"
         cursor.execute(
-            '''SELECT id, total, payment_method, delivery_method,
+            f'''SELECT id, total, payment_method, delivery_method,
                       address, note, status, created_at
-               FROM orders
+               FROM `{settings.BRANCH_C_ORDER_TABLE}`
                WHERE user_account = ?
                  AND (address LIKE ? OR status LIKE ?)
                ORDER BY created_at DESC''',
@@ -263,6 +338,9 @@ class Models:
                 'created_at'     : row[7],
             })
         return result
+
+
+    
 
 
 """
