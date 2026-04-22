@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ product.product_id }}｜{{ store_name or 'My Store' }}</title>
+
+<style>
+/* 延續主頁風格 */
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial}
+body{background:#f7f9ff;color:#1f2937;line-height:1.6}
+a{text-decoration:none;color:inherit}
+.container{width:min(1200px,92%);margin:auto}
+
+/* Topbar 略，建議使用 Flask 的 extends base.html 簡化 */
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:20px 0}
+.topbar-inner{display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;font-size:1.2rem}
+
+.product-detail-section{padding:60px 0}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+
+/* 左側圖片區 */
+.image-gallery{display:flex;flex-direction:column;gap:15px}
+.main-image{width:100%;aspect-ratio:1/1;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05)}
+.main-image img{width:100%;height:100%;object-fit:cover}
+.sub-images{display:flex;gap:10px}
+.sub-image-item{width:80px;height:80px;border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent}
+.sub-image-item:hover{border-color:#1d4ed8}
+.sub-image-item img{width:100%;height:100%;object-fit:cover}
+
+/* 右側資訊區 */
+.info-card{padding:20px}
+.category-badge{display:inline-block;background:#dbeafe;color:#1d4ed8;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:700;margin-bottom:15px}
+.product-name{font-size:2.5rem;font-weight:800;margin-bottom:10px}
+.barcode{color:#9ca3af;font-size:0.9rem;margin-bottom:20px}
+.price-box{margin:30px 0;display:flex;align-items:baseline;gap:15px}
+.sale-price{font-size:2rem;font-weight:800;color:#1d4ed8}
+.original-price{text-decoration:line-through;color:#9ca3af}
+
+.stock-status{margin-bottom:30px;font-size:0.95rem}
+.stock-count{font-weight:700;color:#059669} /* 綠色代表有貨 */
+
+.description-box{border-top:1px solid #e5e7eb;padding-top:30px;margin-top:30px}
+.description-title{font-weight:800;margin-bottom:15px}
+.description-content{color:#4b5563;white-space:pre-line}
+
+.action-bar{margin-top:40px;display:flex;gap:15px}
+.btn-large{flex:1;background:#1d4ed8;color:#fff;text-align:center;padding:18px;border-radius:15px;font-weight:800;font-size:1.1rem;transition:0.3s}
+.btn-large:hover{background:#1e40af;transform:translateY(-2px)}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="container topbar-inner">
+        <div class="logo"><a href="/">{{ store_name or 'My Store' }}</a></div>
+        <a href="/" style="font-weight:700;color:#1d4ed8">← 回主頁</a>
+    </div>
+</header>
+
+<main class="container">
+    <section class="product-detail-section">
+        <div class="detail-grid">
+            
+            <div class="image-gallery">
+                <div class="main-image">
+                    <img id="mainProductImage" src="/{{ product.product_pic }}" alt="主圖">
+                </div>
+
+
+                <div class="sub-images">
+                    {% for pic in extra_pics %}
+                        <div class="sub-image-item">
+                            <img src="/{{ pic.product_pic }}" width="100" onclick="changeImage(this.src)" alt="細節圖">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="info-card">
+                <span class="category-badge">商品分類：{{ product.category }}</span>
+                <h1 class="product-name">{{ product.name }}</h1>
+
+                <div class="price-box">
+                    {% if product.sale_price %}
+                        <span class="sale-price">特價：NT$ {{ product.sale_price }}</span>
+                        <span class="original-price">原價：NT$ {{ product.original_price }}</span>
+                    {% else %}
+                        <span class="original-price">售價：NT$ {{ product.original_price }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="stock-status">
+                    庫存狀態：
+                    {% if stock and stock.product_quantity > 0 %}
+                        <span class="stock-count">現貨:({{ stock.product_quantity }})</span>
+                    {% else %}
+                        <span style="color:#ef4444; font-weight:700;">缺貨中</span>
+                    {% endif %}
+                </div>
+
+                <div class="description-box">
+                    <div class="description-title">商品介紹</div>
+                    <div class="description-content">{{ product.description }}</div>
+                </div>
+
+                <div class="action-bar">
+                    <a href="#" class="btn-large">加入購物車</a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</main>
+
+<footer style="text-align:center; padding:60px 0; color:#9ca3af">
+    &copy; {{ store_name }} All Rights Reserved.
+</footer>
+
+</body>
+</html>

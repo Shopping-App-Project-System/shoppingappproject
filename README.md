@@ -1,6 +1,6 @@
 DB record : 
 
-branchA table columns : user_name user_mobile user_account(primary key) user_password user_email  user_address pic_path token code verify_status
+branchA table columns : user_name user_mobile user_account(primary key) user_password user_email  user_address token code verify_status
 
 branchB table columns :
 

@@ -97,6 +97,65 @@ a{text-decoration:none;color:inherit}
 @media(max-width:600px){
     .product-grid{grid-template-columns:1fr}
 }
+/* 特價字體：紅色 + 粗體 */
+.sale-price {
+    color: #ef4444; /* 鮮紅色 */
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+/* 原價刪除線：灰色 + 縮小 */
+.original-price-muted {
+    color: #9ca3af; /* 淺灰色 */
+    text-decoration: line-through; /* 刪除線 */
+    font-size: 0.85rem;
+    margin-left: 8px;
+}
+
+/* 正常價格 */
+.normal-price {
+    font-weight: 700;
+    color: #1f2937;
+}
+/* 搜尋列容器 */
+.search-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-select, .search-input {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.search-input {
+    flex-grow: 1;
+}
+
+/* 搜尋按鈕樣式  */
+.search-btn {
+    padding: 8px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-btn:hover {
+    background-color: #555;
+}
+
 </style>
 </head>
 
@@ -133,6 +192,25 @@ a{text-decoration:none;color:inherit}
         </div>
     </div>
 </section>
+<!--搜尋列-->
+<div class="search-container" >
+    <form action="/" method="GET" class="search-form">
+        <select name="category_id" class="search-select">
+            <option value="">所有分類</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if request.args.get('category_id') == cat.id|string %}selected{% endif %}>
+                    {{ cat.category }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <input type="text" name="keyword" class="search-input" placeholder="搜尋商品名稱..." 
+               value="{{ request.args.get('keyword', '') }}">
+
+        <button type="submit" class="btn">搜尋</button>
+    </form>
+</div>
+
 
 <section class="section">
 <div class="container">
@@ -141,28 +219,40 @@ a{text-decoration:none;color:inherit}
 
 <div class="product-grid">
 
+<!--商品資訊卡-->
 {% for product in products %}
 <article class="product-card">
 
-<div class="product-image">
-<img src="{{ product.image_url or '/static/default.png' }}">
-</div>
-
+<a href="{{ url_for('product_detail', id=product.id) }}"> <!--點圖進商品詳細頁-->
+    <div class="product-image">
+        <img src="{{ product.product_pic }}">
+    </div>
+</a>
 <div class="product-body">
 
-<div class="product-title">{{ product.name }}</div>
+<a href="{{ url_for('product_detail', id=product.id) }}"> <!--點圖進商品詳細頁-->
+    <div class="product-title">{{ product.name }}</div>
+</a>
 
 <div class="product-desc">
-{{ product.description or '' }}
+{{ product.description }}
 </div>
 
 <div class="product-bottom">
-<span class="price">NT$ {{ product.price | int }}</span>
+<span class="price">
+    {% if product.sale_price and product.sale_price < product.original_price %}
+        <strong class="sale-price">NT$ {{ product.sale_price }}</strong>
+        <del class="original-price-muted">NT$ {{ product.original_price }}</del>
+    {% else %}
+        <span class="normal-price">NT$ {{ product.original_price }}</span>
+    {% endif %}
+</span>
+
 
 {% if product.cart_url %}
-<a href="{{ product.cart_url }}" class="btn">加入</a>
+<a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn">加入</a>
 {% endif %}
-
+<!--【待新增】加入購物車 C分支-->
 </div>
 
 </div>
