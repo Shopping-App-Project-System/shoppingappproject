@@ -60,37 +60,100 @@ class Models:
                             return ...
                         
     """
-    # _____________________________write into your code_____________________________________
+    # _____________________________商品搜尋列_____________________________________
     
+    @start
+    def search_categories(self, consor, cat_id, keyword):
+        sql = """
+            SELECT p.*,pc.category
+            FROM products p
+            JOIN product_category pc 
+            ON p.category_id = pc.id
+            WHERE p.is_active = 1
+        """
+        params = []
+
+        if cat_id:
+            sql += " AND p.category_id = %s"
+            params.append(cat_id)
+        if keyword:
+            sql += " AND p.name LIKE %s"
+            params.append(f"%{keyword}%")        
+        
+        consor.execute(sql,params)
+        results = consor.fetchall()
+        return [RowObject(r) for r in results]
     
+    @start
+    def get_all_categories(self, consor):
+        consor.execute("SELECT id, category FROM product_category")
+        results = consor.fetchall()
+        return [RowObject(r) for r in results]
+
+
+    # _____________________________商品資訊卡_____________________________________
+    # 資料庫條件 -> is_active = 1 (上架)/0 (下架) 。product_quantity(庫存) > 0 
+
+    @start
+    def index(self, consor):
+        sql_query = """
+            SELECT 
+                p.id,
+                p.name,
+                p.product_pic,
+                p.original_price,
+                p.sale_price,
+                p.description,
+                pc.category
+            FROM products p
+            INNER JOIN product_category pc
+                on p.category_id = pc.id
+            INNER JOIN product_stock ps 
+                on p.id = ps.product_id
+            WHERE 
+                p.is_active = 1 
+                and ps.product_quantity > 0 
+        """
+
+        consor.execute(sql_query)
+        results = consor.fetchall()
+        return [RowObject(r) for r in results]
     
+    # _____________________________商品詳細頁_____________________________________
+  
+    @start
+    def product_detail(self, consor, product_id):
+        #__________查主商品__________
+        sql_product = """
+            SELECT
+                p.*,
+                pc.category
+            FROM products p
+            LEFT JOIN product_category pc
+            ON p.category_id = pc.id
+            WHERE p.id = %s
+        """
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        consor.execute(sql_product, (product_id,))
+        results_product = consor.fetchall()
+        product = RowObject(results_product) if results_product else None
+
+        if not product:
+            return None, None, []
+        
+        #__________查庫存__________
+        sql_stock = "SELECT * FROM product_stock WHERE product_id = %s"
+        consor.execute(sql_stock, (product_id,))
+        res_s = consor.fetchone()
+        stock = RowObject(res_s) if res_s else None     
+
+        #__________查多圖__________
+        sql_pics = "SELECT product_pic FROM product_pics WHERE product_id = %s"
+        consor.execute(sql_pics, (product_id,))
+        res_pics = consor.fetchall()
+        extra_pics = [RowObject(p) for p in res_pics]
+
+        return product, stock, extra_pics
     
 """
 於此做測試程式碼
