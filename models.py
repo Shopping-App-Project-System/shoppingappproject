@@ -25,6 +25,14 @@ def start(fun):
             cursor.close()
             conn.close()
     return wrap
+
+"""
+將資料庫查詢結果的 tuple 包裝成物件
+"""
+class RowObject:
+    def __init__(self, row):
+        self.row = row
+
 """
 建立方式 : 先在settings.py中的DATABASE變數中 設定你的資料庫連線資訊
            在controler.py中 使用以下程式碼用於匯入模組
@@ -122,7 +130,7 @@ class Models:
     # _____________________________商品詳細頁_____________________________________
   
     @start
-    def product_detail(self, consor, product_id):
+    def get_product_detail(self, consor, product_id):
         #__________查主商品__________
         sql_product = """
             SELECT

@@ -1,10 +1,9 @@
 # ________________________DATABASE______________________
 HOST = "127.0.0.1"
-PORT = 3306
+PORT = 3307
 USER = "root"
-PASSWORD = "0000"
+PASSWORD = "114321"
 DATABASE = "project"
-
 # ________________________FLASK_________________________
 APP_PORT = 8000 # FLASK啟用時所用的埠號 預設為8000 可以自行調整
 SESSION_KEY = "MyShoppingAppProject" # 建立SESSION時使用的SESSION KEY

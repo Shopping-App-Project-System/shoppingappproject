@@ -35,8 +35,8 @@ def search_categories():
     cat_id = request.args.get('category_id', '')
     keyword = request.args.get('keyword', '')
 
-    products = model.search_categories(cat_id, keyword)
-    categories = model.get_all_categories()
+    products = model.search_categories(cat_id, keyword) or []
+    categories = model.get_all_categories() or []
 
     return render_template(
         "index.html", 
@@ -45,6 +45,21 @@ def search_categories():
         current_cat=cat_id,
         current_kw=keyword
     )
+# @app.route("/")
+# def search_categories():
+#     cat_id = request.args.get('category_id', '')
+#     keyword = request.args.get('keyword', '')
+
+#     products   = model.search_categories(cat_id, keyword) or []
+#     categories = model.get_all_categories() or []
+
+#     return render_template(
+#         "index.html", 
+#         products=products, 
+#         categories=categories,
+#         current_cat=cat_id,
+#         current_kw=keyword
+#     )
 
 #__________商品詳細頁__________
 @app.route("/product/<int:id>")
