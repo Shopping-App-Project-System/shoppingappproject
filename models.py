@@ -20,8 +20,8 @@ def start(fun):
             conn.commit()
             return result
         except Exception as e:
-            conn.rollback()
             raise e
+            conn.rollback()
         finally:
             cursor.close()
             conn.close()
@@ -69,17 +69,6 @@ class Models:
                 price      DECIMAL(10,2) NOT NULL,
                 image_path VARCHAR(255)
             )'''
-        )
-        # 測試用 商品表無資料時插入預設商品
-        cursor.execute(f'SELECT COUNT(*) FROM `{settings.BRANCH_B_TABLE}`')
-        if cursor.fetchone()[0] == 0:
-            cursor.executemany(
-            f'INSERT INTO `{settings.BRANCH_B_TABLE}` (name, price, image_path) VALUES (?,?,?)',
-            [
-                ('測試商品A', 100, None),
-                ('測試商品B', 200, None),
-                ('測試商品C', 300, None),
-            ]
         )
         # 購物車表
         cursor.execute(
@@ -271,20 +260,10 @@ class Models:
     @start
     def remove_cart_item(self, cursor, item_id, user_account):
         # 刪除購物車中指定項目，同時比對 user_account 確保只能刪除自己的項目
-        # 刪除前先查商品名稱以便回傳給 flash 訊息
-        cursor.execute(
-            f'''SELECT p.name FROM `{settings.BRANCH_C_CART_TABLE}` c
-                JOIN `{settings.BRANCH_B_TABLE}` p ON c.product_id = p.id
-                WHERE c.id=? AND c.user_account=?''',
-            (item_id, user_account)
-        )
-        row = cursor.fetchone()
-        product_name = row[0] if row else None
         cursor.execute(
             f'DELETE FROM `{settings.BRANCH_C_CART_TABLE}` WHERE id=? AND user_account=?',
             (item_id, user_account)
         )
-        return product_name
 
     @start
     def clear_cart(self, cursor, user_account):
@@ -316,29 +295,17 @@ class Models:
         return order_id
 
     @start
-    def get_orders(self, cursor, user_account, include_id=None):
-        # 查詢指定使用者的訂單，預設過濾掉「已取消」
-        # include_id：額外顯示該筆訂單（即使狀態為已取消），用於取消後的當次顯示
-        if include_id:
-            cursor.execute(
-                f'''SELECT id, total, payment_method, delivery_method,
-                           address, note, status, created_at
-                    FROM `{settings.BRANCH_C_ORDER_TABLE}`
-                    WHERE user_account=?
-                      AND (status != '已取消' OR id = ?)
-                    ORDER BY created_at DESC''',
-                (user_account, include_id)
-            )
-        else:
-            cursor.execute(
-                f'''SELECT id, total, payment_method, delivery_method,
-                           address, note, status, created_at
-                    FROM `{settings.BRANCH_C_ORDER_TABLE}`
-                    WHERE user_account=?
-                      AND status != '已取消'
-                    ORDER BY created_at DESC''',
-                (user_account,)
-            )
+    def get_orders(self, cursor, user_account):
+        # 查詢指定使用者的所有歷史訂單，依建立時間由新到舊排列
+        # 回傳：list of dict
+        cursor.execute(
+            f'''SELECT id, total, payment_method, delivery_method,
+                       address, note, status, created_at
+                FROM `{settings.BRANCH_C_ORDER_TABLE}`
+                WHERE user_account=?
+                ORDER BY created_at DESC''',
+            (user_account,)
+        )
         rows = cursor.fetchall()
         result = []
         for row in rows:

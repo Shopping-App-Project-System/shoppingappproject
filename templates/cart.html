@@ -60,11 +60,6 @@
         .user-status-text{font-size:12px;color:#6b7280;line-height:1.2}
         .user-account{font-size:13px;font-weight:700;color:#1f2937;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .topbar-btn{color:#1d4ed8;font-weight:700}
-        .flash-wrapper{margin-bottom:20px}
-        .flash-message{padding:14px 18px;border-radius:12px;margin-bottom:12px;font-weight:700;box-shadow:0 6px 15px rgba(0,0,0,.08)}
-        .flash-message.success{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
-        .flash-message.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
-        .flash-message.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
     </style>
 </head>
 <body>
@@ -100,18 +95,6 @@
 </header>
 
 <main class="panel-page">
-<div class="container">
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-<div class="flash-wrapper">
-    {% for category, message in messages %}
-        <div class="flash-message {{ category }}">{{ message }}</div>
-    {% endfor %}
-</div>
-{% endif %}
-{% endwith %}
-</div>
-
     <div class="container cart-layout">
 
         <!-- 商品區 -->

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>商品管理｜{{ store_name or 'My Store' }}</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft JhengHei", Arial
+        }
+
+        body {
+            background: linear-gradient(180deg, #f7f9ff, #eef3fb)
+        }
+
+        .container {
+            width: min(900px, 92%);
+            margin: auto
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb
+        }
+
+        .topbar-inner {
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative
+        }
+
+        .logo {
+            position: absolute;
+            left: 0;
+            font-weight: 800
+        }
+
+        .panel-page {
+            padding: 40px 0
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        textarea {
+            min-height: 120px
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #1d4ed8;
+            color: #fff
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #b91c1c
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .flash {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #fee2e2;
+            color: #b91c1c;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo">{{ store_name or 'My Store' }}</div>
+        </div>
+    </header>
+
+    <main class="panel-page">
+
+        <div class="container">
+
+            <div class="card">
+
+                <h2 style="margin-bottom:10px">商品管理</h2>
+                <p style="margin-bottom:20px;color:#6b7280">上架或下架商品</p>
+
+                <!-- flash -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="flash">{{ messages[0] }}</div>
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" enctype="multipart/form-data" action="{{ submit_url or '/manage' }}">
+
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="商品名稱">
+                    </div>
+
+                    <div class="form-group">
+                        <input type="text" name="price" placeholder="商品價格">
+                    </div>
+
+                    <div class="form-group">
+                        <input type="file" id="imageInput" name="image">
+                        <div class="image-preview">
+                            <img id="preview">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <textarea name="description" placeholder="商品描述"></textarea>
+                    </div>
+
+                    <div class="form-footer">
+
+                        <button name="action" value="remove" class="btn btn-danger">下架</button>
+
+                        <button name="action" value="add" class="btn btn-primary">上架</button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        const input = document.getElementById("imageInput");
+        const preview = document.getElementById("preview");
+
+        input.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (!file) {
+                preview.style.display = "none";
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            }
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+
+</body>
+
+</html>

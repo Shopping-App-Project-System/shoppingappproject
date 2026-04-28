@@ -70,7 +70,7 @@ def index():
                                      "account":session.get(settings.SESSION_AUTHO),
                                      "profile_pic":model.getUser({"user_account":session.get(settings.SESSION_AUTHO)}, "pic_path")
                                      })
-    return render_template("index.html", products=products)
+    return render_template("index.html")
 
 
 # 註冊：GET 顯示表單，POST 驗證輸入、建立帳號、複製預設大頭貼、發送驗證信
@@ -372,12 +372,10 @@ def member():
     user_account = session[settings.SESSION_AUTHO]
     keyword = request.args.get("keyword", "").strip()
 
-    just_cancelled_id = session.pop('just_cancelled', None)
-
     if keyword:
         members = model.search_orders(user_account, keyword)
     else:
-        members = model.get_orders(user_account, include_id=just_cancelled_id)
+        members = model.get_orders(user_account)
 
     user_name, user_email, user_mobile = model.getUser(
         {"user_account": user_account}, "user_name", "user_email", "user_mobile"
@@ -460,9 +458,7 @@ def cart_add():
 def cart_remove(item_id):
     # 從購物車移除指定商品（GET，對應模板中的 remove_url 連結）
     # 比對 user_account 確保只能刪自己的項目
-    product_name = model.remove_cart_item(item_id, session[settings.SESSION_AUTHO])
-    if product_name:
-        flash(f"「{product_name}」已從購物車移除", "success")
+    model.remove_cart_item(item_id, session[settings.SESSION_AUTHO])
     return redirect(url_for("cart"))
 
 
@@ -479,26 +475,16 @@ def checkout():
         flash("購物車是空的")
         return redirect(url_for("cart"))
 
-    card_number = ""
     if request.method == "POST":
-        name            = request.form.get("name")
-        phone           = request.form.get("phone")
-        address         = request.form.get("address")
-        payment_method  = request.form.get("payment")
+        name            = request.form.get("name", "")
+        phone           = request.form.get("phone", "")
+        address         = request.form.get("address", "")
+        payment_method  = request.form.get("payment", "")
         delivery_method = request.form.get("shipping", "")
         note            = request.form.get("note", "")
         card_number     = request.form.get("card_number", "")
 
-        if not name or not phone or not address:
-            flash("姓名、電話、地址為必填欄位", "error")
-            return redirect(url_for("checkout"))
-
-        real_name = model.getUser({"user_account": user_account}, "user_name")
-        if name != real_name:
-            flash("姓名必須填寫您本人的姓名", "error")
-            return redirect(url_for("checkout"))
-
-        if not validatePhone(phone):
+        if phone and not validatePhone(phone):
             flash("手機格式錯誤，請輸入09開頭的10位數字", "error")
             return redirect(url_for("checkout"))
 
@@ -552,7 +538,7 @@ def checkout():
                            submit_url=url_for("checkout"),
                            order_items=order_items,
                            summary={'shipping': shipping, 'total': total},
-                           payment_methods=["ATM 轉帳", "信用卡", "貨到付款"],
+                           payment_methods=["信用卡", "ATM 轉帳", "貨到付款"],
                            shipping_methods=["宅配到府", "超商取貨"],
                            form=None,
                            auth={'logged_in': True,
@@ -580,7 +566,6 @@ def order_cancel(order_id):
     user_account = session[settings.SESSION_AUTHO]
     success = model.cancel_order(order_id, user_account)
     if success:
-        session['just_cancelled'] = order_id
         flash("訂單已取消", "success")
     else:
         flash("無法取消此訂單", "error")

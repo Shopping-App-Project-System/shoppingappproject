@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>註冊</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Microsoft JhengHei", Arial;
+}
+
+body {
+    background: linear-gradient(180deg, #f7f9ff, #eef3fb);
+}
+
+.container {
+    width: min(1100px, 92%);
+    margin: auto;
+}
+
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.topbar-inner {
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo {
+    position: absolute;
+    left: 0;
+    font-weight: 800;
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+}
+
+.nav-links a {
+    color: #6b7280;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-layout {
+    min-height: calc(100vh - 70px);
+    display: grid;
+    place-items: center;
+    padding: 30px 0;
+}
+
+.auth-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+    width: 100%;
+    max-width: 980px;
+}
+
+.auth-visual {
+    padding: 40px;
+    background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+}
+
+.auth-visual h2 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.auth-visual p {
+    font-size: 16px;
+    opacity: .95;
+}
+
+.auth-form {
+    padding: 40px;
+}
+
+.auth-form h1 {
+    margin-bottom: 10px;
+}
+
+.auth-form p {
+    margin-bottom: 20px;
+    color: #6b7280;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group input {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    outline: none;
+    transition: .2s;
+}
+
+.form-group input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+}
+
+.btn {
+    width: 100%;
+    background: #1d4ed8;
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn:hover {
+    background: #1e40af;
+}
+
+.flash {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border-radius: 10px;
+}
+
+.avatar-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #dbeafe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid #93c5fd;
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.file-name {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    word-break: break-all;
+}
+
+@media (max-width: 800px) {
+    .auth-card {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-visual {
+        min-height: 220px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="container topbar-inner">
+        <div class="logo">My Store</div>
+        <nav class="nav-links">
+            <a href="/">主頁</a>
+            <a href="/member">會員中心</a>
+            <a href="/cart">購物車</a>
+        </nav>
+    </div>
+</header>
+
+<main class="auth-layout">
+    <div class="auth-card">
+
+        <div class="auth-visual">
+            <h2>建立帳號</h2>
+            <p>註冊後即可開始購物</p>
+        </div>
+
+        <div class="auth-form">
+            <h1>會員註冊</h1>
+            <p>填寫基本資料</p>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="flash">{{ messages[0] }}</div>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/register" enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <input type="text" name="name" placeholder="姓名">
+                </div>
+
+                <div class="form-group">
+                    <input type="text" name="account" placeholder="帳號">
+                </div>
+
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="密碼">
+                </div>
+
+                <div class="form-group">
+                    <input type="text" name="mobile" placeholder="手機">
+                </div>
+
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="信箱">
+                </div>
+
+                <div class="form-group">
+                    <input type="text" name="address" placeholder="地址">
+                </div>
+
+                <div class="form-group avatar-box">
+                    <div class="avatar-preview">
+                        <img id="preview" src="" alt="頭像預覽">
+                    </div>
+
+                    <input type="file" name="profile_pic" id="profile_pic" accept="image/*">
+                    <div class="file-name" id="fileName">尚未選擇圖片</div>
+                </div>
+
+                <button type="submit" class="btn">註冊</button>
+            </form>
+        </div>
+
+    </div>
+</main>
+
+<script>
+const input = document.getElementById("profile_pic");
+const preview = document.getElementById("preview");
+const fileName = document.getElementById("fileName");
+
+input.addEventListener("change", function () {
+    const file = this.files[0];
+
+    if (!file) {
+        preview.src = "";
+        preview.style.display = "none";
+        fileName.textContent = "尚未選擇圖片";
+        return;
+    }
+
+    fileName.textContent = file.name;
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+});
+</script>
+
+</body>
+</html>

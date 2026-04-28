@@ -62,17 +62,17 @@ def tokenRequired(model,refresh = False):
 def validateEmail(email):
     # 信箱格式：第一個英文(不分大小寫)，英文或數字，@，英文或數字，.，com
     pattern = re.compile(r'^[a-zA-Z][a-zA-Z0-9]*@[a-zA-Z0-9]+\.com$')
-    return pattern.search(email)
+    return bool(pattern.search(email))
 
 
 def validatePhone(phone):
     # 台灣手機格式：09 開頭，後接 8 位數字，共 10 碼
     pattern = re.compile(r'^09\d{8}$')
-    return pattern.search(phone)
+    return bool(pattern.search(phone))
 
 
 def validateCreditCard(card):
     # 信用卡格式：16 位數字，每 4 碼可用 - 或空格分隔（可省略）
     # \d{4} 對應每組 4 碼，[-\s]? 對應可有可無的分隔符號
     pattern = re.compile(r'^\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}$')
-    return pattern.search(card)
+    return bool(pattern.search(card))
