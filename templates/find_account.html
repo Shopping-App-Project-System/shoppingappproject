@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>忘記帳號｜{{ store_name or 'My Store' }}</title>
+
+<style>
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Microsoft JhengHei', Arial;
+}
+
+body {
+  background:linear-gradient(180deg,#f7f9ff,#eef3fb);
+  color:#111827;
+}
+
+a { text-decoration:none; }
+
+.container {
+  width:min(1100px,92%);
+  margin:auto;
+}
+
+.topbar {
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.topbar-inner {
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.logo {
+  position:absolute;
+  left:0;
+  font-weight:800;
+}
+
+.nav-links {
+  display:flex;
+  gap:25px;
+}
+
+.nav-links a {
+  color:#6b7280;
+  font-weight:700;
+}
+
+.auth-layout {
+  min-height:calc(100vh - 70px);
+  display:grid;
+  place-items:center;
+  padding:30px 0;
+}
+
+.auth-card {
+  width:min(960px,100%);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:#fff;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:0 14px 40px rgba(0,0,0,0.1);
+}
+
+.auth-visual {
+  padding:42px;
+  background:linear-gradient(135deg,#1d4ed8,#60a5fa);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+}
+
+.auth-visual h2 {
+  font-size:32px;
+  margin-bottom:12px;
+}
+
+.auth-visual p {
+  line-height:1.8;
+}
+
+.auth-form {
+  padding:42px 40px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.form-title {
+  font-size:30px;
+  margin-bottom:10px;
+}
+
+.form-subtitle {
+  margin-bottom:24px;
+  color:#6b7280;
+}
+
+.flash {
+  margin-bottom:16px;
+  padding:12px;
+  border-radius:10px;
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.success {
+  margin-bottom:16px;
+  padding:12px;
+  border-radius:10px;
+  background:#dcfce7;
+  color:#166534;
+}
+
+.form-group {
+  margin-bottom:16px;
+  display:flex;
+  flex-direction:column;
+}
+
+.form-group label {
+  margin-bottom:6px;
+  font-size:14px;
+  font-weight:700;
+}
+
+.form-group input {
+  padding:12px;
+  border:1px solid #ccc;
+  border-radius:10px;
+}
+
+.btn-main {
+  width:100%;
+  background:#1d4ed8;
+  color:#fff;
+  padding:12px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.helper-box {
+  margin-top:20px;
+  padding:14px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  font-size:14px;
+  color:#6b7280;
+}
+
+.bottom-links {
+  margin-top:20px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.bottom-links a {
+  color:#1d4ed8;
+  font-size:14px;
+  font-weight:700;
+}
+
+@media (max-width:800px) {
+  .auth-card {
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="container topbar-inner">
+    <div class="logo">{{ store_name or 'My Store' }}</div>
+
+    <nav class="nav-links">
+      <a href="/">主頁</a>
+      <a href="/member">會員中心</a>
+      <a href="/cart">購物車</a>
+    </nav>
+  </div>
+</header>
+
+<main class="auth-layout">
+  <div class="auth-card">
+
+    <!-- 左側 -->
+    <div class="auth-visual">
+      <h2>找回您的帳號</h2>
+      <p>請輸入註冊時使用的信箱，系統會寄送帳號資訊給您。</p>
+    </div>
+
+    <!-- 右側 -->
+    <div class="auth-form">
+      <h1 class="form-title">忘記帳號</h1>
+      <p class="form-subtitle">我們會透過信箱協助您找回帳號</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category,message in messages %}
+            {% if category == "success" %}
+              <div class="success">{{ message }}</div>
+            {% else %}
+              <div class="flash">{{ message }}</div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="/login/find/account">
+        <div class="form-group">
+          <label>註冊信箱</label>
+          <input type="email" name="email" placeholder="請輸入您的信箱">
+        </div>
+
+        <button type="submit" class="btn-main">寄送帳號資訊</button>
+      </form>
+
+      <div class="helper-box">
+        若該信箱已註冊，我們會寄送帳號資訊至您的信箱。<br>
+        若您同時忘記密碼，可再使用「忘記密碼」功能。
+      </div>
+
+      <div class="bottom-links">
+        <a href="/login">返回登入</a>
+        <a href="/login/find/password">忘記密碼？</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

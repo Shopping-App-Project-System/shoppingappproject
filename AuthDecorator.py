@@ -1,7 +1,8 @@
 import settings
 from functools import wraps
-from flask import request,session,render_template,flash
+from flask import request,session,render_template,flash,redirect,url_for
 from utils import getVerifyToken
+import models_shopping
 
 """
 在此設計方便各分支使用的防呆裝飾器
@@ -15,7 +16,9 @@ def loginRequired(fun):
     @wraps(fun)
     def wrap(*args,**kwargs):
         if settings.SESSION_AUTHO in session:
-            return fun(*args,**kwargs)
+            if session.get(settings.SESSION_AUTHO) != "admin":
+                return fun(*args,**kwargs)
+            return render_template("manage.html")
         return render_template("login.html")
     return wrap
 
@@ -37,18 +40,18 @@ def adminRequired(fun):
         return render_template("index.html")
     return wrap
 
-def tokenRequired(model,refresh = False):
+def tokenRequired(refresh = False):
     def decorator(fun):
         @wraps(fun)
         def wrap(*args,**kwargs):
             token = kwargs.get("token")
-            ori_token = model.getUser({"token":token},"token")
+            ori_token = models_shopping.getUser({"token":token},"token")
             if ori_token is None:
                 return render_template("index.html")
             
             if refresh is True:
                 new_token = getVerifyToken(32)
-                model.updateUser({"token":new_token},{"token":ori_token})
+                models_shopping.updateUser({"token":new_token},{"token":ori_token})
                 kwargs["token"] = new_token
             return fun(*args,**kwargs)
         return wrap

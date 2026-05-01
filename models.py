@@ -14,7 +14,7 @@ def start(fun):
         conn = mariadb.connect(host=self.HOST, port=self.PORT,
                 user=self.USER, password=self.PASSWORD,
                 database=self.DATABASE)
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         try:
             result = fun(self,cursor,*args,**kwargs)
             conn.commit()

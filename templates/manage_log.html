@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作紀錄｜{{ store_name or 'My Store' }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft JhengHei", Arial
+        }
+
+        body {
+            background: linear-gradient(180deg, #f7f9ff, #eef3fb)
+        }
+
+        .container {
+            width: min(1100px, 92%);
+            margin: auto
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb
+        }
+
+        .topbar-inner {
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative
+        }
+
+        .logo {
+            position: absolute;
+            left: 0;
+            font-weight: 800
+        }
+
+        .panel-page {
+            padding: 40px 0
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .1)
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: #111827
+        }
+
+        .back-link {
+            float: right;
+            color: #1d4ed8;
+            font-weight: 700;
+            font-size: 14px
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .log-table th,
+        .log-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 14px
+        }
+
+        .log-table th {
+            font-weight: 800;
+            color: #374151;
+            background: #f9fafb
+        }
+
+        .action-add {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .action-remove {
+            background: #fef3c7;
+            color: #b45309;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .action-clear {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .action-restore {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .action-restock {
+            background: #f0fdf4;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo">{{ store_name or 'My Store' }}</div>
+        </div>
+    </header>
+
+    <main class="panel-page">
+        <div class="container">
+
+            <div class="card">
+                <div class="card-title">
+                    操作紀錄
+                    <a href="/manage" class="back-link">返回商品管理</a>
+                </div>
+
+                {% if logs %}
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>管理員</th>
+                            <th>操作</th>
+                            <th>商品編號</th>
+                            <th>商品名稱</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.created_at }}</td>
+                            <td>{{ log.admin_account }}</td>
+                            <td>
+                                {% if log.action == '上架' %}
+                                <span class="action-add">上架</span>
+                                {% elif log.action == '下架' %}
+                                <span class="action-remove">下架</span>
+                                {% elif log.action == '刪除' %}
+                                <span class="action-clear">刪除</span>
+                                {% elif log.action == '恢復' %}
+                                <span class="action-restore">恢復</span>
+                                {% elif log.action == '重新上架' %}
+                                <span class="action-restock">重新上架</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.product_id or '-' }}</td>
+                            <td>{{ log.product_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% else %}
+                <div class="empty">目前沒有操作紀錄</div>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </main>
+
+</body>
+
+</html>

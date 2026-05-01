@@ -1,284 +1,465 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title or (store_name ~ '｜主頁') if store_name else 'My Store｜主頁' }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft JhengHei", Arial
+        }
 
-<title>{{ page_title or (store_name ~ '｜主頁') if store_name else 'My Store｜主頁' }}</title>
+        body {
+            background: linear-gradient(180deg, #f7f9ff, #eef3fb);
+            color: #1f2937
+        }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial}
-body{background:linear-gradient(180deg,#f7f9ff,#eef3fb);color:#1f2937}
-a{text-decoration:none;color:inherit}
-.container{width:min(1380px,92%);margin:auto}
+        a {
+            text-decoration: none;
+            color: inherit
+        }
 
-.topbar{background:#fff;border-bottom:1px solid #e5e7eb}
-.topbar-inner{min-height:78px;display:flex;justify-content:center;align-items:center;position:relative}
-.logo{position:absolute;left:0;font-weight:800}
-.nav-links{display:flex;gap:28px}
-.nav-links a{color:#6b7280;font-weight:700}
-.nav-links a.active{color:#1d4ed8}
+        .container {
+            width: min(1380px, 92%);
+            margin: auto
+        }
 
-.hero{padding:30px 0}
-.hero-banner{
-    border-radius:28px;
-    padding:40px;
-    color:#fff;
-    background:
-    linear-gradient(120deg,rgba(0,0,0,.6),rgba(29,78,216,.6)),
-    url('{{ hero.background_image if hero else "" }}') center/cover;
-}
-.hero h1{font-size:2.5rem;margin-bottom:10px}
-.hero p{margin-bottom:15px}
+        /* ── Topbar ── */
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb
+        }
 
-.section{padding:20px 0 40px}
+        .topbar-inner {
+            min-height: 78px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
 
-.product-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:24px;
-}
+        .logo {
+            position: absolute;
+            left: 0;
+            font-weight: 800
+        }
 
-.product-card{
-    background:#fff;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            align-items: center
+        }
 
-.product-image{
-    height:260px;
-    background:#f3f4f6;
-}
-.product-image img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
+        .nav-links a {
+            color: #6b7280;
+            font-weight: 700
+        }
 
-.product-body{padding:18px}
+        .nav-links a.active {
+            color: #1d4ed8
+        }
 
-.product-title{font-weight:800;margin-bottom:10px}
+        .user-panel {
+            position: absolute;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-.product-desc{
-    font-size:.9rem;
-    color:#6b7280;
-    margin-bottom:12px;
-    min-height:40px;
-}
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+            background: #f8fafc;
+            max-width: 220px;
+        }
 
-.product-bottom{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #dbeafe;
+            border: 1px solid #bfdbfe;
+        }
 
-.price{font-weight:800}
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block
+        }
 
-.btn{
-    background:#1d4ed8;
-    color:#fff;
-    padding:10px 14px;
-    border-radius:10px;
-    font-weight:700;
-}
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            min-width: 0
+        }
 
-.empty-state{
-    text-align:center;
-    padding:60px;
-    color:#6b7280;
-}
+        .user-status-text {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.2
+        }
 
-.footer{padding:40px;text-align:center;color:#6b7280}
+        .user-account {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-@media(max-width:1000px){
-    .product-grid{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:600px){
-    .product-grid{grid-template-columns:1fr}
-}
-/* 特價字體：紅色 + 粗體 */
-.sale-price {
-    color: #ef4444; /* 鮮紅色 */
-    font-size: 1.2rem;
-    font-weight: 800;
-}
+        .topbar-btn {
+            color: #1d4ed8;
+            font-weight: 700
+        }
 
-/* 原價刪除線：灰色 + 縮小 */
-.original-price-muted {
-    color: #9ca3af; /* 淺灰色 */
-    text-decoration: line-through; /* 刪除線 */
-    font-size: 0.85rem;
-    margin-left: 8px;
-}
+        /* ── Flash ── */
+        .flash-wrapper {
+            margin-top: 20px
+        }
 
-/* 正常價格 */
-.normal-price {
-    font-weight: 700;
-    color: #1f2937;
-}
-/* 搜尋列容器 */
-.search-container {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-}
+        .flash-message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, .08);
+        }
 
-.search-form {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
+        .flash-message.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0
+        }
 
-.search-select, .search-input {
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
+        .flash-message.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca
+        }
 
-.search-input {
-    flex-grow: 1;
-}
+        .flash-message.info {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe
+        }
 
-/* 搜尋按鈕樣式  */
-.search-btn {
-    padding: 8px 20px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
+        /* ── Hero ── */
+        .hero {
+            padding: 30px 0
+        }
 
-.search-btn:hover {
-    background-color: #555;
-}
+        .hero-banner {
+            border-radius: 28px;
+            padding: 40px;
+            color: #fff;
+            background:linear-gradient(120deg, rgba(0, 0, 0, .6), rgba(29, 78, 216, .6)),
+            url('{{ hero.background_image if hero else "" }}') center/cover;
+        }
 
-</style>
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px
+        }
+
+        .hero p {
+            margin-bottom: 15px
+        }
+
+        /* ── 搜尋列 ── */
+        .search-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+
+        .search-select,
+        .search-input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .search-input {
+            flex-grow: 1
+        }
+
+        .search-btn {
+            padding: 8px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background-color: #555
+        }
+
+        /* ── 商品 ── */
+        .section {
+            padding: 20px 0 40px
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+        }
+
+        .product-image {
+            height: 260px;
+            background: #f3f4f6
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        .product-body {
+            padding: 18px
+        }
+
+        .product-title {
+            font-weight: 800;
+            margin-bottom: 10px
+        }
+
+        .product-desc {
+            font-size: .9rem;
+            color: #6b7280;
+            margin-bottom: 12px;
+            min-height: 40px
+        }
+
+        .product-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .price {
+            font-weight: 800
+        }
+
+        .sale-price {
+            color: #ef4444;
+            font-size: 1.2rem;
+            font-weight: 800
+        }
+
+        .original-price-muted {
+            color: #9ca3af;
+            text-decoration: line-through;
+            font-size: 0.85rem;
+            margin-left: 8px
+        }
+
+        .normal-price {
+            font-weight: 700;
+            color: #1f2937
+        }
+
+        .btn {
+            background: #1d4ed8;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #6b7280
+        }
+
+        .footer {
+            padding: 40px;
+            text-align: center;
+            color: #6b7280
+        }
+
+        @media(max-width:1000px) {
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media(max-width:600px) {
+            .product-grid {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<header class="topbar">
-    <div class="container topbar-inner">
-        <div class="logo">{{ store_name or 'My Store' }}</div>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="logo">{{ store_name or 'My Store' }}</div>
 
-        <nav class="nav-links">
-            <a href="{{ home_url or 'index.html' }}" class="active">主頁</a>
-            <a href="{{ member_url or 'member.html' }}">會員中心</a>
-            <a href="{{ cart_url or 'cart.html' }}">購物車</a>
+            <nav class="nav-links">
+                <a href="/" class="active">主頁</a>
+                <a href="/member">會員中心</a>
+                <a href="/cart">購物車</a>
+            </nav>
 
-            {% if auth and auth.logged_in %}
-                <a href="{{ logout_url }}">登出</a>
-            {% else %}
-                <a href="{{ login_url }}">登入</a>
-            {% endif %}
-        </nav>
-    </div>
-</header>
-
-<main>
-
-<section class="hero">
-    <div class="container">
-        <div class="hero-banner">
-
-            <h1>{{ hero.title if hero else "歡迎來到商店" }}</h1>
-
-            <p>{{ hero.subtitle if hero else "開始你的購物旅程" }}</p>
-
+            <div class="user-panel">
+                {% if auth and auth.logged_in %}
+                <div class="user-card">
+                    <div class="user-avatar">
+                        <img src="{{ auth.profile_pic }}">
+                    </div>
+                    <div class="user-meta">
+                        <span class="user-status-text">登入中</span>
+                        <span class="user-account">{{ auth.account }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="topbar-btn">登出</a>
+                {% else %}
+                <a href="/login" class="topbar-btn">登入</a>
+                {% endif %}
+            </div>
         </div>
-    </div>
-</section>
-<!--搜尋列-->
-<div class="search-container" >
-    <form action="/" method="GET" class="search-form">
-        <select name="category_id" class="search-select">
-            <option value="">所有分類</option>
-            {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if request.args.get('category_id') == cat.id|string %}selected{% endif %}>
-                    {{ cat.category }}
-                </option>
+    </header>
+
+    <main>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container flash-wrapper">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
             {% endfor %}
-        </select>
+        </div>
+        {% endif %}
+        {% endwith %}
 
-        <input type="text" name="keyword" class="search-input" placeholder="搜尋商品名稱..." 
-               value="{{ request.args.get('keyword', '') }}">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-banner">
+                    <h1>{{ hero.title if hero else "歡迎來到商店" }}</h1>
+                    <p>{{ hero.subtitle if hero else "開始你的購物旅程" }}</p>
+                </div>
+            </div>
+        </section>
 
-        <button type="submit" class="btn">搜尋</button>
-    </form>
-</div>
+        <!-- 搜尋列 -->
+        <div class="container">
+            <div class="search-container">
+                <form action="/" method="GET" class="search-form">
+                    <select name="category_id" class="search-select">
+                        <option value="">所有分類</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.category }}" {% if current_cat==cat.category %}selected{% endif %}>
+                            {{ cat.category }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="keyword" class="search-input" placeholder="搜尋商品名稱..."
+                        value="{{ current_kw or '' }}">
+                    <button type="submit" class="search-btn">搜尋</button>
+                </form>
+            </div>
+        </div>
 
+        <!-- 商品列表 -->
+        <section class="section">
+            <div class="container">
 
-<section class="section">
-<div class="container">
+                {% if products %}
+                <div class="product-grid">
+                    {% for product in products %}
+                    <article class="product-card">
 
-{% if products %}
+                        <a href="{{ url_for('product_detail', id=product.id) }}">
+                            <div class="product-image">
+                                <img src="{{ product.product_pic or '/static/default.png' }}">
+                            </div>
+                        </a>
 
-<div class="product-grid">
+                        <div class="product-body">
 
-<!--商品資訊卡-->
-{% for product in products %}
-<article class="product-card">
+                            <a href="{{ url_for('product_detail', id=product.id) }}">
+                                <div class="product-title">{{ product.product_id }}</div>
+                            </a>
 
-<a href="{{ url_for('product_detail', id=product.id) }}"> <!--點圖進商品詳細頁-->
-    <div class="product-image">
-        <img src="{{ product.product_pic }}">
-    </div>
-</a>
-<div class="product-body">
+                            <div class="product-desc">{{ product.description or '' }}</div>
 
-<a href="{{ url_for('product_detail', id=product.id) }}"> <!--點圖進商品詳細頁-->
-    <div class="product-title">{{ product.name }}</div>
-</a>
+                            <div class="product-bottom">
+                                <span class="price">
+                                    {% if product.sale_price and product.sale_price < product.original_price %} <strong
+                                        class="sale-price">NT$ {{ product.sale_price }}</strong>
+                                        <del class="original-price-muted">NT$ {{ product.original_price }}</del>
+                                        {% else %}
+                                        <span class="normal-price">NT$ {{ product.original_price }}</span>
+                                        {% endif %}
+                                </span>
 
-<div class="product-desc">
-{{ product.description }}
-</div>
+                                <form action="/cart/add" method="post" style="display:inline">
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <input type="hidden" name="next" value="/">
+                                    <button type="submit" class="btn">加入</button>
+                                </form>
 
-<div class="product-bottom">
-<span class="price">
-    {% if product.sale_price and product.sale_price < product.original_price %}
-        <strong class="sale-price">NT$ {{ product.sale_price }}</strong>
-        <del class="original-price-muted">NT$ {{ product.original_price }}</del>
-    {% else %}
-        <span class="normal-price">NT$ {{ product.original_price }}</span>
-    {% endif %}
-</span>
+                            </div>
+                        </div>
 
+                    </article>
+                    {% endfor %}
+                </div>
 
-{% if product.cart_url %}
-<a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn">加入</a>
-{% endif %}
-<!--【待新增】加入購物車 C分支-->
-</div>
+                {% else %}
+                <div class="empty-state">
+                    <h3>目前沒有商品</h3>
+                    <p>商品即將上架</p>
+                </div>
+                {% endif %}
 
-</div>
+            </div>
+        </section>
 
-</article>
-{% endfor %}
+    </main>
 
-</div>
-
-{% else %}
-
-<div class="empty-state">
-<h3>目前沒有商品</h3>
-<p>商品即將上架</p>
-</div>
-
-{% endif %}
-
-</div>
-</section>
-
-</main>
-
-<footer class="footer">
-{{ footer_text or '' }}
-</footer>
+    <footer class="footer">{{ footer_text or '' }}</footer>
 
 </body>
+
 </html>

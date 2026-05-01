@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>驗證碼確認</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #eef4ff, #d6e4ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 40px rgba(80, 120, 200, 0.15);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 26px;
+            color: #3a5bbf;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #5f6f99;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .flash-box {
+            margin-bottom: 18px;
+        }
+
+        .flash {
+            background: #f4f7ff;
+            border: 1px solid #d0d9ff;
+            color: #4a5fcc;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .code-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .code-input {
+            width: 50px;
+            height: 55px;
+            border-radius: 12px;
+            border: 1.5px solid #c7d6ff;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .code-input:focus {
+            border-color: #4a6cff;
+            box-shadow: 0 0 0 3px rgba(74, 108, 255, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #6f8cff, #4a6cff);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .back a {
+            text-decoration: none;
+            color: #4a6cff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="title">驗證碼確認</h1>
+            <p class="subtitle">請輸入驗證碼</p>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="flash-box">
+                {% for message in messages %}
+                <div class="flash">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{form_action}}">
+                <div class="code-group">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                    <input type="text" class="code-input" maxlength="1">
+                </div>
+
+                <input type="hidden" name="code" id="code">
+
+                <button type="submit" class="btn">確認</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.querySelector("form");
+        const inputs = document.querySelectorAll(".code-input");
+        const hidden = document.getElementById("code");
+
+        inputs.forEach((input, index) => {
+            input.addEventListener("input", function () {
+                if (this.value && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener("keydown", function (e) {
+                if (e.key === "Backspace" && !this.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        form.addEventListener("submit", function () {
+            hidden.value = Array.from(inputs).map(input => input.value).join("");
+        });
+    </script>
+
+</body>
+
+</html>
