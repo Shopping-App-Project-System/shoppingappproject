@@ -107,9 +107,11 @@ a{text-decoration:none;color:inherit}
                     <div class="description-content">{{ product.description }}</div>
                 </div>
 
-                <div class="action-bar">
-                    <a href="#" class="btn-large">加入購物車</a>
-                </div>
+                <form action="/cart/add" method="post" class="action-bar">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="hidden" name="next" value="/">
+                    <button type="submit" class="btn-large">加入購物車</button>
+                </form>
             </div>
 
         </div>

@@ -409,7 +409,7 @@
                     {% for product in products %}
                     <article class="product-card">
 
-                        <a href="{{ url_for('product_detail', id=product.id) }}">
+                        <a href="{{ url_for('B.product_detail', product_id=product.id) }}">
                             <div class="product-image">
                                 <img src="{{ product.product_pic or '/static/default.png' }}">
                             </div>
@@ -417,8 +417,8 @@
 
                         <div class="product-body">
 
-                            <a href="{{ url_for('product_detail', id=product.id) }}">
-                                <div class="product-title">{{ product.product_id }}</div>
+                            <a href="{{ url_for('B.product_detail', product_id=product.id) }}">
+                                <div class="product-title">{{ product.name }}</div>
                             </a>
 
                             <div class="product-desc">{{ product.description or '' }}</div>

@@ -1,14 +1,21 @@
+# __________________________________________內部模組_____________________________________
+from flask import request
+from werkzeug.utils import secure_filename
 from secrets import token_urlsafe
 from random import randint
 from functools import wraps
-import settings
+from shutil import move,copy
 import os
 import re
-from flask import request
-from werkzeug.utils import secure_filename
-from shutil import move,copy
-import models_shopping
-# ── 表單解析 ──────────────────────────────────────────────────────────────────
+
+# _______________________________________自定義模組_______________________________________
+from models import getUser
+from settings import ALLOWED_EXTENSIONS
+
+# _______________________________________初始化___________________________________________
+
+
+# ________________________________________API_____________________________________________
 def parse_request(fun):
     @wraps(fun)
     def wrap(*args, **kwargs):
@@ -75,7 +82,7 @@ def validateEmail(email):
     return bool(pattern.search(email))
 
 
-def validatePhone(phone):
+def validateMobile(phone):
     # 台灣手機格式：09 開頭，後接 8 位數字，共 10 碼
     pattern = re.compile(r'^09\d{8}$')
     return bool(pattern.search(phone))
@@ -118,7 +125,7 @@ def del_imgae(src):
 def save_image(file, folder, filename=None):
     if file and '.' in file.filename:
         ext = file.filename.rsplit('.', 1)[1].lower()
-        if ext in settings.ALLOWED_EXTENSIONS:
+        if ext in ALLOWED_EXTENSIONS:
             if filename is None:
                 filename = secure_filename(file.filename)
             else:
@@ -133,6 +140,6 @@ def get_auth(user_account):
     return{
         "logged_in"  : True,
         "account"    : user_account,
-        "profile_pic": normalize_path(models_shopping.getUser({"user_account": user_account}, "pic_path"))
+        "profile_pic": normalize_path(getUser({"user_account": user_account}, "pic_path"))
     }
     
