@@ -142,6 +142,8 @@ def login_service():
         return render_template("login.html")
     
     session[SESSION_AUTHO] = user_account
+    if user_account == "admin":
+        return redirect(url_for("D.manage"))
     flash(f"welcome {user_account} !")
     return redirect(url_for("B.index"))
 

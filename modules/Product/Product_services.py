@@ -19,6 +19,7 @@ def index_service():
     
     user_account = session.get(SESSION_AUTHO)
     if user_account:
+        
         return render_template(
             "index.html", 
             products=products, 

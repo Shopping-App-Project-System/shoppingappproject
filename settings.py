@@ -21,10 +21,9 @@ BRANCH_C_ORDER_ITEMS_TABLE  = "order_items"
 MAIL_SERVER='smtp.gmail.com'
 MAIL_PORT = 465
 MAIL_USERNAME = 'cbes502034@gmail.com'
-MAIL_PASSWORD = "rtgxkcucluuqtkdt"
+MAIL_PASSWORD = "dbajumgvkoxrdcxd"
 MAIL_USE_TLS = False
 MAIL_USE_SSL = True
-
 # ________________________FLASK_________________________
 APP_PORT = 7775 # FLASK啟用時所用的埠號 預設為8000 可以自行調整
 SESSION_KEY = "MyShoppingAppProject" # 建立SESSION時使用的SESSION KEY
