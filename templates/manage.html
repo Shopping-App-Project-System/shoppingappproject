@@ -41,6 +41,27 @@
             font-weight: 800
         }
 
+        /* 方法 b 新增：頂部導覽列右側登出按鈕樣式 */
+        .logout-btn {
+            position: absolute;
+            right: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #b91c1c;
+            background: #fee2e2;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: #fca5a5;
+            color: #991b1b;
+        }
+
         .panel-page {
             padding: 40px 0
         }
@@ -64,308 +85,202 @@
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
-            gap: 6px
+            gap: 5px
         }
 
         .form-group label {
             font-size: 14px;
             font-weight: 700;
-            color: #374151
+            color: #4b5563
         }
 
-        .form-group input,
-        .form-group textarea {
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            font-size: 14px
-        }
-
-        textarea {
-            min-height: 100px
+        .form-control {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            outline: none;
+            width: 100%
         }
 
         .btn {
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 8px;
             border: none;
+            font-weight: 700;
             cursor: pointer;
+            transition: 0.2s;
             font-size: 14px
         }
 
         .btn-primary {
-            background: #1d4ed8;
+            background: #2563eb;
             color: #fff
         }
 
-        .btn-warning {
-            background: #fef3c7;
-            color: #b45309
+        .btn-primary:hover {
+            background: #1d4ed8
         }
 
         .btn-danger {
-            background: #fee2e2;
-            color: #b91c1c
+            background: #ef4444;
+            color: #fff
+        }
+
+        .btn-danger:hover {
+            background: #dc2626
         }
 
         .btn-success {
-            background: #dcfce7;
-            color: #166534
+            background: #10b981;
+            color: #fff
         }
 
-        .btn-admin-remove {
-            background: #fef3c7;
-            color: #b45309
+        .btn-success:hover {
+            background: #059669
         }
 
-        .btn-primary:hover {
-            background: #1e40af
+        .table-responsive {
+            overflow-x: auto
         }
 
-        .flash {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 10px
-        }
-
-        .flash.success {
-            background: #dcfce7;
-            color: #166534
-        }
-
-        .flash.error {
-            background: #fee2e2;
-            color: #b91c1c
-        }
-
-        .image-preview {
-            margin-top: 10px;
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f3f4f6;
-            border-radius: 10px;
-            overflow: hidden
-        }
-
-        .image-preview img {
+        .table {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none
-        }
-
-        .product-table {
-            width: 100%;
-            border-collapse: collapse
-        }
-
-        .product-table th,
-        .product-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
+            border-collapse: collapse;
             text-align: left;
             font-size: 14px
         }
 
-        .product-table th {
-            font-weight: 800;
+        .table th,
+        .table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb
+        }
+
+        .table th {
+            background: #f9fafb;
             color: #374151;
+            font-weight: 700
+        }
+
+        .table tr:hover {
             background: #f9fafb
         }
 
-        .product-table img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px
-        }
-
-        .status-on {
-            background: #dcfce7;
-            color: #166534;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700
-        }
-
-        .status-off {
-            background: #fef3c7;
-            color: #b45309;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700
-        }
-
-        .status-del {
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700
-        }
-
-        .action-group {
+        .action-btns {
             display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap
-        }
-
-        .log-link {
-            float: right;
-            color: #1d4ed8;
-            font-weight: 700;
-            font-size: 14px
-        }
-
-        /* 價格樣式 */
-        .sale-price {
-            color: #b91c1c;
-            font-weight: 800;
-            font-size: 14px
-        }
-
-        .original-price-muted {
-            color: #9ca3af;
-            font-size: 12px;
-            margin-left: 4px
-        }
-
-        .normal-price {
-            font-weight: 700;
-            font-size: 14px;
-            color: #111827
+            gap: 8px
         }
     </style>
 </head>
 
 <body>
+
     <header class="topbar">
         <div class="container topbar-inner">
             <div class="logo">{{ store_name or 'My Store' }}</div>
+            
+            <form method="POST" action="/logout" style="display: inline;" onsubmit="return confirm('確定要登出管理系統嗎？')">
+                <button type="submit" class="logout-btn">登出</button>
+            </form>
         </div>
     </header>
 
     <main class="panel-page">
         <div class="container">
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+            <div style="margin-bottom:25px;display:flex;gap:15px;align-items:center">
+                <a href="/manage" style="font-weight:800;color:#2563eb;text-decoration:underline;font-size:16px">商品管理</a>
+                <span style="color:#9ca3af">|</span>
+                <a href="/manage/log" style="font-weight:700;color:#4b5563;text-decoration:none;font-size:16px">操作紀錄</a>
+            </div>
 
-            <!-- 上架表單 -->
             <div class="card">
-                <div class="card-title">
-                    上架新商品
-                    <a href="/manage/log" class="log-link">操作紀錄</a>
-                </div>
-
+                <div class="card-title">新增商品</div>
                 <form method="POST" action="/manage/add" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label>商品名稱</label>
-                        <input type="text" name="name" placeholder="請輸入商品名稱">
-                    </div>
-
-                    <div class="form-group">
-                        <label>價格</label>
-                        <input type="number" name="price" placeholder="請輸入價格">
-                    </div>
-
-                    <div class="form-group">
-                        <label>商品描述</label>
-                        <textarea name="description" placeholder="請輸入商品描述"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>商品圖片</label>
-                        <input type="file" id="imageInput" name="image" accept="image/*">
-                        <div class="image-preview">
-                            <img id="preview">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px">
+                        <div class="form-group">
+                            <label for="name">商品名稱</label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="輸入商品名稱" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="original_price">原價</label>
+                            <input type="number" id="original_price" name="original_price" class="form-control" placeholder="例如：1000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sale_price">特價 (選填)</label>
+                            <input type="number" id="sale_price" name="sale_price" class="form-control" placeholder="若無特價請留空">
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">上架商品</button>
+                    <div class="form-group" style="margin-top:15px">
+                        <label for="imageInput">商品圖片 (選填)</label>
+                        <input type="file" id="imageInput" name="image" class="form-control" accept="image/*">
+                        <img id="preview" src="" alt="圖片預覽" style="max-width:120px;border-radius:8px;margin-top:10px;display:none">
+                    </div>
+
+                    <div style="margin-top:20px;text-align:right">
+                        <button type="submit" class="btn btn-primary">新增商品</button>
+                    </div>
                 </form>
             </div>
 
-            <!-- 商品列表 -->
             <div class="card">
                 <div class="card-title">商品列表</div>
 
                 {% if products %}
-                <table class="product-table">
-                    <thead>
-                        <tr>
-                            <th>圖片</th>
-                            <th>名稱</th>
-                            <th>價格</th>
-                            <th>庫存</th>
-                            <th>狀態</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in products %}
-                        <tr>
-                            <td><img src="{{ p.product_pic or '/static/default.png' }}"></td>
-                            <td>{{ p.name }}</td>
-
-                            <!-- 價格欄位：有折扣顯示售價+原價刪除線，否則顯示原價 -->
-                            <td>
-                                {% if p.sale_price and p.sale_price < p.original_price %}
-                                    <strong class="sale-price">NT$ {{ p.sale_price }}</strong>
-                                    <del class="original-price-muted">NT$ {{ p.original_price }}</del>
-                                {% else %}
-                                    <span class="normal-price">NT$ {{ p.original_price }}</span>
-                                {% endif %}
-                            </td>
-
-                            <td>{{ p.product_quantity or 0 }}</td>
-                            <td>
-                                {% if p.is_active %}
-                                <span class="status-on">上架中</span>
-                                {% else %}
-                                <span class="status-off">已下架</span>
-                                {% endif %}
-                            </td>
-
-                            <!-- 操作欄位 -->
-                            <td>
-                                <div class="action-group">
-
-                                    {% if p.is_active %}
-                                    <!-- 上架中：可下架 -->
-                                    <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')">
-                                        <input type="hidden" name="product_id" value="{{ p.id }}">
-                                        <input type="hidden" name="next" value="/">
-                                        <button type="submit" class="btn btn-warning">下架</button>
-                                    </form>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:100px">圖片</th>
+                                <th>商品名稱</th>
+                                <th>原價</th>
+                                <th>特價</th>
+                                <th>狀態</th>
+                                <th style="width:220px">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in products %}
+                            <tr>
+                                <td>
+                                    {% if p.image_url %}
+                                    <img src="{{ p.image_url }}" alt="{{ p.name }}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb">
                                     {% else %}
-                                    <!-- 已下架：可重新上架或刪除 -->
-                                    <form method="POST" action="/manage/restock" onsubmit="return confirm('確定要重新上架嗎？')">
-                                        <input type="hidden" name="product_id" value="{{ p.id }}">
-                                        <button type="submit" class="btn btn-success">重新上架</button>
-                                    </form>
-
+                                    <div style="width:60px;height:60px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px">無圖片</div>
                                     {% endif %}
-
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
+                                </td>
+                                <td style="font-weight:700">{{ p.name }}</td>
+                                <td>{{ p.original_price }}</td>
+                                <td>{{ p.sale_price if p.sale_price else '-' }}</td>
+                                <td>
+                                    {% if p.is_active %}
+                                    <span style="color:#10b981;font-weight:700">銷售中</span>
+                                    {% else %}
+                                    <span style="color:#ef4444;font-weight:700">已下架</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        {% if p.is_active %}
+                                        <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')">
+                                            <input type="hidden" name="product_id" value="{{ p.id }}">
+                                            <button type="submit" class="btn btn-danger">下架</button>
+                                        </form>
+                                        {% else %}
+                                        <form method="POST" action="/manage/restock" onsubmit="return confirm('確定要重新上架嗎？')">
+                                            <input type="hidden" name="product_id" value="{{ p.id }}">
+                                            <button type="submit" class="btn btn-success">重新上架</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
                 <p style="color:#6b7280;text-align:center;padding:30px">目前沒有商品</p>
                 {% endif %}
