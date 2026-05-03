@@ -1,10 +1,10 @@
 import os
 # ________________________DATABASE______________________
 HOST = "127.0.0.1"
-PORT = 3306
+PORT = 3307
 USER = "root"
-PASSWORD = "eric225200"
-DATABASE = "shoppingproject"
+PASSWORD = "114321"
+DATABASE = "project"
 # # ________________________POOL__________________________
 # POOL_NAME = "pool"
 # POOL_SIZE = 5

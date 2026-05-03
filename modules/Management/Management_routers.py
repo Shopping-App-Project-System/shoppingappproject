@@ -30,12 +30,12 @@ def manage_remove():return manage_remove_service()
 def manage_restock():return manage_restock_service()
 
 @bp.route("/member/edit", methods=["GET", "POST"])
-@adminRequired
+@loginRequired
 def member_edit():return member_edit_service()
 
 # 會員中心
 @bp.route("/member")
-@adminRequired
+@loginRequired
 def member():return member_service()
 
 @bp.route("/manage/logout")

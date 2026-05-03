@@ -85,7 +85,7 @@ def member_edit_service():
 def member_service():
     user_account = session[SESSION_AUTHO]
     keyword = request.args.get("keyword", "").strip()
-
+    
     if keyword:
         orders = search_orders(user_account, keyword)
     else:
