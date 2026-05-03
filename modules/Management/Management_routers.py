@@ -3,7 +3,7 @@ from flask import Blueprint
 
 # _______________________________________自定義模組_______________________________________
 from AuthDecorator import adminRequired,loginRequired
-from .Management_services import manage_add_service,manage_clear_service,manage_service,manage_remove_service,manage_restock_service,member_edit_service,member_service
+from .Management_services import manage_add_service,manage_clear_service,manage_service,manage_remove_service,manage_restock_service,member_edit_service,member_service,manage_logout_service
 
 # _______________________________________初始化___________________________________________
 bp = Blueprint("D",__name__)
@@ -30,10 +30,14 @@ def manage_remove():return manage_remove_service()
 def manage_restock():return manage_restock_service()
 
 @bp.route("/member/edit", methods=["GET", "POST"])
-@loginRequired
+@adminRequired
 def member_edit():return member_edit_service()
 
 # 會員中心
 @bp.route("/member")
-@loginRequired
+@adminRequired
 def member():return member_service()
+
+@bp.route("/manage/logout")
+@adminRequired
+def manage_logout():return manage_logout_service()

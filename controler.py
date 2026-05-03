@@ -31,4 +31,3 @@ app.register_blueprint(Management_bp)
 
 if __name__ == "__main__":
     app.run(debug=True,use_reloader=False,port=APP_PORT)
-    

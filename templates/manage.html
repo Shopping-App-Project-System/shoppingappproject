@@ -114,6 +114,11 @@
             color: #166534
         }
 
+        .btn-admin-remove {
+            background: #fef3c7;
+            color: #b45309
+        }
+
         .btn-primary:hover {
             background: #1e40af
         }
@@ -207,7 +212,9 @@
 
         .action-group {
             display: flex;
-            gap: 8px
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap
         }
 
         .log-link {
@@ -215,6 +222,25 @@
             color: #1d4ed8;
             font-weight: 700;
             font-size: 14px
+        }
+
+        /* 價格樣式 */
+        .sale-price {
+            color: #b91c1c;
+            font-weight: 800;
+            font-size: 14px
+        }
+
+        .original-price-muted {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-left: 4px
+        }
+
+        .normal-price {
+            font-weight: 700;
+            font-size: 14px;
+            color: #111827
         }
     </style>
 </head>
@@ -282,8 +308,7 @@
                         <tr>
                             <th>圖片</th>
                             <th>名稱</th>
-                            <th>原價</th>
-                            <th>售價</th>
+                            <th>價格</th>
                             <th>庫存</th>
                             <th>狀態</th>
                             <th>操作</th>
@@ -294,8 +319,17 @@
                         <tr>
                             <td><img src="{{ p.product_pic or '/static/default.png' }}"></td>
                             <td>{{ p.name }}</td>
-                            <td>NT$ {{ p.original_price }}</td>
-                            <td>NT$ {{ p.sale_price or '-' }}</td>
+
+                            <!-- 價格欄位：有折扣顯示售價+原價刪除線，否則顯示原價 -->
+                            <td>
+                                {% if p.sale_price and p.sale_price < p.original_price %}
+                                    <strong class="sale-price">NT$ {{ p.sale_price }}</strong>
+                                    <del class="original-price-muted">NT$ {{ p.original_price }}</del>
+                                {% else %}
+                                    <span class="normal-price">NT$ {{ p.original_price }}</span>
+                                {% endif %}
+                            </td>
+
                             <td>{{ p.product_quantity or 0 }}</td>
                             <td>
                                 {% if p.is_active %}
@@ -304,24 +338,27 @@
                                 <span class="status-off">已下架</span>
                                 {% endif %}
                             </td>
+
+                            <!-- 操作欄位 -->
                             <td>
                                 <div class="action-group">
+
                                     {% if p.is_active %}
+                                    <!-- 上架中：可下架 -->
                                     <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')">
                                         <input type="hidden" name="product_id" value="{{ p.id }}">
+                                        <input type="hidden" name="next" value="/">
                                         <button type="submit" class="btn btn-warning">下架</button>
                                     </form>
                                     {% else %}
+                                    <!-- 已下架：可重新上架或刪除 -->
                                     <form method="POST" action="/manage/restock" onsubmit="return confirm('確定要重新上架嗎？')">
                                         <input type="hidden" name="product_id" value="{{ p.id }}">
                                         <button type="submit" class="btn btn-success">重新上架</button>
                                     </form>
-                                    <form method="POST" action="/manage/clear"
-                                        onsubmit="return confirm('確定要刪除此商品嗎？此操作無法還原。')">
-                                        <input type="hidden" name="product_id" value="{{ p.id }}">
-                                        <button type="submit" class="btn btn-danger">刪除</button>
-                                    </form>
+
                                     {% endif %}
+
                                 </div>
                             </td>
                         </tr>

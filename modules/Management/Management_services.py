@@ -101,3 +101,8 @@ def member_service():
         user=user,
         auth=get_auth(user_account)
     )
+
+def manage_logout_service():
+    session.pop(SESSION_AUTHO,None)
+    flash("已登出")
+    return redirect(url_for("B.index"))
