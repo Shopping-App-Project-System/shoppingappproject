@@ -180,7 +180,7 @@
         <div class="container topbar-inner">
             <div class="logo">{{ store_name or 'My Store' }}</div>
             
-            <form method="POST" action="/logout" style="display: inline;" onsubmit="return confirm('確定要登出管理系統嗎？')">
+            <form method="POST" action="/manage/logout" style="display: inline;" onsubmit="return confirm('確定要登出管理系統嗎？')">
                 <button type="submit" class="logout-btn">登出</button>
             </form>
         </div>
