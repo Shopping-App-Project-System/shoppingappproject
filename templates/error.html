@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統錯誤</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft JhengHei", Arial; }
+        body {
+            background: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+        }
+        .icon {
+            font-size: 60px;
+            margin-bottom: 24px;
+        }
+        .message {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 12px;
+        }
+        .countdown {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        .countdown span {
+            font-weight: 700;
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="icon">⚠️</div>
+    <div class="message">
+        {% if error %}
+            {{ error }}
+        {% else %}
+            系統出現錯誤
+        {% endif %}
+    </div>
+    <div class="countdown"><span id="sec">3</span> 秒後返回首頁</div>
+</div>
+
+<script>
+    let sec = 3;
+    const el = document.getElementById('sec');
+    const timer = setInterval(() => {
+        sec--;
+        el.textContent = sec;
+        if (sec <= 0) {
+            clearInterval(timer);
+            window.location.href = '/';
+        }
+    }, 1000);
+</script>
+
+</body>
+</html>
