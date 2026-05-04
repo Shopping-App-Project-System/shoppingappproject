@@ -57,7 +57,7 @@ def getUser(cursor, where: dict, *selections):
 @db_transaction
 def search_categories(cursor, cat_id, keyword):
     sql = """
-        SELECT id, product_code, product_pic, original_price, sale_price, name, description, category, tag
+        SELECT id, product_pic, original_price, sale_price, name, description, category, tag
         FROM products
         WHERE is_active = 1
     """
