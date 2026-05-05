@@ -180,8 +180,8 @@ def add_card_service():
 
     # 卡號可能含空白或減號，去除後檢查長度
     cleaned_number = card_number.replace(" ", "").replace("-", "")
-    if not cleaned_number.isdigit() or not (13 <= len(cleaned_number) <= 19):
-        flash("卡號格式錯誤", "error")
+    if not cleaned_number.isdigit() or len(cleaned_number) != 16:
+        flash("卡號必須為 16 碼數字", "error")
         return redirect(url_for("D.member_cards"))
 
     # 如果這是該會員的第一張卡，自動設為預設

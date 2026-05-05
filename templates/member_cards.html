@@ -362,9 +362,9 @@
 
                 <form method="POST" action="/member/cards/add" id="addCardForm">
                     <div class="form-group" style="margin-bottom:14px">
-                        <label for="card_number">卡號</label>
+                        <label for="card_number">卡號（16 碼）</label>
                         <input type="text" id="card_number" name="card_number" class="form-control"
-                            placeholder="1234 5678 9012 3456" maxlength="23" inputmode="numeric"
+                            placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric"
                             autocomplete="cc-number" required>
                     </div>
 
@@ -395,10 +395,10 @@
     </main>
 
     <script>
-        // 卡號自動每 4 碼加空格
+        // 卡號自動每 4 碼加空格（最多 16 碼）
         const cardNumberInput = document.getElementById("card_number");
         cardNumberInput.addEventListener("input", function (e) {
-            let v = e.target.value.replace(/\D/g, "").slice(0, 19);
+            let v = e.target.value.replace(/\D/g, "").slice(0, 16);
             // 每 4 碼一個空格
             const parts = [];
             for (let i = 0; i < v.length; i += 4) {
