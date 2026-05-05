@@ -139,7 +139,7 @@ def get_product_pics(cursor, product_id):
 def get_cart_items(cursor, user_account):
     cursor.execute(
         f'''SELECT c.id, c.user_id, c.product_id, c.quantity,
-                   p.name, p.sale_price AS price, p.product_pic AS image_path
+                    p.name, COALESCE(p.sale_price, p.original_price) AS price, p.product_pic AS image_path
             FROM `{BRANCH_C_CART_TABLE}` c
             JOIN `{BRANCH_B_TABLE}` p ON c.product_id = p.id
             WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',

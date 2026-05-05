@@ -102,7 +102,7 @@ def checkout_service():
             submit_url=url_for("C.checkout"),
             order_items=order_items,
             summary={"shipping": shipping, "total": total},
-            payment_methods=["信用卡", "ATM 轉帳", "貨到付款"],
+            payment_methods=["ATM 轉帳", "信用卡", "貨到付款"],
             shipping_methods=["宅配到府", "超商取貨"],
             form={
                 "name"   : user.get("user_name"),
