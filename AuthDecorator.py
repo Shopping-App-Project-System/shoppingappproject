@@ -11,49 +11,51 @@ from models import getUser,updateUser
 是完整性中最重要的一環
 """
 
-# 必須要登入中 才可進行的功能 皆可用此裝飾器做包裝
-def loginRequired(fun):
-    @wraps(fun)
-    def wrap(*args,**kwargs):
-        if SESSION_AUTHO in session:
-            if session.get(SESSION_AUTHO) != "admin":
-                return fun(*args,**kwargs)
-            return render_template("manage.html")
-        return render_template("login.html")
-    return wrap
-
-# 已登入的使用者 不可再進入註冊或登入頁面
+# ── 身份驗證：未登入才能進（登入頁、註冊頁）────────────────────────────────
 def guestOnly(fun):
     @wraps(fun)
-    def wrap(*args,**kwargs):
-        if not SESSION_AUTHO in session:
-            return fun(*args,**kwargs)
+    def wrap(*args, **kwargs):
+        if SESSION_AUTHO not in session:
+            return fun(*args, **kwargs)
         return render_template("index.html")
     return wrap
 
-# 只有admin管理員可以使用的功能 皆可用此裝飾器做包裝
+# ── 角色控制：一般使用者才能進（購物車、訂單...）──────────────────────────
+def userRequired(fun):
+    @wraps(fun)
+    def wrap(*args, **kwargs):
+        if SESSION_AUTHO not in session:
+            return render_template("login.html")
+        if session.get(SESSION_AUTHO) != "admin":
+            return fun(*args, **kwargs)
+        return render_template("manage.html")
+    return wrap
+
+# ── 角色控制：管理員才能進（後台管理...）──────────────────────────────────
 def adminRequired(fun):
     @wraps(fun)
-    def wrap(*args,**kwargs):
+    def wrap(*args, **kwargs):
+        if SESSION_AUTHO not in session:
+            return render_template("login.html")
         if session.get(SESSION_AUTHO) == "admin":
-            return fun(*args,**kwargs)
+            return fun(*args, **kwargs)
         return render_template("index.html")
     return wrap
 
-def tokenRequired(refresh = False):
+# ── Token 驗證：特殊功能驗證（重設密碼...）────────────────────────────────
+def tokenRequired(refresh=False):
     def decorator(fun):
         @wraps(fun)
-        def wrap(*args,**kwargs):
+        def wrap(*args, **kwargs):
             token = kwargs.get("token")
-            ori_token = getUser({"token":token},"token")
+            ori_token = getUser({"token": token}, "token")
             if ori_token is None:
                 return render_template("index.html")
-            
             if refresh is True:
                 new_token = getVerifyToken(32)
-                updateUser({"token":new_token},{"token":ori_token})
+                updateUser({"token": new_token}, {"token": ori_token})
                 kwargs["token"] = new_token
-            return fun(*args,**kwargs)
+            return fun(*args, **kwargs)
         return wrap
     return decorator
             

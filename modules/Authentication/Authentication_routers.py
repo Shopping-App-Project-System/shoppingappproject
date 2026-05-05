@@ -2,7 +2,7 @@
 from flask import Blueprint
 
 # _______________________________________自定義模組_______________________________________
-from AuthDecorator import loginRequired,guestOnly,tokenRequired
+from AuthDecorator import userRequired,guestOnly,tokenRequired
 from .Authentication_services import forgot_account_service,forgot_password_service,forgot_verify_account_service,reset_verify_password_service,login_service,logout_service,register_service,reset_password_service,verify_register_service
 # _______________________________________初始化___________________________________________
 bp = Blueprint("A",__name__)
@@ -37,7 +37,7 @@ def login():return login_service()
 
 # 登出：清除 session 中的登入資訊並導回首頁
 @bp.route("/logout")
-@loginRequired
+@userRequired
 def logout():return logout_service()
 
 
