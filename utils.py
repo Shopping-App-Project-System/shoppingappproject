@@ -145,13 +145,8 @@ def getResponseFile(files, *selections):
     
     return datas
 
-def checkUserInput(datas, **msgs):
-    # 逐一確認必填欄位，回傳缺少欄位的顯示名稱（以「、」串接），全部填寫則回傳空字串
-    missing = []
-    for key, msg in msgs.items():
-        if not datas[key]:
-            missing.append(msg)
-
+def checkUserInput(*args):
+    missing = [msg for msg, value in args if not value]
     return "、".join(missing)
 
 # ── 驗證碼與 Token ────────────────────────────────────────────────────────────

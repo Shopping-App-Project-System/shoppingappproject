@@ -21,13 +21,13 @@ def forgot_password():return forgot_password_service()
 @bp.route("/login/find/account/email/<token>/verify/code",methods=["POST","GET"])
 @guestOnly
 @tokenRequired(refresh = True)
-def forgot_verify_account(token):return forgot_verify_account_service(token)
+def forgot_verify_account(token):return forgot_verify_account_service()
 
 # 重設密碼驗證碼確認：GET 顯示輸入頁，POST 比對驗證碼，成功後顯示重設密碼頁
 @bp.route("/login/find/password/email/<token>/verify/code",methods=["POST","GET"])
 @guestOnly
 @tokenRequired(refresh = True)
-def reset_verify_password(token):return reset_verify_password_service(token)
+def reset_verify_password(token):return reset_verify_password_service()
 
 
 @bp.route("/login",methods = ["POST","GET"])
@@ -51,11 +51,11 @@ def register():return register_service()
 @bp.route("/login/reset/password/<token>",methods=["POST","GET"])
 @guestOnly
 @tokenRequired(refresh = True)
-def reset_password(token):return reset_password_service(token)
+def reset_password(token):return reset_password_service()
 
 
 # 信箱驗證碼確認：GET 顯示輸入頁，POST 比對驗證碼，成功後將大頭貼移至正式路徑並啟用帳號
 @bp.route("/register/email/<token>/verify/code",methods=["POST","GET"])
 @guestOnly
 @tokenRequired(refresh = True)
-def verify_register(token):return verify_register_service(token)
+def verify_register(token):return verify_register_service()
