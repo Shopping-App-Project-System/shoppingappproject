@@ -10,7 +10,7 @@ from utils import get_auth,validateMobile,save_image,del_imgae
 # _______________________________________services___________________________________________
 def manage_add_service():
     name         = request.form.get("name")
-    price        = request.form.get("price")
+    price        = request.form.get("original_price")
     description  = request.form.get("description")
     file         = request.files.get("image")
     img_filename = save_image(file, UPLOAD_FOLDER)
