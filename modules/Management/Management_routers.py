@@ -72,3 +72,4 @@ def delete_card():return delete_card_service()
 @bp.route("/member/cards/set_default", methods=["POST"])
 @userRequired
 def set_default_card_route():return set_default_card_service()
+
