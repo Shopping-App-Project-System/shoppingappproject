@@ -64,7 +64,7 @@ def tokenRequired(refresh=False):
                 new_token = getVerifyToken(32)
                 updateUser({"token": new_token}, {"token": ori_token})
                 kwargs["token"] = new_token
+                request.view_args["token"] = new_token  # ← 更新給 requestParsor 用
             return fun(*args, **kwargs)
         return wrap
     return decorator
-            
