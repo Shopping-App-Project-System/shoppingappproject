@@ -67,7 +67,7 @@ def search_categories(cursor, cat_id, keyword):
         sql += " AND category = %s"
         params.append(cat_id)
     if keyword:
-        sql += " AND (product_code LIKE %s OR name LIKE %s OR description LIKE %s)"
+        sql += " AND (id LIKE %s OR name LIKE %s OR description LIKE %s)"
         params.append(f"%{keyword}%")
         params.append(f"%{keyword}%")
         params.append(f"%{keyword}%")
@@ -89,7 +89,7 @@ def index(cursor):
     cursor.execute("""
         SELECT
             p.id,
-            p.product_code,
+            p.id,
             p.product_pic,
             p.original_price,
             p.sale_price,
