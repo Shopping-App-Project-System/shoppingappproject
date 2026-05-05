@@ -1,10 +1,20 @@
 import os
+from dotenv import load_dotenv
+
 # ________________________DATABASE______________________
-HOST = "127.0.0.1"
-PORT = 3307
-USER = "root"
-PASSWORD = "114321"
-DATABASE = "project"
+# HOST = "127.0.0.1"
+# PORT = 3306
+# USER = "root"
+# PASSWORD = "1207"
+# DATABASE = "project"
+
+load_dotenv()  # 讀取 .env 檔案，將其中的鍵值對載入為環境變數
+HOST     = os.getenv("DB_HOST")  # 從環境變數取得資料庫主機位址，覆蓋 settings 預設值
+PORT     = int(os.getenv("DB_PORT"))  # 從環境變數取得資料庫連線埠號，轉為整數
+USER     = os.getenv("DB_USER")  # 從環境變數取得資料庫登入帳號
+PASSWORD = os.getenv("DB_PASSWORD")  # 從環境變數取得資料庫登入密碼
+DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
+
 # # ________________________POOL__________________________
 # POOL_NAME = "pool"
 # POOL_SIZE = 5
@@ -20,8 +30,8 @@ BRANCH_C_ORDER_ITEMS_TABLE  = "order_items"
 # ________________________EMAIL_________________________
 MAIL_SERVER='smtp.gmail.com'
 MAIL_PORT = 465
-MAIL_USERNAME = 'eric225123451@gmail.com'
-MAIL_PASSWORD = "aadx ohel sdfk jkcx"
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_USE_TLS = False
 MAIL_USE_SSL = True
 
