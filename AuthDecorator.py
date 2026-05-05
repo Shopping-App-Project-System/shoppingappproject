@@ -17,7 +17,7 @@ def guestOnly(fun):
     def wrap(*args, **kwargs):
         if SESSION_AUTHO not in session:
             return fun(*args, **kwargs)
-        return render_template("index.html")
+        return render_template("B.index")
     return wrap
 
 # ── 角色控制：一般使用者才能進（購物車、訂單...）──────────────────────────
@@ -25,10 +25,10 @@ def userRequired(fun):
     @wraps(fun)
     def wrap(*args, **kwargs):
         if SESSION_AUTHO not in session:
-            return render_template("login.html")
+            return redirect(url_for("A.login"))
         if session.get(SESSION_AUTHO) != "admin":
             return fun(*args, **kwargs)
-        return render_template("manage.html")
+        return redirect(url_for("D.manage"))
     return wrap
 
 # ── 角色控制：管理員才能進（後台管理...）──────────────────────────────────
@@ -36,10 +36,19 @@ def adminRequired(fun):
     @wraps(fun)
     def wrap(*args, **kwargs):
         if SESSION_AUTHO not in session:
-            return render_template("login.html")
+            return redirect(url_for("A.login"))
         if session.get(SESSION_AUTHO) == "admin":
             return fun(*args, **kwargs)
-        return render_template("index.html")
+        return redirect(url_for("B.index"))
+    return wrap
+
+# ── 擋掉 admin，其他人都能進 ──────────────────────────
+def blockAdmin(fun):
+    @wraps(fun)
+    def wrap(*args, **kwargs):
+        if session.get(SESSION_AUTHO) == "admin":
+            return redirect(url_for("D.manage"))  # admin導去管理頁
+        return fun(*args, **kwargs)  # 未登入或一般使用者都放行
     return wrap
 
 # ── Token 驗證：特殊功能驗證（重設密碼...）────────────────────────────────
@@ -50,7 +59,7 @@ def tokenRequired(refresh=False):
             token = kwargs.get("token")
             ori_token = getUser({"token": token}, "token")
             if ori_token is None:
-                return render_template("index.html")
+                return redirect(url_for("B.index"))
             if refresh is True:
                 new_token = getVerifyToken(32)
                 updateUser({"token": new_token}, {"token": ori_token})
