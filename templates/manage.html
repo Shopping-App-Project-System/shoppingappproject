@@ -193,6 +193,31 @@
             flex-wrap: wrap
         }
 
+        /* ───────── 新增：flash 訊息樣式（與 member.html 一致） ───────── */
+        .flash-wrapper {
+            margin-bottom: 20px
+        }
+
+        .flash-message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 14px
+        }
+
+        .flash-message.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0
+        }
+
+        .flash-message.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca
+        }
+
         /* ───────────── 新增：編輯彈出視窗（Modal）樣式 ───────────── */
         .modal-overlay {
             display: none;
@@ -262,6 +287,17 @@
                 <span style="color:#9ca3af">|</span>
                 <a href="/manage/log" style="font-weight:700;color:#4b5563;text-decoration:none;font-size:16px">操作紀錄</a>
             </div>
+
+            {# ───────── 新增：flash 訊息顯示區塊 ───────── #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-wrapper">
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
 
             <div class="card">
                 <div class="card-title">新增商品</div>

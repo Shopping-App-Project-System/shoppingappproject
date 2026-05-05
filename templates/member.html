@@ -311,6 +311,66 @@
             border: 1px solid #fecaca
         }
 
+        /* ───────── 新增：「我的付款方式」摘要區塊樣式 ───────── */
+        .payment-summary {
+            margin-top: 16px;
+            padding: 14px;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            border-radius: 14px;
+            color: #fff
+        }
+
+        .payment-summary-label {
+            font-size: 12px;
+            color: #bfdbfe;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 1px
+        }
+
+        .payment-summary-number {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            font-family: "Courier New", monospace
+        }
+
+        .payment-summary-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #dbeafe
+        }
+
+        .payment-empty {
+            margin-top: 16px;
+            padding: 14px;
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 14px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px
+        }
+
+        .btn-cards {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            color: #1d4ed8;
+            border: 1px solid #1d4ed8;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center
+        }
+
+        .btn-cards:hover {
+            background: #eff6ff
+        }
+
         @media(max-width:900px) {
             .layout {
                 grid-template-columns: 1fr
@@ -388,6 +448,31 @@
                     </div>
 
                     <a href="/member/edit" class="btn-edit">編輯資料</a>
+
+                    {# ───────── 新增：我的付款方式摘要區塊 ───────── #}
+                    {% if default_card %}
+                    <div class="payment-summary">
+                        <div class="payment-summary-label">預設付款方式</div>
+                        <div class="payment-summary-number">
+                            •••• •••• •••• {{ default_card.card_number[-4:] }}
+                        </div>
+                        <div class="payment-summary-meta">
+                            <span>{{ default_card.holder_name }}</span>
+                            <span>{{ default_card.expiry }}</span>
+                        </div>
+                    </div>
+                    {% if card_count and card_count > 1 %}
+                    <div style="text-align:center;font-size:12px;color:#6b7280;margin-top:8px">
+                        共 {{ card_count }} 張信用卡
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="payment-empty">
+                        尚未綁定信用卡
+                    </div>
+                    {% endif %}
+
+                    <a href="/member/cards" class="btn-cards">管理信用卡</a>
                 </div>
 
                 <!-- 右側訂單 -->
@@ -407,7 +492,7 @@
                         <tbody>
                             {% for o in orders %}
                             <tr>
-                                <td>#{{ o.id }}</td>
+                                <td>#{{ loop.index }}</td>
                                 <td>NT$ {{ o.total | int }}</td>
                                 <td>
                                     {% if o.status == '已完成' %}

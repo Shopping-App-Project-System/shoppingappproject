@@ -3,7 +3,13 @@ from flask import Blueprint
 
 # _______________________________________自定義模組_______________________________________
 from AuthDecorator import adminRequired,userRequired
-from .Management_services import manage_add_service,manage_clear_service,manage_service,manage_remove_service,manage_restock_service,member_edit_service,member_service,manage_logout_service,manage_log_service,manage_edit_service
+from .Management_services import (
+    manage_add_service,manage_clear_service,manage_service,
+    manage_remove_service,manage_restock_service,
+    member_edit_service,member_service,
+    manage_logout_service,manage_log_service,manage_edit_service,
+    member_cards_service,add_card_service,delete_card_service,set_default_card_service,
+)
 
 # _______________________________________初始化___________________________________________
 bp = Blueprint("D",__name__)
@@ -29,7 +35,6 @@ def manage_remove():return manage_remove_service()
 @adminRequired
 def manage_restock():return manage_restock_service()
 
-# 新增：商品修改路由（修改商品名稱、原價、特價、圖片）
 @bp.route("/manage/edit", methods=["POST"])
 @adminRequired
 def manage_edit():return manage_edit_service()
@@ -50,3 +55,20 @@ def manage_logout():return manage_logout_service()
 @bp.route("/manage/log")
 @adminRequired
 def manage_log():return manage_log_service()
+
+# ── 信用卡管理 ──────────────────────────────────────────────────────────
+@bp.route("/member/cards", methods=["GET"])
+@userRequired
+def member_cards():return member_cards_service()
+
+@bp.route("/member/cards/add", methods=["POST"])
+@userRequired
+def add_card():return add_card_service()
+
+@bp.route("/member/cards/delete", methods=["POST"])
+@userRequired
+def delete_card():return delete_card_service()
+
+@bp.route("/member/cards/set_default", methods=["POST"])
+@userRequired
+def set_default_card_route():return set_default_card_service()

@@ -2,7 +2,13 @@
 from flask import request,redirect,render_template,session,url_for,flash
 
 # _______________________________________自定義模組_______________________________________
-from models import getUser,updateUser,add_product,add_log,get_product_by_id,soft_delete_product,get_all_products,set_product_active,search_orders,get_orders,update_product
+from models import (
+    getUser,updateUser,
+    add_product,add_log,get_product_by_id,soft_delete_product,
+    get_all_products,set_product_active,
+    search_orders,get_orders,update_product,
+    get_member_cards,add_member_card,delete_member_card,set_default_card,
+)
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae
 # _______________________________________初始化___________________________________________
@@ -11,7 +17,7 @@ from utils import get_auth,validateMobile,save_image,del_imgae
 def manage_add_service():
     name           = request.form.get("name")
     original_price = request.form.get("original_price")
-    sale_price     = request.form.get("sale_price") or None  # 空字串轉 None，沒填特價就存 NULL
+    sale_price     = request.form.get("sale_price") or None
     description    = request.form.get("description")
     file           = request.files.get("image")
     img_filename   = save_image(file, UPLOAD_FOLDER)
@@ -48,33 +54,29 @@ def manage_restock_service():
     flash("商品已重新上架", "success")
     return redirect(url_for("D.manage"))
 
-# 新增：商品修改服務（修改商品名稱、原價、特價、圖片）
 def manage_edit_service():
     product_id     = request.form.get("product_id")
     name           = request.form.get("name")
     original_price = request.form.get("original_price")
-    sale_price     = request.form.get("sale_price") or None  # 空字串轉 None，沒填特價就存 NULL
+    sale_price     = request.form.get("sale_price") or None
     file           = request.files.get("image")
 
-    # 先確認商品存在，順便拿舊資料（特別是舊圖路徑，等下要刪）
     product = get_product_by_id(product_id)
     if not product:
         flash("找不到該商品", "error")
         return redirect(url_for("D.manage"))
 
-    # 組要更新的資料
     update_data = {
         "name": name,
         "original_price": original_price,
         "sale_price": sale_price,
     }
 
-    # 有上傳新圖才更新圖片欄位，沒上傳就保留原圖
     if file and file.filename != "":
         old_pic_path = product.get("product_pic")
         new_pic_path = save_image(file, UPLOAD_FOLDER)
         update_data["product_pic"] = new_pic_path
-        del_imgae(old_pic_path)  # 刪掉舊圖避免堆積
+        del_imgae(old_pic_path)
 
     update_product(update_data, product_id)
     add_log(session.get(SESSION_AUTHO), "修改", product_id, name)
@@ -104,14 +106,13 @@ def member_edit_service():
         return redirect(url_for("D.member_edit"))
 
     update_data = {"user_name": name, "user_mobile": mobile}
-   
-    
+
     if file and file.filename != "":
         old_pic_path = getUser({"user_account":user_account}, "pic_path")
         new_pic_path = save_image(file, PROFILE_PIC_FOLDER, filename=user_account)
         update_data["pic_path"] = new_pic_path
         del_imgae(old_pic_path)
-    
+
     updateUser(update_data, {"user_account": user_account})
     flash("資料更新成功", "success")
     return redirect(url_for("D.member"))
@@ -119,7 +120,7 @@ def member_edit_service():
 def member_service():
     user_account = session[SESSION_AUTHO]
     keyword = request.args.get("keyword", "").strip()
-    
+
     if keyword:
         orders = search_orders(user_account, keyword)
     else:
@@ -130,10 +131,17 @@ def member_service():
         "user_name", "user_account", "user_email", "user_mobile"
     )
     user.update({"level": "一般會員"})
+
+    # 同時把預設卡資訊塞到 user 物件裡，給 member.html 顯示「我的付款方式」摘要
+    cards = get_member_cards(user_account)
+    default_card = next((c for c in cards if c.get("is_default")), None)
+
     return render_template("member.html",
         orders=orders,
         user=user,
-        auth=get_auth(user_account)
+        auth=get_auth(user_account),
+        default_card=default_card,
+        card_count=len(cards)
     )
 
 def manage_logout_service():
@@ -143,3 +151,60 @@ def manage_logout_service():
 
 def manage_log_service():
     return render_template("manage_log.html")
+
+
+# ── 信用卡管理 services ────────────────────────────────────────────────────
+# ⚠️ 注意：本功能直接儲存完整卡號，僅適用於學校作業/示意用途。
+
+def member_cards_service():
+    """信用卡管理頁：列出該會員所有信用卡。"""
+    user_account = session[SESSION_AUTHO]
+    cards = get_member_cards(user_account)
+    return render_template("member_cards.html",
+        cards=cards,
+        auth=get_auth(user_account)
+    )
+
+def add_card_service():
+    """新增一張信用卡。"""
+    user_account = session[SESSION_AUTHO]
+    card_number  = request.form.get("card_number", "").strip()
+    expiry       = request.form.get("expiry", "").strip()
+    holder_name  = request.form.get("holder_name", "").strip()
+    is_default   = 1 if request.form.get("is_default") else 0
+
+    # 簡易驗證（學校作業夠用）
+    if not card_number or not expiry or not holder_name:
+        flash("請完整填寫卡片資訊", "error")
+        return redirect(url_for("D.member_cards"))
+
+    # 卡號可能含空白或減號，去除後檢查長度
+    cleaned_number = card_number.replace(" ", "").replace("-", "")
+    if not cleaned_number.isdigit() or not (13 <= len(cleaned_number) <= 19):
+        flash("卡號格式錯誤", "error")
+        return redirect(url_for("D.member_cards"))
+
+    # 如果這是該會員的第一張卡，自動設為預設
+    existing_cards = get_member_cards(user_account)
+    if not existing_cards:
+        is_default = 1
+
+    add_member_card(user_account, cleaned_number, expiry, holder_name, is_default)
+    flash("信用卡已新增", "success")
+    return redirect(url_for("D.member_cards"))
+
+def delete_card_service():
+    """刪除一張信用卡。"""
+    user_account = session[SESSION_AUTHO]
+    card_id = request.form.get("card_id")
+    delete_member_card(user_account, card_id)
+    flash("信用卡已刪除", "success")
+    return redirect(url_for("D.member_cards"))
+
+def set_default_card_service():
+    """把指定卡設為預設。"""
+    user_account = session[SESSION_AUTHO]
+    card_id = request.form.get("card_id")
+    set_default_card(user_account, card_id)
+    flash("已設定為預設卡", "success")
+    return redirect(url_for("D.member_cards"))
