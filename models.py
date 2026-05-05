@@ -273,13 +273,26 @@ def insert_order_item(cursor, order_id, product_id, quantity, price):
 # ___________________________________________________________________________________________________________________________________
 
 @db_transaction
+def get_all_orders(cursor, user_account):
+    cursor.execute(
+        f'''SELECT id, total, payment_method, delivery_method,
+                   address, note, status, created_at
+            FROM `{BRANCH_C_ORDER_TABLE}`
+            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            ORDER BY created_at ASC''',
+        (user_account,)
+    )
+    return cursor.fetchall()
+
+@db_transaction
 def get_orders(cursor, user_account):
     cursor.execute(
         f'''SELECT id, total, payment_method, delivery_method,
                    address, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            ORDER BY created_at DESC''',
+            AND status != '已取消'
+            ORDER BY created_at ASC''',
         (user_account,)
     )
     return cursor.fetchall()
@@ -292,6 +305,7 @@ def search_orders(cursor, user_account, keyword):
                    address, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            AND status != '已取消'
             AND (address LIKE ? OR status LIKE ?)
             ORDER BY created_at DESC''',
         (user_account, like_keyword, like_keyword)

@@ -2,7 +2,7 @@
 from flask import request,redirect,render_template,session,url_for,flash
 
 # _______________________________________自定義模組_______________________________________
-from models import getUser,get_product,upsert_cart,get_cart_items,remove_cart_item,insert_order,insert_order_item,clear_cart,get_order,cancel_order
+from models import getUser,get_product,upsert_cart,get_cart_items,remove_cart_item,insert_order,insert_order_item,clear_cart,get_order,cancel_order,get_all_orders
 from settings import SESSION_AUTHO
 from utils import get_auth,validateMobile,validateCreditCard
 
@@ -145,12 +145,23 @@ def order_cancel_service(order_id):
     if request.method == "GET":
         return redirect(url_for("B.index"))
     user_account = session[SESSION_AUTHO]
-    
+
     order = get_order(order_id, user_account)
     if not order:
         flash("訂單不存在")
         return redirect(url_for("D.member"))
-    
+
     cancel_order(order_id)
     flash("訂單已取消", "success")
-    return redirect(url_for("D.member"))
+
+    orders = get_all_orders(user_account)
+    user = getUser(
+        {"user_account": user_account},
+        "user_name", "user_account", "user_email", "user_mobile"
+    )
+    user.update({"level": "一般會員"})
+    return render_template("member.html",
+        orders=orders,
+        user=user,
+        auth=get_auth(user_account)
+    )

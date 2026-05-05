@@ -407,7 +407,7 @@
                         <tbody>
                             {% for o in orders %}
                             <tr>
-                                <td>#{{ o.id }}</td>
+                                <td>#{{ loop.index }}</td>
                                 <td>NT$ {{ o.total | int }}</td>
                                 <td>
                                     {% if o.status == '已完成' %}
