@@ -154,9 +154,21 @@
                     </div>
 
                     <div class="form-group full" id="card-input-group" style="display:none">
+                        {% if saved_cards %}
+                        <select name="card_id" id="card-select" onchange="toggleManualCard()">
+                            {% for c in saved_cards %}
+                            <option value="{{ c.id }}" {% if c.is_default %}selected{% endif %}>
+                                •••• {{ c.card_number[-4:] }}　{{ c.holder_name }}
+                                {% if c.is_default %}（預設）{% endif %}
+                            </option>
+                            {% endfor %}
+                            <option value="">輸入新卡號</option>
+                        </select>
+                        {% endif %}
                         <input type="text" name="card_number" id="card-number"
                                placeholder="信用卡卡號（16位數字）" maxlength="19"
-                               value="{{ form.card_number if form else '' }}">
+                               value="{{ form.card_number if form else '' }}"
+                               style="{{ 'display:none' if saved_cards else '' }}">
                     </div>
 
                     <div class="form-group full">
@@ -215,7 +227,18 @@ function toggleCardInput() {
     }
 }
 
-// 自動插入空格（每 4 碼加一空格）
+function toggleManualCard() {
+    const cardSelect = document.getElementById('card-select');
+    const input      = document.getElementById('card-number');
+    if (!cardSelect) return;
+    if (cardSelect.value === '') {
+        input.style.display = 'block';
+    } else {
+        input.style.display = 'none';
+        input.value = '';
+    }
+}
+
 document.getElementById('card-number').addEventListener('input', function () {
     let val = this.value.replace(/\D/g, '').substring(0, 16);
     this.value = val.replace(/(.{4})/g, '$1 ').trim();

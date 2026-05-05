@@ -188,12 +188,12 @@ def clear_cart(cursor, user_account):
 # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
 @db_transaction
-def insert_order(cursor, user_account, total, payment_method, delivery_method, address, note):
+def insert_order(cursor, user_account, total, payment_method, delivery_method, address, note, credit_card_number=None):
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
-            (user_id, total, payment_method, delivery_method, address, note, status)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,?,?,'處理中')''',
-        (user_account, total, payment_method, delivery_method, address, note)
+            (user_id, total, payment_method, delivery_method, address, note, status, credit_card_number)
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,?,?,'處理中',?)''',
+        (user_account, total, payment_method, delivery_method, address, note, credit_card_number)
     )
     return cursor.lastrowid
 
