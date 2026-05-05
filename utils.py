@@ -19,20 +19,22 @@ from settings import ALLOWED_EXTENSIONS,SESSION_AUTHO
 # ___________________________________service routine_____________________________________
 def requestParsor(fun):
     @wraps(fun)              # 保留被裝飾函式的原始資訊
-    def wrap(*args):         # *args 接收 Flask 傳入的位置參數（如路徑參數）
+    def wrap(*args, **kwargs):         # *args 接收 Flask 傳入的位置參數（如路徑參數）
         result = {}                          # 建立空字典收集所有請求參數
+        result.update(request.view_args or {})
         result.update(request.form)          # 塞入 POST 表單參數
         result.update(request.args)          # 塞入 GET query string 參數
         result.update(request.files)         # 塞入上傳的檔案參數
-        
+        for key in kwargs:
+            result.pop(key, None) 
         sig = inspect.signature(fun)         # 讀取被裝飾函式的參數簽名
         for name, param in sig.parameters.items():  # 逐一遍歷函式需要的參數
-            if name not in result:           # 如果這個參數在 request 裡沒有對應的值
+            if name not in result and name not in kwargs:     # 如果這個參數在 request 裡沒有對應的值
                 if param.default is inspect.Parameter.empty:  # 判斷這個參數有沒有預設值
                     result[name] = None      # 沒有預設值 → 補 None 避免報錯
                 else:
                     result[name] = param.default  # 有預設值 → 用函式定義的預設值
-        return fun(*args, **result)  # *args 保留位置參數，**result 展開所有收集到的參數
+        return fun(*args, **kwargs, **result)  # *args 保留位置參數，**result 展開所有收集到的參數
     return wrap               # 回傳包裝後的函式
 
 
