@@ -2,19 +2,20 @@
 from flask import request,redirect,render_template,session,url_for,flash
 
 # _______________________________________自定義模組_______________________________________
-from models import getUser,updateUser,add_product,add_log,get_product_by_id,soft_delete_product,get_all_products,set_product_active,search_orders,get_orders
+from models import getUser,updateUser,add_product,add_log,get_product_by_id,soft_delete_product,get_all_products,set_product_active,search_orders,get_orders,update_product
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae
 # _______________________________________初始化___________________________________________
 
 # _______________________________________services___________________________________________
 def manage_add_service():
-    name         = request.form.get("name")
-    price        = request.form.get("original_price")
-    description  = request.form.get("description")
-    file         = request.files.get("image")
-    img_filename = save_image(file, UPLOAD_FOLDER)
-    add_product(name, price, description, img_filename)
+    name           = request.form.get("name")
+    original_price = request.form.get("original_price")
+    sale_price     = request.form.get("sale_price") or None  # 空字串轉 None，沒填特價就存 NULL
+    description    = request.form.get("description")
+    file           = request.files.get("image")
+    img_filename   = save_image(file, UPLOAD_FOLDER)
+    add_product(name, original_price, sale_price, description, img_filename)
     add_log(session.get(SESSION_AUTHO), "上架", None, name)
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
@@ -45,6 +46,39 @@ def manage_restock_service():
     set_product_active(product_id, 1)
     add_log(session.get(SESSION_AUTHO), "重新上架", product_id, product["name"])
     flash("商品已重新上架", "success")
+    return redirect(url_for("D.manage"))
+
+# 新增：商品修改服務（修改商品名稱、原價、特價、圖片）
+def manage_edit_service():
+    product_id     = request.form.get("product_id")
+    name           = request.form.get("name")
+    original_price = request.form.get("original_price")
+    sale_price     = request.form.get("sale_price") or None  # 空字串轉 None，沒填特價就存 NULL
+    file           = request.files.get("image")
+
+    # 先確認商品存在，順便拿舊資料（特別是舊圖路徑，等下要刪）
+    product = get_product_by_id(product_id)
+    if not product:
+        flash("找不到該商品", "error")
+        return redirect(url_for("D.manage"))
+
+    # 組要更新的資料
+    update_data = {
+        "name": name,
+        "original_price": original_price,
+        "sale_price": sale_price,
+    }
+
+    # 有上傳新圖才更新圖片欄位，沒上傳就保留原圖
+    if file and file.filename != "":
+        old_pic_path = product.get("product_pic")
+        new_pic_path = save_image(file, UPLOAD_FOLDER)
+        update_data["product_pic"] = new_pic_path
+        del_imgae(old_pic_path)  # 刪掉舊圖避免堆積
+
+    update_product(update_data, product_id)
+    add_log(session.get(SESSION_AUTHO), "修改", product_id, name)
+    flash("商品資料已更新", "success")
     return redirect(url_for("D.manage"))
 
 def member_edit_service():

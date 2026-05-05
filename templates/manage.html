@@ -140,6 +140,26 @@
             background: #059669
         }
 
+        /* 新增：修改按鈕（橘黃色，跟下架/上架做區別） */
+        .btn-edit {
+            background: #f59e0b;
+            color: #fff
+        }
+
+        .btn-edit:hover {
+            background: #d97706
+        }
+
+        /* 新增：取消按鈕（灰色） */
+        .btn-cancel {
+            background: #9ca3af;
+            color: #fff
+        }
+
+        .btn-cancel:hover {
+            background: #6b7280
+        }
+
         .table-responsive {
             overflow-x: auto
         }
@@ -169,7 +189,55 @@
 
         .action-btns {
             display: flex;
-            gap: 8px
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        /* ───────────── 新增：編輯彈出視窗（Modal）樣式 ───────────── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px
+        }
+
+        .modal-overlay.active {
+            display: flex
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            width: min(560px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25)
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: #111827
+        }
+
+        .modal-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px
+        }
+
+        .current-img {
+            max-width: 120px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #e5e7eb
         }
     </style>
 </head>
@@ -179,7 +247,7 @@
     <header class="topbar">
         <div class="container topbar-inner">
             <div class="logo">{{ store_name or 'My Store' }}</div>
-            
+
             <form method="GET" action="/manage/logout" style="display: inline;">
                 <button type="submit" class="logout-btn">登出</button>
             </form>
@@ -238,7 +306,7 @@
                                 <th>原價</th>
                                 <th>特價</th>
                                 <th>狀態</th>
-                                <th style="width:220px">操作</th>
+                                <th style="width:260px">操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -263,6 +331,16 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
+                                        {# 修改按鈕：點擊後開啟對應的編輯視窗 #}
+                                        <button type="button" class="btn btn-edit"
+                                            onclick="openEditModal(
+                                                '{{ p.id }}',
+                                                {{ p.name | tojson }},
+                                                '{{ p.original_price }}',
+                                                '{{ p.sale_price if p.sale_price else '' }}',
+                                                '{{ p.product_pic if p.product_pic else '' }}'
+                                            )">修改</button>
+
                                         {% if p.is_active %}
                                         <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')">
                                             <input type="hidden" name="product_id" value="{{ p.id }}">
@@ -290,7 +368,53 @@
         </div>
     </main>
 
+    {# ───────────── 新增：編輯商品的彈出視窗（共用一個，由 JS 動態填入資料）───────────── #}
+    <div id="editModal" class="modal-overlay" onclick="closeEditModalIfBackdrop(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-title">修改商品</div>
+
+            <form id="editForm" method="POST" action="/manage/edit" enctype="multipart/form-data">
+                {# 隱藏欄位：要修改的商品 ID #}
+                <input type="hidden" id="edit_product_id" name="product_id">
+
+                <div class="form-group">
+                    <label for="edit_name">商品名稱</label>
+                    <input type="text" id="edit_name" name="name" class="form-control" required>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+                    <div class="form-group">
+                        <label for="edit_original_price">原價</label>
+                        <input type="number" id="edit_original_price" name="original_price" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_sale_price">特價 (選填)</label>
+                        <input type="number" id="edit_sale_price" name="sale_price" class="form-control" placeholder="若無特價請留空">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>目前圖片</label>
+                    <img id="edit_current_pic" src="" alt="目前圖片" class="current-img" style="display:none">
+                    <span id="edit_no_pic" style="color:#9ca3af;font-size:13px;display:none">（無圖片）</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_image">更換圖片 (選填，不選擇則保留原圖)</label>
+                    <input type="file" id="edit_image" name="image" class="form-control" accept="image/*">
+                    <img id="edit_preview" src="" alt="新圖片預覽" style="max-width:120px;border-radius:8px;margin-top:10px;display:none">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存變更</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // ───── 新增商品的圖片預覽（原有邏輯） ─────
         const input = document.getElementById("imageInput");
         const preview = document.getElementById("preview");
         input.addEventListener("change", function () {
@@ -300,6 +424,62 @@
             reader.onload = e => {
                 preview.src = e.target.result;
                 preview.style.display = "block";
+            }
+            reader.readAsDataURL(file);
+        });
+
+        // ───── 新增：編輯視窗的開關與資料填入 ─────
+        const editModal = document.getElementById("editModal");
+
+        function openEditModal(id, name, originalPrice, salePrice, productPic) {
+            document.getElementById("edit_product_id").value = id;
+            document.getElementById("edit_name").value = name;
+            document.getElementById("edit_original_price").value = originalPrice;
+            document.getElementById("edit_sale_price").value = salePrice || "";
+
+            const curImg = document.getElementById("edit_current_pic");
+            const noPic = document.getElementById("edit_no_pic");
+            if (productPic) {
+                curImg.src = productPic;
+                curImg.style.display = "block";
+                noPic.style.display = "none";
+            } else {
+                curImg.style.display = "none";
+                noPic.style.display = "inline";
+            }
+
+            // 清空舊的「新圖片預覽」
+            document.getElementById("edit_image").value = "";
+            document.getElementById("edit_preview").style.display = "none";
+            document.getElementById("edit_preview").src = "";
+
+            editModal.classList.add("active");
+        }
+
+        function closeEditModal() {
+            editModal.classList.remove("active");
+        }
+
+        // 點擊背景關閉
+        function closeEditModalIfBackdrop(e) {
+            if (e.target === editModal) closeEditModal();
+        }
+
+        // 按 Esc 關閉
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape" && editModal.classList.contains("active")) closeEditModal();
+        });
+
+        // 編輯視窗的圖片預覽
+        const editImageInput = document.getElementById("edit_image");
+        const editPreview = document.getElementById("edit_preview");
+        editImageInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (!file) { editPreview.style.display = "none"; return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                editPreview.src = e.target.result;
+                editPreview.style.display = "block";
             }
             reader.readAsDataURL(file);
         });

@@ -3,7 +3,7 @@ from flask import Blueprint
 
 # _______________________________________自定義模組_______________________________________
 from AuthDecorator import adminRequired,userRequired
-from .Management_services import manage_add_service,manage_clear_service,manage_service,manage_remove_service,manage_restock_service,member_edit_service,member_service,manage_logout_service,manage_log_service
+from .Management_services import manage_add_service,manage_clear_service,manage_service,manage_remove_service,manage_restock_service,member_edit_service,member_service,manage_logout_service,manage_log_service,manage_edit_service
 
 # _______________________________________初始化___________________________________________
 bp = Blueprint("D",__name__)
@@ -28,6 +28,11 @@ def manage_remove():return manage_remove_service()
 @bp.route("/manage/restock", methods=["POST"])
 @adminRequired
 def manage_restock():return manage_restock_service()
+
+# 新增：商品修改路由（修改商品名稱、原價、特價、圖片）
+@bp.route("/manage/edit", methods=["POST"])
+@adminRequired
+def manage_edit():return manage_edit_service()
 
 @bp.route("/member/edit", methods=["GET", "POST"])
 @userRequired

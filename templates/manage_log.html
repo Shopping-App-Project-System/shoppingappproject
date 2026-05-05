@@ -130,6 +130,17 @@
             font-weight: 700
         }
 
+        /* 新增：修改動作的標籤樣式（橘黃色，跟 manage.html 的「修改」按鈕顏色呼應） */
+        .action-edit {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #fcd34d
+        }
+
         .empty {
             text-align: center;
             padding: 30px;
@@ -181,6 +192,12 @@
                                 <span class="action-restore">恢復</span>
                                 {% elif log.action == '重新上架' %}
                                 <span class="action-restock">重新上架</span>
+                                {# 新增：修改動作的顯示 #}
+                                {% elif log.action == '修改' %}
+                                <span class="action-edit">修改</span>
+                                {% else %}
+                                {# 保險用：未來若新增其他動作類型，至少能顯示文字而不會空白 #}
+                                <span>{{ log.action }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ log.product_id or '-' }}</td>

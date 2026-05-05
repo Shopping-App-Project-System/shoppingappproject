@@ -338,13 +338,14 @@ def cancel_order(cursor, order_id):
 
 
 # _______________________________________________________________
+# 修正：新增商品時改成可同時寫入 sale_price（前端表單已有此欄位）
 @db_transaction
-def add_product(cursor, name, price, description, img_filename):
+def add_product(cursor, name, original_price, sale_price, description, img_filename):
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_TABLE}`
-        (`name`, `original_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?, ?, ?, ?, 1)
-    """, (name, price, description, img_filename))
+        (`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
+        VALUES (?, ?, ?, ?, ?, 1)
+    """, (name, original_price, sale_price, description, img_filename))
     
 @db_transaction
 def set_product_active(cursor, product_id, is_active):
@@ -353,7 +354,27 @@ def set_product_active(cursor, product_id, is_active):
         SET `is_active` = ?
         WHERE `id` = ?
     """, (is_active, product_id))
-    
+
+# 新增：依照 dict 動態更新商品欄位（仿 updateUser 的寫法）
+@db_transaction
+def update_product(cursor, set_: dict, product_id):
+    """
+    更新商品資料。
+    set_       : 要更新的欄位 dict，例如 {"name": "新名稱", "original_price": 100, ...}
+    product_id : 要更新的商品 ID
+    """
+    if not set_:
+        return  # 沒東西要更新就不打資料庫
+
+    set_key, set_value = tuple(set_.keys()), tuple(set_.values())
+    set_sql = ", ".join(f"`{key}` = ?" for key in set_key)
+
+    cursor.execute(f"""
+        UPDATE `{BRANCH_B_TABLE}`
+        SET {set_sql}
+        WHERE `id` = ?
+    """, set_value + (product_id,))
+
 # 查所有商品（含下架，排除已刪除）
 @db_transaction
 def get_all_products(cursor):
