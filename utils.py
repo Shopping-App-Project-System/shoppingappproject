@@ -13,82 +13,33 @@ from datetime import datetime
 # _______________________________________自定義模組_______________________________________
 from models import getUser
 from settings import ALLOWED_EXTENSIONS,SESSION_AUTHO
-
+import warnings
 # _______________________________________初始化___________________________________________
 
 # ___________________________________service routine_____________________________________
 def requestParsor(fun):
-    @wraps(fun)              # 保留被裝飾函式的原始資訊
-    def wrap(*args, **kwargs):         # *args 接收 Flask 傳入的位置參數（如路徑參數）
-        result = {}                          # 建立空字典收集所有請求參數
+    sig = inspect.signature(fun)
+    @wraps(fun)
+    def wrap(*args, **kwargs):
+        result = {}
         result.update(request.view_args or {})
-        result.update(request.form)          # 塞入 POST 表單參數
-        result.update(request.args)          # 塞入 GET query string 參數
-        result.update(request.files)         # 塞入上傳的檔案參數
+        result.update(request.form)
+        result.update(request.args)
+        result.update(request.files)
         for key in kwargs:
-            result.pop(key, None) 
-        sig = inspect.signature(fun)         # 讀取被裝飾函式的參數簽名
-        for name, param in sig.parameters.items():  # 逐一遍歷函式需要的參數
-            if name not in result and name not in kwargs:     # 如果這個參數在 request 裡沒有對應的值
-                if param.default is inspect.Parameter.empty:  # 判斷這個參數有沒有預設值
-                    result[name] = None      # 沒有預設值 → 補 None 避免報錯
+            result.pop(key, None)
+        for name, param in sig.parameters.items():
+            if name not in result and name not in kwargs:
+                if param.default is inspect.Parameter.empty:
+                    result[name] = None
                 else:
-                    result[name] = param.default  # 有預設值 → 用函式定義的預設值
-        return fun(*args, **kwargs, **result)  # *args 保留位置參數，**result 展開所有收集到的參數
-    return wrap               # 回傳包裝後的函式
-
-
-"""
-========================================
-Parse 裝飾器使用說明
-========================================
-
-功能：
-    自動從 request 中取出參數（GET / POST / FILES）
-    並依照被裝飾函式的參數簽名，自動補齊缺少的參數。
-    同時保留 Flask 原本的位置參數傳遞方式（*args）。
-
-使用方式：
-    @app.route('/example', methods=['GET', 'POST'])
-    @Parse
-    def example(keyword, cat_id, image=None):
-        ...
-
-參數處理規則：
-    1. request 有傳對應名稱的值    → 直接使用該值
-    2. request 沒傳，但函式有預設值 → 使用函式定義的預設值
-    3. request 沒傳，函式也沒預設值 → 自動補 None
-
-注意事項：
-    - 前後端的參數名稱必須一致，名稱對不上會拿到 None
-    - GET 和 POST 不要使用相同的參數名稱，避免互相覆蓋
-    - 檔案上傳參數（request.files）也會自動處理
-    - *args 會保留 Flask 傳入的位置參數，確保 Flask 原本的行為不受影響
-
-範例：
-    # 前端 GET 請求：/search?keyword=apple&cat_id=1
-    @app.route('/search')
-    @Parse
-    def search(keyword, cat_id):
-        print(keyword)  # 'apple'
-        print(cat_id)   # '1'
-
-    # 前端 POST 請求：product_id=123, name=手機
-    @app.route('/add', methods=['POST'])
-    @Parse
-    def add(product_id, name, description=None):
-        print(product_id)   # '123'
-        print(name)         # '手機'
-        print(description)  # None（沒傳但有預設值）
-
-    # 選填參數沒傳也沒預設值
-    @app.route('/test')
-    @Parse
-    def test(keyword, optional):
-        print(keyword)   # request 有傳 → 正常取值
-        print(optional)  # request 沒傳 → None
-========================================
-"""
+                    result[name] = param.default
+        extra_keys = [k for k in result if k not in sig.parameters.keys()]
+        if extra_keys:
+            warnings.warn(f"[requestParsor] {fun.__name__}() 收到未定義的參數，已忽略：{extra_keys}")
+        result = {k: v for k, v in result.items() if k in sig.parameters.keys()}
+        return fun(*args, **kwargs, **result)
+    return wrap
 # _______________________________________全局例外處理______________________________________
 # def exceptionCatcher(msg):
 #     def decorator(fun):

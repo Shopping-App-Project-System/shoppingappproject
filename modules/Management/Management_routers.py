@@ -39,14 +39,15 @@ def manage_restock():return manage_restock_service()
 @adminRequired
 def manage_edit():return manage_edit_service()
 
-@bp.route("/member/edit", methods=["GET", "POST"])
-@userRequired
-def member_edit():return member_edit_service()
 
-# 會員中心
+# ── 信用卡管理 ──────────────────────────────────────────────────────────
 @bp.route("/member")
 @userRequired
 def member():return member_service()
+
+@bp.route("/member/edit", methods=["GET", "POST"])
+@userRequired
+def member_edit():return member_edit_service()
 
 @bp.route("/manage/logout")
 @adminRequired

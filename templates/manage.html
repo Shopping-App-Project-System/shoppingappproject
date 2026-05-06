@@ -13,6 +13,67 @@
             font-family: "Microsoft JhengHei", Arial
         }
 
+        .img-preview-box {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 2px dashed #d1d5db;
+            background: #f9fafb;
+            overflow: hidden;
+            display: none;
+        }
+
+        .img-preview-box.visible {
+            display: block;
+        }
+
+        .img-preview-box img {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        .img-preview-box-sm {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .img-preview-box-sm.solid {
+            border: 1px solid #e5e7eb;
+        }
+
+        .img-preview-box-sm.dashed {
+            border: 2px dashed #d1d5db;
+            background: #f9fafb;
+        }
+
+        .img-preview-box-sm.visible {
+            display: block;
+        }
+
+        .img-preview-box-sm img {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            max-width: none !important;
+            max-height: none !important;
+        }
+
         body {
             background: linear-gradient(180deg, #f7f9ff, #eef3fb)
         }
@@ -259,8 +320,10 @@
         }
 
         .current-img {
-            max-width: 120px;
-            border-radius: 8px;
+            width: 240px;
+            height: 240px;
+            object-fit: cover;
+            border-radius: 10px;
             margin-top: 10px;
             border: 1px solid #e5e7eb
         }
@@ -302,28 +365,47 @@
             <div class="card">
                 <div class="card-title">新增商品</div>
                 <form method="POST" action="/manage/add" enctype="multipart/form-data">
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px">
-                        <div class="form-group">
-                            <label for="name">商品名稱</label>
-                            <input type="text" id="name" name="name" class="form-control" placeholder="輸入商品名稱" required>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start">
+
+                        {# ── 左欄：基本資訊 ── #}
+                        <div>
+                            <div class="form-group">
+                                <label for="name">商品名稱</label>
+                                <input type="text" id="name" name="name" class="form-control" placeholder="輸入商品名稱" required>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+                                <div class="form-group">
+                                    <label for="original_price">原價</label>
+                                    <input type="number" id="original_price" name="original_price" class="form-control" placeholder="例如：1000" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale_price">特價 (選填)</label>
+                                    <input type="number" id="sale_price" name="sale_price" class="form-control" placeholder="若無特價請留空">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top:5px">
+                                <label for="imageInput">商品圖片 (選填)</label>
+                                <input type="file" id="imageInput" name="image" class="form-control" accept="image/*">
+                                <div id="previewBox" class="img-preview-box">
+                                    <img id="preview" src="" alt="圖片預覽">
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="original_price">原價</label>
-                            <input type="number" id="original_price" name="original_price" class="form-control" placeholder="例如：1000" required>
+
+                        {# ── 右欄：商品資訊輸入 ── #}
+                        <div style="display:flex;flex-direction:column;height:100%">
+                            <div class="form-group" style="flex:1;display:flex;flex-direction:column">
+                                <label for="description">商品描述</label>
+                                <textarea id="description" name="description" class="form-control"
+                                    placeholder="輸入商品詳細說明，例如：&#10;・材質：100% 純棉&#10;・尺寸：M / L / XL&#10;・產地：台灣&#10;・注意事項：請勿漂白"
+                                    style="flex:1;min-height:180px;resize:vertical;line-height:1.7;font-family:inherit"></textarea>
+                            </div>
+
                         </div>
-                        <div class="form-group">
-                            <label for="sale_price">特價 (選填)</label>
-                            <input type="number" id="sale_price" name="sale_price" class="form-control" placeholder="若無特價請留空">
-                        </div>
+
                     </div>
 
-                    <div class="form-group" style="margin-top:15px">
-                        <label for="imageInput">商品圖片 (選填)</label>
-                        <input type="file" id="imageInput" name="image" class="form-control" accept="image/*">
-                        <img id="preview" src="" alt="圖片預覽" style="max-width:120px;border-radius:8px;margin-top:10px;display:none">
-                    </div>
-
-                    <div style="margin-top:20px;text-align:right">
+                    <div style="margin-top:24px;text-align:right;border-top:1px solid #f3f4f6;padding-top:20px">
                         <button type="submit" class="btn btn-primary">新增商品</button>
                     </div>
                 </form>
@@ -431,14 +513,18 @@
 
                 <div class="form-group">
                     <label>目前圖片</label>
-                    <img id="edit_current_pic" src="" alt="目前圖片" class="current-img" style="display:none">
+                    <div id="edit_current_pic_box" class="img-preview-box-sm solid">
+                        <img id="edit_current_pic" src="" alt="目前圖片">
+                    </div>
                     <span id="edit_no_pic" style="color:#9ca3af;font-size:13px;display:none">（無圖片）</span>
                 </div>
 
                 <div class="form-group">
                     <label for="edit_image">更換圖片 (選填，不選擇則保留原圖)</label>
                     <input type="file" id="edit_image" name="image" class="form-control" accept="image/*">
-                    <img id="edit_preview" src="" alt="新圖片預覽" style="max-width:120px;border-radius:8px;margin-top:10px;display:none">
+                    <div id="edit_preview_box" class="img-preview-box-sm dashed">
+                        <img id="edit_preview" src="" alt="新圖片預覽">
+                    </div>
                 </div>
 
                 <div class="modal-actions">
@@ -453,13 +539,14 @@
         // ───── 新增商品的圖片預覽（原有邏輯） ─────
         const input = document.getElementById("imageInput");
         const preview = document.getElementById("preview");
+        const previewBox = document.getElementById("previewBox");
         input.addEventListener("change", function () {
             const file = this.files[0];
-            if (!file) { preview.style.display = "none"; return; }
+            if (!file) { previewBox.classList.remove("visible"); return; }
             const reader = new FileReader();
             reader.onload = e => {
                 preview.src = e.target.result;
-                preview.style.display = "block";
+                previewBox.classList.add("visible");
             }
             reader.readAsDataURL(file);
         });
@@ -474,19 +561,20 @@
             document.getElementById("edit_sale_price").value = salePrice || "";
 
             const curImg = document.getElementById("edit_current_pic");
+            const curBox = document.getElementById("edit_current_pic_box");
             const noPic = document.getElementById("edit_no_pic");
             if (productPic) {
                 curImg.src = productPic;
-                curImg.style.display = "block";
+                curBox.classList.add("visible");
                 noPic.style.display = "none";
             } else {
-                curImg.style.display = "none";
+                curBox.classList.remove("visible");
                 noPic.style.display = "inline";
             }
 
             // 清空舊的「新圖片預覽」
             document.getElementById("edit_image").value = "";
-            document.getElementById("edit_preview").style.display = "none";
+            document.getElementById("edit_preview_box").classList.remove("visible");
             document.getElementById("edit_preview").src = "";
 
             editModal.classList.add("active");
@@ -509,13 +597,14 @@
         // 編輯視窗的圖片預覽
         const editImageInput = document.getElementById("edit_image");
         const editPreview = document.getElementById("edit_preview");
+        const editPreviewBox = document.getElementById("edit_preview_box");
         editImageInput.addEventListener("change", function () {
             const file = this.files[0];
-            if (!file) { editPreview.style.display = "none"; return; }
+            if (!file) { editPreviewBox.classList.remove("visible"); return; }
             const reader = new FileReader();
             reader.onload = e => {
                 editPreview.src = e.target.result;
-                editPreview.style.display = "block";
+                editPreviewBox.classList.add("visible");
             }
             reader.readAsDataURL(file);
         });
