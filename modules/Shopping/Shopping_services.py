@@ -1,8 +1,54 @@
+'''
+==========================================================
+  Branch C — 購物車 & 結帳模組（Shopping_services.py）
+==========================================================
+
+【功能清單】
+  1. 加入購物車（cart_add_service）
+     - 驗證商品是否存在、是否已下架、是否有庫存
+     - 檢查購物車現有數量 + 1 是否超過庫存上限
+     - 通過驗證後寫入購物車，數量重複加購時自動累加
+
+  2. 購物車頁面（cart_service）
+     - 列出該會員所有購物車商品
+     - 計算每項小計（單價 × 數量）、運費（有商品才收 $60）、
+       折扣、總金額
+     - 購物車為空時顯示空狀態提示
+
+  3. 移除購物車商品（cart_remove_service）
+     - 從購物車刪除指定商品（驗證商品屬於本人）
+
+  4. 結帳頁面 GET（checkout_service）
+     - 顯示結帳表單，自動帶入使用者姓名、手機、地址
+     - 列出購物車商品明細與金額摘要
+     - 顯示該會員已儲存的信用卡供快速選擇
+
+  5. 結帳送出 POST（checkout_service）
+     - 必填驗證：收件人姓名、地址、付款方式、配送方式
+     - 手機格式驗證（09 開頭 10 碼）
+     - 信用卡驗證：
+        · 已儲存的卡：驗證 card_id 確實屬於本人
+        · 手動輸入：驗證 16 碼格式，記錄後四碼
+     - 結帳前再次驗證庫存（防止購物車舊資料導致超量）
+     - 後端重新計算總金額（防止前端竄改）
+     - 建立訂單與訂單明細，扣減各商品庫存，清空購物車
+     
+  6. 取消訂單（order_cancel_service）
+     - 驗證訂單屬於本人且狀態為「處理中」
+     - 更新狀態為「已取消」
+     - 自動將該訂單所有商品的庫存補回
+
+【資料表依賴】
+ cart_items、orders、order_items、products、
+ product_stock、member_cards、users
+==========================================================
+'''
+
 # __________________________________________內部模組_____________________________________
 from flask import request,redirect,render_template,session,url_for,flash
 
 # _______________________________________自定義模組_______________________________________
-from models import getUser,get_product,get_product_by_id,get_product_stock,upsert_cart,get_cart_items,remove_cart_item,insert_order,insert_order_item,clear_cart,get_order,cancel_order,get_all_orders,get_member_cards
+from models import getUser,get_product_by_id,get_product_stock,find_cart_item,upsert_cart,get_cart_items,remove_cart_item,insert_order,insert_order_item,get_order_items,clear_cart,get_order,cancel_order,get_member_cards,deduct_product_stock,restore_product_stock
 from settings import SESSION_AUTHO
 from utils import get_auth,validateMobile,validateCreditCard,requestParsor
 
@@ -12,12 +58,9 @@ from utils import get_auth,validateMobile,validateCreditCard,requestParsor
 
 # ── 加入購物車 ────────────────────────────────────────────────────────────────────────────────
 # 對應路由：POST /cart/add
-def cart_add_service():
-    if request.method == "GET":         # 直接用 GET 訪問此路由時，拒絕並導向購物車
-        return redirect(url_for("C.cart"))
-
-    next_url = request.form.get("next") or url_for("C.cart")
-    product_id = request.form.get("product_id")
+@requestParsor
+def cart_add_service(product_id=None, next=""):
+    next_url = next or url_for("C.cart")
 
     if not product_id:                  # 表單沒有帶 product_id，無法處理，直接導回
         return redirect(next_url)
@@ -32,6 +75,11 @@ def cart_add_service():
     stock = get_product_stock(int(product_id))
     if not stock or stock.get("product_quantity", 0) <= 0:  # 庫存為 0 或無庫存紀錄
         flash("此商品已無庫存", "error")
+        return redirect(next_url)
+    cart_item = find_cart_item(session[SESSION_AUTHO], int(product_id))
+    current_qty = cart_item["quantity"] if cart_item else 0
+    if current_qty + 1 > stock.get("product_quantity", 0):  # 加入後會超過庫存上限
+        flash("購物車數量已達庫存上限", "error")
         return redirect(next_url)
 
     upsert_cart(session[SESSION_AUTHO], int(product_id))
@@ -86,7 +134,7 @@ def cart_remove_service(item_id):
 # ── 結帳 ──────────────────────────────────────────────────────────────────────────────────────
 # 對應路由：GET + POST /checkout
 @requestParsor
-def checkout_service(name="",phone="",address="",payment_method="",delivery_method="",note="",card_id="",card_number=""):
+def checkout_service(name="",phone="",address="",payment="",shipping="",note="",card_id="",card_number=""):
     user_account = session.get(SESSION_AUTHO)
     rows = get_cart_items(user_account)
 
@@ -132,12 +180,24 @@ def checkout_service(name="",phone="",address="",payment_method="",delivery_meth
         )
 
     # ── POST：驗證表單並建立訂單 ──
+    if not name:
+        flash("請填寫收件人姓名", "error")
+        return redirect(url_for("C.checkout"))
+    if not address:
+        flash("請填寫收件地址", "error")
+        return redirect(url_for("C.checkout"))
+    if not payment:
+        flash("請選擇付款方式", "error")
+        return redirect(url_for("C.checkout"))
+    if not shipping:
+        flash("請選擇配送方式", "error")
+        return redirect(url_for("C.checkout"))
     if phone and not validateMobile(phone):     # 有填電話但格式不符（非 09 開頭 10 碼）
         flash("手機格式錯誤，請輸入09開頭的10位數字", "error")
         return redirect(url_for("C.checkout"))
 
     credit_card_number = None
-    if payment_method == "信用卡":              # 付款方式選信用卡時才需要驗證卡號
+    if payment == "信用卡":                      # 付款方式選信用卡時才需要驗證卡號
         if card_id:                             # 用戶選擇了已儲存的卡
             saved_cards = get_member_cards(user_account)
             matched = next((c for c in saved_cards if str(c["id"]) == card_id), None)
@@ -154,21 +214,27 @@ def checkout_service(name="",phone="",address="",payment_method="",delivery_meth
                 return redirect(url_for("C.checkout"))
             credit_card_number = card_number.replace(" ", "")[-4:]  # 取手動輸入卡號的後四碼
 
+    for row in rows:                            # 結帳前重新確認庫存，防止購物車舊資料超量
+        stock     = get_product_stock(row["product_id"])
+        available = stock.get("product_quantity", 0) if stock else 0
+        if row["quantity"] > available:
+            flash(f"「{row['name']}」庫存不足（剩餘 {available} 件），請回購物車調整數量", "error")
+            return redirect(url_for("C.cart"))
+
     total    = sum(row['price'] * row['quantity'] for row in rows) + 60     # 重新計算總額防止前端竄改
-    order_id = insert_order(user_account, total, payment_method, delivery_method, address, note, credit_card_number)
-    for row in rows:                            # 逐筆將購物車商品寫入訂單明細
+    order_id = insert_order(user_account, total, payment, shipping, address, note, credit_card_number)
+    for row in rows:                            # 逐筆將購物車商品寫入訂單明細並扣庫存
         insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
+        deduct_product_stock(row["product_id"], row['quantity'])
 
     clear_cart(user_account)
-    flash(f"訂單 #{order_id} 建立成功！", "success")
+    flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
 
 # ── 取消訂單 ──────────────────────────────────────────────────────────────────────────────────
 # 對應路由：POST /order/<order_id>/cancel
 def order_cancel_service(order_id):
-    if request.method == "GET":         # 防止誤觸，GET 訪問直接導向首頁
-        return redirect(url_for("B.index"))
     user_account = session[SESSION_AUTHO]
 
     order = get_order(order_id, user_account)
@@ -176,6 +242,9 @@ def order_cancel_service(order_id):
         flash("訂單不存在")
         return redirect(url_for("D.member"))
 
+    order_items = get_order_items(order_id)
     cancel_order(order_id)
+    for item in order_items:            # 取消後補回各商品庫存
+        restore_product_stock(item["product_id"], item["quantity"])
     flash("訂單已取消", "success")
     return redirect(url_for("D.member"))

@@ -208,6 +208,14 @@ def insert_order_item(cursor, order_id, product_id, quantity, price):
     )
 
 @db_transaction
+def get_order_items(cursor, order_id):
+    cursor.execute(
+        f'SELECT product_id, quantity FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` WHERE order_id = ?',
+        (order_id,)
+    )
+    return cursor.fetchall()
+
+@db_transaction
 def get_all_orders(cursor, user_account):
     cursor.execute(
         f'''SELECT id, total, payment_method, delivery_method,
@@ -263,6 +271,20 @@ def cancel_order(cursor, order_id):
     cursor.execute(
         f"UPDATE `{BRANCH_C_ORDER_TABLE}` SET status = '已取消' WHERE id = ?",
         (order_id,)
+    )
+
+@db_transaction
+def deduct_product_stock(cursor, product_id, quantity):
+    cursor.execute(
+        "UPDATE `product_stock` SET product_quantity = product_quantity - ? WHERE product_id = ?",
+        (quantity, product_id)
+    )
+
+@db_transaction
+def restore_product_stock(cursor, product_id, quantity):
+    cursor.execute(
+        "UPDATE `product_stock` SET product_quantity = product_quantity + ? WHERE product_id = ?",
+        (quantity, product_id)
     )
 
 

@@ -129,7 +129,7 @@
                     </div>
 
                     <div class="item-side">
-                        <strong>NT$ {{ item.price | int }}</strong>
+                        <strong>NT$ {{ (item.price * item.qty) | int }}</strong>
 
                         {% if item.remove_url %}
                         <a href="{{ item.remove_url }}" class="btn btn-danger">移除</a>
