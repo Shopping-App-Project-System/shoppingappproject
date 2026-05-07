@@ -57,17 +57,20 @@ def getUser(cursor, where: dict, *selections):
 @db_transaction
 def search_categories(cursor, cat_id, keyword):
     sql = """
-        SELECT id, product_pic, original_price, sale_price, name, description, category, tag
-        FROM products
-        WHERE is_active = 1
-    """
+     SELECT p.id, p.product_pic, p.original_price, p.sale_price, 
+            p.name, p.description, p.category, p.tag,
+            ps.product_quantity
+     FROM products p
+     LEFT JOIN product_stock ps ON p.id = ps.product_id
+     WHERE p.is_active = 1
+ """
     params = []
 
     if cat_id:
-        sql += " AND category = %s"
+        sql += " AND p.category = %s"
         params.append(cat_id)
     if keyword:
-        sql += " AND (id LIKE %s OR name LIKE %s OR description LIKE %s)"
+        sql += " AND (p.id LIKE %s OR p.name LIKE %s OR p.description LIKE %s)"
         params.append(f"%{keyword}%")
         params.append(f"%{keyword}%")
         params.append(f"%{keyword}%")
@@ -272,6 +275,16 @@ def add_product(cursor, name, original_price, sale_price, description, img_filen
         (`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
         VALUES (?, ?, ?, ?, ?, 1)
     """, (name, original_price, sale_price, description, img_filename))
+    return cursor.lastrowid
+    
+
+# 商品入庫
+@db_transaction
+def add_product_stock(cursor, product_id, quantity):
+    cursor.execute("""
+        INSERT INTO `product_stock` (product_id, product_quantity)
+        VALUES (?, ?)
+    """, (product_id, quantity))
 
 @db_transaction
 def set_product_active(cursor, product_id, is_active):
@@ -366,14 +379,6 @@ def add_member_card(cursor, user_account, card_number, expiry, holder_name, is_d
     為會員新增一張信用卡。
     若 is_default=1，會先把該會員其他卡的 is_default 全部設為 0，避免有兩張預設卡。
     """
-    if is_default:
-        cursor.execute(
-            f"""UPDATE `member_cards`
-                SET is_default = 0
-                WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
-            (user_account,)
-        )
-
     cursor.execute(
         f"""INSERT INTO `member_cards`
             (user_id, card_number, expiry, holder_name, is_default)
@@ -397,10 +402,29 @@ def delete_member_card(cursor, user_account, card_id):
         (card_id, user_account)
     )
 
+# @db_transaction
+# def set_default_card(cursor, user_account, card_id):
+#     """
+#     把指定卡片設為預設卡，同時把該會員其他卡設為非預設。
+#     """
+#     cursor.execute(
+#         f"""UPDATE `member_cards`
+#             SET is_default = 0
+#             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
+#         (user_account,)
+#     )
+#     cursor.execute(
+#         f"""UPDATE `member_cards`
+#             SET is_default = 1
+#             WHERE id = ?
+#             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
+#         (card_id, user_account)
+#     )
+
 @db_transaction
-def set_default_card(cursor, user_account, card_id):
+def clear_default_cards(cursor, user_account):
     """
-    把指定卡片設為預設卡，同時把該會員其他卡設為非預設。
+    把該會員所有卡片設為非預設。
     """
     cursor.execute(
         f"""UPDATE `member_cards`
@@ -408,6 +432,12 @@ def set_default_card(cursor, user_account, card_id):
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (user_account,)
     )
+
+@db_transaction
+def set_default_card(cursor, user_account, card_id):
+    """
+    把指定卡片設為預設卡。
+    """
     cursor.execute(
         f"""UPDATE `member_cards`
             SET is_default = 1
@@ -415,7 +445,5 @@ def set_default_card(cursor, user_account, card_id):
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (card_id, user_account)
     )
-
-
 if __name__ == "__main__":
     ...

@@ -7,7 +7,8 @@ from models import (
     add_product,add_log,get_product_by_id,soft_delete_product,
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
-    get_member_cards,add_member_card,delete_member_card,set_default_card,
+    get_member_cards,add_member_card,delete_member_card,set_default_card,clear_default_cards,
+    get_all_categories,add_product_stock
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -15,10 +16,11 @@ from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 
 # _______________________________________services___________________________________________
 @requestParsor
-def manage_add_service(name,original_price,sale_price,description,image):
+def manage_add_service(name,original_price,sale_price,description,image,product_quantity):
     img_filename   = save_image(image, UPLOAD_FOLDER)
-    add_product(name, original_price, sale_price, description, img_filename)
-    add_log(session.get(SESSION_AUTHO), "上架", None, name)
+    product_id = add_product(name, original_price, sale_price, description, img_filename)
+    add_product_stock(product_id,int(product_quantity))
+    add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
 
@@ -32,7 +34,8 @@ def manage_clear_service(product_id):
 
 def manage_service():
     products = get_all_products()
-    return render_template("manage.html", products=products)
+    categories = get_all_categories()
+    return render_template("manage.html", products=products, category_list = categories)
 
 @requestParsor
 def manage_remove_service(product_id):
@@ -178,7 +181,10 @@ def add_card_service(is_default,card_number="",expiry="",holder_name=""):
     existing_cards = get_member_cards(user_account)
     if not existing_cards:
         is_default = 1
-
+    
+    if is_default:
+        clear_default_cards(user_account)
+    
     add_member_card(user_account, cleaned_number, expiry, holder_name, is_default)
     flash("信用卡已新增", "success")
     return redirect(url_for("D.member_cards"))
@@ -195,6 +201,7 @@ def delete_card_service(card_id):
 def set_default_card_service(card_id):
     """把指定卡設為預設。"""
     user_account = session[SESSION_AUTHO]
+    clear_default_cards(user_account)
     set_default_card(user_account, card_id)
     flash("已設定為預設卡", "success")
     return redirect(url_for("D.member_cards"))

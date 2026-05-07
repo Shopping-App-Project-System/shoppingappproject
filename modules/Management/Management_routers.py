@@ -14,7 +14,7 @@ from .Management_services import (
 # _______________________________________初始化___________________________________________
 bp = Blueprint("D",__name__)
 
-# ________________________________________API_____________________________________________
+# __ 管理者 _____________________________________________
 @bp.route("/manage/add", methods=["POST"])
 @adminRequired
 def manage_add():return manage_add_service()
@@ -40,7 +40,7 @@ def manage_restock():return manage_restock_service()
 def manage_edit():return manage_edit_service()
 
 
-# ── 信用卡管理 ──────────────────────────────────────────────────────────
+# ── 會員管理 ──────────────────────────────────────────────────────────
 @bp.route("/member")
 @userRequired
 def member():return member_service()

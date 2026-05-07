@@ -423,6 +423,15 @@
 
                             <div class="product-desc">{{ product.description or '' }}</div>
 
+                            <div style="font-size:13px;color:#6b7280;margin-bottom:10px">
+                                剩餘數量：
+                                {% if product.product_quantity and product.product_quantity > 0 %}
+                                <span style="color:#10b981;font-weight:700">{{ product.product_quantity }}</span>
+                                {% else %}
+                                <span style="color:#ef4444;font-weight:700">已售完</span>
+                                {% endif %}
+                            </div>
+
                             <div class="product-bottom">
                                 <span class="price">
                                     {% if product.sale_price and product.sale_price < product.original_price %} <strong

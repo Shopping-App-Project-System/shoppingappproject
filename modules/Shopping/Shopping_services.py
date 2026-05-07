@@ -4,7 +4,7 @@ from flask import request,redirect,render_template,session,url_for,flash
 # _______________________________________自定義模組_______________________________________
 from models import getUser,get_product,get_product_by_id,get_product_stock,upsert_cart,get_cart_items,remove_cart_item,insert_order,insert_order_item,clear_cart,get_order,cancel_order,get_all_orders,get_member_cards
 from settings import SESSION_AUTHO
-from utils import get_auth,validateMobile,validateCreditCard
+from utils import get_auth,validateMobile,validateCreditCard,requestParsor
 
 # _______________________________________初始化___________________________________________
 
@@ -85,7 +85,8 @@ def cart_remove_service(item_id):
 
 # ── 結帳 ──────────────────────────────────────────────────────────────────────────────────────
 # 對應路由：GET + POST /checkout
-def checkout_service():
+@requestParsor
+def checkout_service(name="",phone="",address="",payment_method="",delivery_method="",note="",card_id="",card_number=""):
     user_account = session.get(SESSION_AUTHO)
     rows = get_cart_items(user_account)
 
@@ -131,15 +132,6 @@ def checkout_service():
         )
 
     # ── POST：驗證表單並建立訂單 ──
-    name            = request.form.get("name", "")
-    phone           = request.form.get("phone", "")
-    address         = request.form.get("address", "")
-    payment_method  = request.form.get("payment", "")
-    delivery_method = request.form.get("shipping", "")
-    note            = request.form.get("note", "")
-    card_id         = request.form.get("card_id", "")
-    card_number     = request.form.get("card_number", "")
-
     if phone and not validateMobile(phone):     # 有填電話但格式不符（非 09 開頭 10 碼）
         flash("手機格式錯誤，請輸入09開頭的10位數字", "error")
         return redirect(url_for("C.checkout"))

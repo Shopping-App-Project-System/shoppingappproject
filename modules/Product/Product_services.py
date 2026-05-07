@@ -14,7 +14,7 @@ from utils import get_auth,requestParsor
 def index_service(category_id="",keyword=""):
     products = search_categories(category_id, keyword) or []
     categories = get_all_categories() or []
-    
+    print(products)
     user_account = session.get(SESSION_AUTHO)
     if user_account:
         
