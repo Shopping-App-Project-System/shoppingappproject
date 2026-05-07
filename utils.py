@@ -22,12 +22,9 @@ def requestParsor(fun):
     @wraps(fun)
     def wrap(*args, **kwargs):
         result = {}
-        result.update(request.view_args or {})
         result.update(request.form)
         result.update(request.args)
         result.update(request.files)
-        for key in kwargs:
-            result.pop(key, None)
         for name, param in sig.parameters.items():
             if name not in result and name not in kwargs:
                 if param.default is inspect.Parameter.empty:
