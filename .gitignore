@@ -1,3 +1,6 @@
+# Minecraft 伺服器
+mc_server/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

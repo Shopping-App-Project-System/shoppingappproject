@@ -47,8 +47,11 @@ SESSION_AUTHO = "AUTHO" # 用於儲存使用者登入狀態的KEY 各分支會�
 PROFILE_TEMP_FOLDER = os.path.join("static", "profile", "temp")
 PROFILE_PIC_FOLDER = os.path.join("static", "profile")
 PROFILE_TEMP_PATH = os.path.join(PROFILE_TEMP_FOLDER, "{}")
-PROFILE_PIC_PATH = os.path.join("static", "profile", "{}")
+PROFILE_PIC_PATH = os.path.join(PROFILE_PIC_FOLDER, "{}")
 
+# ________________________PORDUCT PIC___________________
+PRODUCT_PIC_FOLDER = os.path.join("static", "uploads")
+PROFILE_PIC_PATH = os.path.join(PRODUCT_PIC_FOLDER, "{}")
 # ________________________MANAGE________________________
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}

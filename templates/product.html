@@ -67,14 +67,14 @@ a{text-decoration:none;color:inherit}
             
             <div class="image-gallery">
                 <div class="main-image">
-                    <img id="mainProductImage" src="/{{ product.product_pic }}" alt="主圖">
+                    <img id="mainProductImage" src="{{ product.product_pic }}" alt="主圖">
                 </div>
 
 
                 <div class="sub-images">
                     {% for pic in extra_pics %}
                         <div class="sub-image-item">
-                            <img src="/{{ pic.product_pic }}" width="100" onclick="changeImage(this.src)" alt="細節圖">
+                            <img src="{{ pic.product_pic }}" width="100" onclick="changeImage(this.src)" alt="細節圖">
                         </div>
                     {% endfor %}
                 </div>
