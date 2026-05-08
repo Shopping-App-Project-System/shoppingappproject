@@ -149,6 +149,7 @@ def get_cart_items(cursor, user_account):
     cursor.execute(
         f'''SELECT c.id, c.user_id, c.product_id, c.quantity,
                     p.name, COALESCE(p.sale_price, p.original_price) AS price, p.product_pic AS image_path,
+                    p.is_active,
                     stock.product_quantity AS stock
             FROM `{BRANCH_C_CART_TABLE}` c
             JOIN `{BRANCH_B_PRODUCT_STOCK_TABLE}` stock ON c.product_id = stock.product_id
@@ -260,6 +261,19 @@ def get_order_items(cursor, order_id):
     # 取得指定訂單的所有商品明細（商品 id 與數量），取消訂單補回庫存時使用
     cursor.execute(
         f'SELECT product_id, quantity FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` WHERE order_id = ?',
+        (order_id,)
+    )
+    return cursor.fetchall()
+
+@db_transaction
+def get_order_items_detail(cursor, order_id):
+    # 取得訂單明細並 JOIN 商品名稱，供會員頁訂單展開顯示使用
+    cursor.execute(
+        f'''SELECT oi.quantity, oi.price,
+                   p.name, p.product_pic
+            FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
+            JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON oi.product_id = p.id
+            WHERE oi.order_id = ?''',
         (order_id,)
     )
     return cursor.fetchall()

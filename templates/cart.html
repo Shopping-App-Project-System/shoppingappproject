@@ -126,7 +126,7 @@
 
                 {% for item in cart_items %}
                 {# item.stock 由後端傳入，代表該商品目前可購買庫存數量 #}
-                <article class="cart-item {% if item.stock == 0 %}out-of-stock{% endif %}"
+                <article class="cart-item {% if not item.is_active or item.stock == 0 %}out-of-stock{% endif %}"
                          data-item-id="{{ item.id }}"
                          data-price="{{ item.price }}"
                          data-stock="{{ item.stock }}">
@@ -139,7 +139,9 @@
                         <h3>{{ item.name }}</h3>
 
                         {# 庫存標籤 #}
-                        {% if item.stock == 0 %}
+                        {% if not item.is_active %}
+                            <div class="stock-label out">此商品已下架，請移除後再結帳</div>
+                        {% elif item.stock == 0 %}
                             <div class="stock-label out">庫存不足，無法購買</div>
                         {% elif item.stock <= 3 %}
                             <div class="stock-label low">庫存僅剩 {{ item.stock }} 件</div>
@@ -151,12 +153,12 @@
                         <div class="qty-picker">
                             <button type="button"
                                     class="qty-minus"
-                                    {% if item.qty <= 1 or item.stock == 0 %}disabled{% endif %}
+                                    {% if item.qty <= 1 or item.stock == 0 or not item.is_active %}disabled{% endif %}
                                     aria-label="減少數量">−</button>
                             <span class="qty-num">{{ item.qty }}</span>
                             <button type="button"
                                     class="qty-plus"
-                                    {% if item.qty >= item.stock or item.stock == 0 %}disabled{% endif %}
+                                    {% if item.qty >= item.stock or item.stock == 0 or not item.is_active %}disabled{% endif %}
                                     aria-label="增加數量">＋</button>
                         </div>
                     </div>
@@ -191,22 +193,22 @@
 
             <div class="summary-line">
                 <span>商品小計</span>
-                <span id="summary-subtotal">{{ summary.subtotal or 0 }}</span>
+                <span id="summary-subtotal">NT$ {{ summary.subtotal or 0 }}</span>
             </div>
 
             <div class="summary-line">
                 <span>運費</span>
-                <span>{{ summary.shipping or 0 }}</span>
+                <span>NT$ {{ summary.shipping or 0 }}</span>
             </div>
 
             <div class="summary-line">
                 <span>折扣</span>
-                <span>{{ summary.discount or 0 }}</span>
+                <span>NT$ {{ summary.discount or 0 }}</span>
             </div>
 
             <div class="summary-line total">
                 <span>總計</span>
-                <span id="summary-total">{{ summary.total or 0 }}</span>
+                <span id="summary-total">NT$ {{ summary.total or 0 }}</span>
             </div>
 
             <div style="margin-top:20px">

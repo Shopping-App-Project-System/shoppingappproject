@@ -164,6 +164,11 @@
                             {% endfor %}
                             <option value="">輸入新卡號</option>
                         </select>
+                        {% else %}
+                        <div id="no-card-warning" style="padding:10px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;color:#92400e;font-weight:700;margin-bottom:10px">
+                            ⚠️ 您尚未綁定信用卡，請手動輸入卡號，或
+                            <a href="/member/cards" style="color:#b45309;text-decoration:underline">前往會員中心綁定</a>
+                        </div>
                         {% endif %}
                         <input type="text" name="card_number" id="card-number"
                                placeholder="信用卡卡號（16位數字）" maxlength="19"

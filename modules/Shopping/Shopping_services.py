@@ -13,30 +13,43 @@
      - 列出該會員所有購物車商品
      - 計算每項小計（單價 × 數量）、運費（有商品才收 $60）、
        折扣、總金額
+     - 顯示每項商品的剩餘庫存與上下架狀態
+     - 下架商品顯示「已下架」標籤並停用數量調整按鈕
      - 購物車為空時顯示空狀態提示
 
   3. 移除購物車商品（cart_remove_service）
      - 從購物車刪除指定商品（驗證商品屬於本人）
 
-  4. 結帳頁面 GET（checkout_service）
+  4. 購物車數量更新（cart_update_service）
+     - 即時更新購物車商品數量
+     - 驗證數量不超過庫存上限
+
+  5. 結帳頁面 GET（checkout_service）
      - 顯示結帳表單，自動帶入使用者姓名、手機、地址
      - 列出購物車商品明細與金額摘要
      - 顯示該會員已儲存的信用卡供快速選擇
+     - 若尚未綁定信用卡，選擇信用卡付款時顯示警告說明
 
-  5. 結帳送出 POST（checkout_service）
+  6. 結帳送出 POST（checkout_service）
      - 必填驗證：收件人姓名、地址、付款方式、配送方式
      - 手機格式驗證（09 開頭 10 碼）
      - 信用卡驗證：
         · 已儲存的卡：驗證 card_id 確實屬於本人
         · 手動輸入：驗證 16 碼格式，記錄後四碼
+     - 結帳前驗證商品是否已下架，給出明確的「已下架」錯誤訊息
      - 結帳前再次驗證庫存（防止購物車舊資料導致超量）
      - 後端重新計算總金額（防止前端竄改）
      - 建立訂單與訂單明細，扣減各商品庫存，清空購物車
-     
-  6. 取消訂單（order_cancel_service）
+
+  7. 取消訂單（order_cancel_service）
      - 驗證訂單屬於本人且狀態為「處理中」
      - 更新狀態為「已取消」
      - 自動將該訂單所有商品的庫存補回
+
+  8. 訂單明細查詢 API（order_items_service）
+     - 對應路由：GET /order/<order_id>/items
+     - 回傳指定訂單的商品清單（名稱、數量、單價、圖片）
+     - 回傳格式：JSON 陣列，供前端動態顯示訂單明細使用
 
 【資料表依賴】
  cart_items、orders、order_items、products、
@@ -60,6 +73,7 @@ from models import (getUser,
                     insert_order,
                     insert_order_item,
                     get_order_items,
+                    get_order_items_detail,
                     clear_cart,
                     get_order,
                     cancel_order,
@@ -117,13 +131,14 @@ def cart_service():
         item_total = row['price'] * row['quantity']
         subtotal  += item_total
         items.append({
-            'id'        : row['id'],   
+            'id'        : row['id'],
             'image'     : row['image_path'],
             'name'      : row['name'],
             'qty'       : row['quantity'],
             'price'     : row['price'],
             'remove_url': url_for('C.cart_remove', item_id=row['id']),
             'stock'     : row['stock'],
+            'is_active' : row['is_active'],
         })
 
     shipping = 60 if subtotal > 0 else 0    # 有商品才收運費，空購物車不收
@@ -236,7 +251,11 @@ def checkout_service(name="",phone="",address="",payment="",shipping="",note="",
                 return redirect(url_for("C.checkout"))
             credit_card_number = card_number.replace(" ", "")[-4:]  # 取手動輸入卡號的後四碼
 
-    for row in rows:                            # 結帳前重新確認庫存，防止購物車舊資料超量
+    for row in rows:                            # 結帳前重新確認商品狀態與庫存
+        product = get_product_by_id(row["product_id"])
+        if not product or not product.get("is_active"):
+            flash(f"「{row['name']}」已下架，請回購物車移除後再結帳", "error")
+            return redirect(url_for("C.cart"))
         stock     = get_product_stock(row["product_id"])
         available = stock.get("product_quantity", 0) if stock else 0
         if row["quantity"] > available:
@@ -264,6 +283,22 @@ def cart_update_service(item_id, qty):
         return '', 400
     update_cart_qty(item_id, int(qty))
     return '', 200
+
+# ── 訂單明細（AJAX）──────────────────────────────────────────────────────────────────────────
+# 對應路由：GET /order/<order_id>/items
+def order_items_service(order_id):
+    from flask import jsonify
+    rows = get_order_items_detail(order_id)
+    result = [
+        {
+            "name"   : r["name"],
+            "qty"    : r["quantity"],
+            "price"  : r["price"],
+            "image"  : r["product_pic"] or "",
+        }
+        for r in rows
+    ]
+    return jsonify(result)
 
 # ── 取消訂單 ──────────────────────────────────────────────────────────────────────────────────
 # 對應路由：POST /order/<order_id>/cancel
