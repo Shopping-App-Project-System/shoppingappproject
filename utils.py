@@ -148,10 +148,9 @@ def move_image(src, dst):
     return "/" + dst.replace("\\", "/")
 
 def del_imgae(src):
-    if src:
-        src = src.lstrip("/")
-        if os.path.exists(src):
-            os.remove(src)
+    src = src.lstrip("/")
+    if os.path.exists(src):
+        os.remove(src)
         
 def save_image(file, folder, filename=None):
     if file and '.' in file.filename:

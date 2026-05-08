@@ -45,7 +45,12 @@ from flask import Blueprint
 
 # _______________________________________自定義模組_______________________________________
 from AuthDecorator import userRequired
-from .Shopping_services import cart_add_service,cart_service,cart_remove_service,checkout_service,order_cancel_service
+from .Shopping_services import (cart_add_service,
+                                cart_service,
+                                cart_remove_service,
+                                checkout_service,
+                                order_cancel_service,
+                                cart_update_service)
 
 # _______________________________________初始化___________________________________________
 bp = Blueprint("C",__name__)
@@ -65,6 +70,9 @@ def cart():return cart_service()
 @userRequired
 def cart_remove(item_id):return cart_remove_service(item_id)
 
+@bp.route("/cart/update", methods=["GET","POST"])
+@userRequired
+def cart_update():return cart_update_service()
 
 @bp.route("/checkout", methods=["GET", "POST"])
 @userRequired

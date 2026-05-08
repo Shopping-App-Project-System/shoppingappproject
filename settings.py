@@ -21,7 +21,10 @@ DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
 # ________________________BRANCH TABLES_________________
 BRANCH_A_TABLE = "user"
 
-BRANCH_B_TABLE              = "products"
+BRANCH_B_PRODUCTS_TABLE              = "products"
+BRANCH_B_PRODUCT_CATEGORY_TABLE = "product_category"
+BRANCH_B_PRODUCT_PICS_TABLE = "product_pics"
+BRANCH_B_PRODUCT_STOCK_TABLE = "product_stock"
 
 BRANCH_C_CART_TABLE         = "cart_items"
 BRANCH_C_ORDER_TABLE        = "orders"

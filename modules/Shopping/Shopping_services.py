@@ -48,9 +48,27 @@
 from flask import request,redirect,render_template,session,url_for,flash
 
 # _______________________________________自定義模組_______________________________________
-from models import getUser,get_product_by_id,get_product_stock,find_cart_item,upsert_cart,get_cart_items,remove_cart_item,insert_order,insert_order_item,get_order_items,clear_cart,get_order,cancel_order,get_member_cards,deduct_product_stock,restore_product_stock
 from settings import SESSION_AUTHO
 from utils import get_auth,validateMobile,validateCreditCard,requestParsor
+from models import (getUser,
+                    get_product_by_id,
+                    get_product_stock,
+                    find_cart_item,
+                    upsert_cart,
+                    get_cart_items,
+                    remove_cart_item,
+                    insert_order,
+                    insert_order_item,
+                    get_order_items,
+                    clear_cart,
+                    get_order,
+                    cancel_order,
+                    get_member_cards,
+                    deduct_product_stock,
+                    restore_product_stock,
+                    get_cart_item_stock,
+                    update_cart_qty)
+
 
 # _______________________________________初始化___________________________________________
 
@@ -99,11 +117,13 @@ def cart_service():
         item_total = row['price'] * row['quantity']
         subtotal  += item_total
         items.append({
+            'id'        : row['id'],   
             'image'     : row['image_path'],
             'name'      : row['name'],
             'qty'       : row['quantity'],
             'price'     : row['price'],
             'remove_url': url_for('C.cart_remove', item_id=row['id']),
+            'stock'     : row['stock'],
         })
 
     shipping = 60 if subtotal > 0 else 0    # 有商品才收運費，空購物車不收
@@ -116,6 +136,8 @@ def cart_service():
         'discount': discount,
         'total'   : total,
     }
+    
+
 
     return render_template("cart.html",
                            cart_items=items,
@@ -231,6 +253,17 @@ def checkout_service(name="",phone="",address="",payment="",shipping="",note="",
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
+@requestParsor
+def cart_update_service(item_id, qty):
+    if request.method == "GET":
+        return redirect(url_for("C.cart"))
+    
+    user_account = session.get(SESSION_AUTHO)
+    stock = get_cart_item_stock(item_id, user_account)
+    if not stock or int(qty) > stock:
+        return '', 400
+    update_cart_qty(item_id, int(qty))
+    return '', 200
 
 # ── 取消訂單 ──────────────────────────────────────────────────────────────────────────────────
 # 對應路由：POST /order/<order_id>/cancel
