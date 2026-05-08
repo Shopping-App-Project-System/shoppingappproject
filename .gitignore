@@ -1,5 +1,6 @@
 # Minecraft 伺服器
 mc_server/
+test_rcon.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
