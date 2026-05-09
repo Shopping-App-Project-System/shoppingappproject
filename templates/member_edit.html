@@ -1,421 +1,172 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>編輯資料｜{{ store_name or 'My Store' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft JhengHei", Arial
-        }
+        :root{--dirt:#8B5E3C;--dirt-dark:#5C3A1E;--grass-top:#5D9E3F;--leaf-dark:#2A6320;--stone:#7F7F7F;--stone-light:#A5A5A5;--wood:#B5892D;--wood-dark:#7A5C1E;--diamond:#5DECF5;--diamond-dk:#1ABAC8;--gold-ore:#F0C93A;--redstone:#E03030;--lapis:#1A44A8;--lapis-dk:#0d2a6e;--sky-top:#7DC6FF;--sky-bot:#B8E0FF;--white-mc:#F0F0F0;--black-mc:#1A1A1A;--shadow-inset:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25);--shadow-block:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),5px 5px 0 #000;--font-pixel:"Press Start 2P",monospace;--font-ui:"Noto Sans TC",sans-serif;--border-block:4px solid #000;}
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        html{image-rendering:pixelated;}
+        body{font-family:var(--font-ui);background:linear-gradient(#fff 0,#fff 100%) 5% 20px/120px 24px no-repeat,linear-gradient(#fff 0,#fff 100%) 55% 22px/100px 24px no-repeat,linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bot) 100%);color:var(--black-mc);overflow-x:hidden;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23fff'/%3E%3Crect x='2' y='2' width='12' height='12' fill='%23222'/%3E%3Crect x='5' y='5' width='6' height='6' fill='%23fff'/%3E%3C/svg%3E") 8 8,crosshair;}
+        a{text-decoration:none;color:inherit;}
+        .container{width:min(1400px,94%);margin:auto;}
+        .ground-strip{height:24px;background:repeating-linear-gradient(90deg,var(--grass-top) 0,var(--grass-top) 24px,#4e8a33 24px,#4e8a33 48px);border-bottom:var(--border-block);box-shadow:0 4px 0 #000;}
+        .topbar{position:sticky;top:0;z-index:100;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);box-shadow:0 6px 0 #000;}
+        .topbar-inner{display:flex;justify-content:center;align-items:center;min-height:80px;position:relative;padding:0 8px;}
+        .logo{position:absolute;left:0;font-family:var(--font-pixel);font-size:clamp(.7rem,1.5vw,1rem);color:var(--gold-ore);text-shadow:3px 3px 0 #000,-2px -2px 0 #000;display:flex;align-items:center;gap:10px;}
+        .logo-gem{width:22px;height:22px;flex-shrink:0;border:2px solid #000;box-shadow:var(--shadow-inset);background:linear-gradient(#5DECF5 0,#5DECF5 100%) 0 0/22px 22px no-repeat,linear-gradient(#1ABAC8 0,#1ABAC8 100%) 3px 3px/9px 9px no-repeat,linear-gradient(#fff 0,#fff 100%) 3px 3px/5px 5px no-repeat;}
+        .nav-links{display:flex;gap:8px;align-items:center;}
+        .nav-links a{font-family:var(--font-pixel);font-size:1rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;padding:10px 18px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);box-shadow:var(--shadow-block);transition:transform .08s steps(2);}
+        .nav-links a:hover{filter:brightness(1.25);transform:translateY(-3px);}
+        .nav-links a.active{background:repeating-linear-gradient(180deg,var(--grass-top) 0,var(--grass-top) 6px,var(--leaf-dark) 6px,var(--leaf-dark) 12px);}
+        .nav-toggle{display:none;position:absolute;right:0;flex-direction:column;gap:6px;background:none;border:none;cursor:pointer;padding:8px;}
+        .nav-toggle span{display:block;width:26px;height:5px;background:var(--white-mc);border:2px solid #000;transition:transform .2s steps(4),opacity .2s;}
+        .nav-toggle.open span:nth-child(1){transform:translateY(11px) rotate(45deg);}
+        .nav-toggle.open span:nth-child(2){opacity:0;}
+        .nav-toggle.open span:nth-child(3){transform:translateY(-11px) rotate(-45deg);}
+        .nav-drawer{display:none;flex-direction:column;gap:4px;padding:12px 16px;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);}
+        .nav-drawer.open{display:flex;}
+        .nav-drawer a{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:12px 16px;border:var(--border-block);background:var(--stone);box-shadow:var(--shadow-block);}
+        .user-panel{position:absolute;right:0;display:flex;align-items:center;gap:10px;}
+        .user-card{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border:var(--border-block);background:repeating-linear-gradient(180deg,#4a3728 0,#4a3728 6px,#5C3A1E 6px,#5C3A1E 12px);box-shadow:var(--shadow-block);max-width:220px;}
+        .user-avatar-sm{width:44px;height:44px;border:var(--border-block);overflow:hidden;flex-shrink:0;image-rendering:pixelated;}
+        .user-avatar-sm img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated;}
+        .user-meta{display:flex;flex-direction:column;min-width:0;}
+        .user-status-text{font-family:var(--font-pixel);font-size:.55rem;color:var(--grass-top);text-shadow:1px 1px 0 #000;margin-bottom:3px;}
+        .user-account-text{font-family:var(--font-pixel);font-size:.65rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .topbar-btn{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:10px 18px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,#a02020 6px,#a02020 12px);box-shadow:var(--shadow-block);transition:transform .08s steps(2);}
+        .topbar-btn:hover{filter:brightness(1.2);transform:translateY(-2px);}
 
-        body {
-            background: linear-gradient(180deg, #f7f9ff, #eef3fb);
-            color: #1f2937
-        }
+        .panel{padding:32px 0 80px;}
+        .layout{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start;}
 
-        a {
-            text-decoration: none;
-            color: inherit
-        }
+        .flash-wrapper{margin-bottom:20px;}
+        .flash-message{font-family:var(--font-pixel);font-size:.7rem;line-height:2;padding:14px 18px;border:var(--border-block);margin-bottom:10px;box-shadow:var(--shadow-block);}
+        .flash-message.success{background:repeating-linear-gradient(180deg,#1a5c2a 0,#1a5c2a 6px,#0d3a1a 6px,#0d3a1a 12px);color:#7fff7f;text-shadow:2px 2px 0 #000;}
+        .flash-message.error{background:repeating-linear-gradient(180deg,#6a1010 0,#6a1010 6px,#420a0a 6px,#420a0a 12px);color:#ff8080;text-shadow:2px 2px 0 #000;}
 
-        .container {
-            width: min(1200px, 92%);
-            margin: auto
-        }
+        .mc-block{border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);overflow:hidden;}
+        .mc-block-header{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:14px 20px;}
+        .mc-block-header h2{font-family:var(--font-pixel);font-size:.9rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;}
+        .mc-block-body{padding:24px;}
 
-        .topbar {
-            background: #fff;
-            border-bottom: 1px solid #e5e7eb
-        }
+        /* profile */
+        .profile{text-align:center;margin-bottom:20px;}
+        .avatar-wrap{width:88px;height:88px;margin:0 auto 14px;border:var(--border-block);box-shadow:var(--shadow-inset),4px 4px 0 #000;overflow:hidden;image-rendering:pixelated;cursor:pointer;position:relative;background:repeating-linear-gradient(45deg,#333 0,#333 8px,#2a2a2a 8px,#2a2a2a 16px);}
+        .avatar-wrap img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated;}
+        .avatar-wrap:hover::after{content:'更換';position:absolute;inset:0;background:rgba(0,0,0,.6);color:var(--white-mc);font-family:var(--font-pixel);font-size:.55rem;text-shadow:1px 1px 0 #000;display:flex;align-items:center;justify-content:center;}
+        .profile-name{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;margin-bottom:10px;line-height:1.8;}
+        .profile-level{font-family:var(--font-pixel);font-size:.55rem;color:var(--black-mc);background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;padding:5px 14px;display:inline-block;margin-bottom:0;}
+        .mc-hr{height:4px;background:repeating-linear-gradient(90deg,#000 0,#000 8px,#333 8px,#333 16px);margin:18px 0;}
 
-        .topbar-inner {
-            min-height: 78px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative
-        }
+        .note{font-family:var(--font-pixel);font-size:.5rem;color:#888;text-shadow:1px 1px 0 #000;margin-bottom:4px;}
+        .field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:10px 12px;background:repeating-linear-gradient(180deg,#2a2a2a 0,#2a2a2a 6px,#1a1a1a 6px,#1a1a1a 12px);border:3px solid #000;box-shadow:var(--shadow-inset);gap:12px;}
+        .field-label{font-family:var(--font-pixel);font-size:.6rem;color:#aaa;text-shadow:1px 1px 0 #000;flex-shrink:0;}
+        .field-input{flex:1;font-family:var(--font-pixel);font-size:.62rem;background:transparent;border:none;color:var(--white-mc);text-shadow:1px 1px 0 #000;text-align:right;outline:none;padding:4px 0;}
+        .field-input:not([disabled]){border-bottom:2px solid #555;transition:border-color .15s steps(2);}
+        .field-input:not([disabled]):focus{border-color:var(--diamond);}
+        .field-input[disabled]{color:#555;cursor:not-allowed;}
+        .field-input::placeholder{color:#444;}
 
-        .logo {
-            position: absolute;
-            left: 0;
-            font-weight: 800
-        }
+        .btn{font-family:var(--font-pixel);font-size:.75rem;border:var(--border-block);padding:12px 18px;cursor:pointer;box-shadow:var(--shadow-block);display:block;text-align:center;transition:transform .08s steps(2),box-shadow .08s steps(2);width:100%;margin-top:10px;}
+        .btn:hover{filter:brightness(1.2);transform:translateY(-2px);box-shadow:var(--shadow-inset),3px 5px 0 #000;}
+        .btn:active{transform:translateY(2px);box-shadow:var(--shadow-inset),1px 1px 0 #000;}
+        .btn-save{background:repeating-linear-gradient(180deg,var(--lapis) 0,var(--lapis) 6px,var(--lapis-dk) 6px,var(--lapis-dk) 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
+        .btn-back{background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
 
-        .nav-links {
-            display: flex;
-            gap: 25px
-        }
+        .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);}
+        .footer{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 10px,var(--dirt-dark) 10px,var(--dirt-dark) 20px);border-top:var(--border-block);padding:36px 40px;text-align:center;}
+        .footer-logo{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;display:block;margin-bottom:12px;}
 
-        .nav-links a {
-            color: #6b7280;
-            font-weight: 700
-        }
-
-        .nav-links a.active {
-            color: #1d4ed8
-        }
-
-        .user-panel {
-            position: absolute;
-            right: 0;
-            display: flex;
-            align-items: center;
-            gap: 12px
-        }
-
-        .user-card {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 10px;
-            border: 1px solid #e5e7eb;
-            border-radius: 999px;
-            background: #f8fafc;
-            max-width: 220px
-        }
-
-        .user-avatar-sm {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            overflow: hidden;
-            flex-shrink: 0;
-            background: #dbeafe;
-            border: 1px solid #bfdbfe
-        }
-
-        .user-avatar-sm img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block
-        }
-
-        .user-meta {
-            display: flex;
-            flex-direction: column;
-            min-width: 0
-        }
-
-        .user-status-text {
-            font-size: 12px;
-            color: #6b7280;
-            line-height: 1.2
-        }
-
-        .user-account-text {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1f2937;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis
-        }
-
-        .topbar-btn {
-            color: #1d4ed8;
-            font-weight: 700
-        }
-
-        .panel {
-            padding: 40px 0
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 25px;
-            align-items: start
-        }
-
-        .card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .08)
-        }
-
-        .profile {
-            text-align: center
-        }
-
-        .avatar-wrap {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid #dbeafe;
-            margin: 0 auto 14px;
-            cursor: pointer;
-            position: relative
-        }
-
-        .avatar-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block
-        }
-
-        .avatar-wrap:hover::after {
-            content: '更換';
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, .4);
-            color: #fff;
-            display: grid;
-            place-items: center;
-            font-size: 13px;
-            font-weight: 700;
-            border-radius: 50%
-        }
-
-        .profile-name {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 4px
-        }
-
-        .profile-level {
-            font-size: 13px;
-            color: #6b7280;
-            background: #f3f4f6;
-            padding: 3px 10px;
-            border-radius: 999px;
-            display: inline-block;
-            margin-bottom: 20px
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid #e5e7eb;
-            margin: 0 0 20px
-        }
-
-        .field-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px
-        }
-
-        .field-label {
-            font-size: 14px;
-            font-weight: 700;
-            color: #6b7280;
-            min-width: 60px
-        }
-
-        .field-input {
-            flex: 1;
-            margin-left: 12px;
-            padding: 9px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-            transition: .2s;
-            text-align: right
-        }
-
-        .field-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, .14)
-        }
-
-        .field-input:disabled {
-            background: #f3f4f6;
-            color: #9ca3af;
-            cursor: not-allowed;
-            border-color: #e5e7eb
-        }
-
-        .btn-save {
-            display: block;
-            width: 100%;
-            margin-top: 16px;
-            padding: 11px;
-            background: #1d4ed8;
-            color: #fff;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            transition: .2s
-        }
-
-        .btn-save:hover {
-            background: #1e40af
-        }
-
-        .btn-back {
-            display: block;
-            text-align: center;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #d1d5db;
-            color: #374151;
-            font-weight: 700;
-            font-size: 14px;
-            margin-top: 10px
-        }
-
-        .btn-back:hover {
-            background: #f3f4f6
-        }
-
-        .flash-wrapper {
-            margin-bottom: 20px
-        }
-
-        .flash-message {
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-weight: 700;
-            font-size: 14px
-        }
-
-        .flash-message.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0
-        }
-
-        .flash-message.error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca
-        }
-
-        .note {
-            font-size: 11px;
-            color: #9ca3af;
-            text-align: right;
-            margin-top: 2px
-        }
-
-        @media(max-width:900px) {
-            .layout {
-                grid-template-columns: 1fr
-            }
-        }
+        @media(max-width:900px){.layout{grid-template-columns:1fr;}.nav-links,.user-panel{display:none;}.nav-toggle{display:flex;}}
     </style>
 </head>
-
 <body>
-    <header class="topbar">
-        <div class="container topbar-inner">
-            <div class="logo">{{ store_name or 'My Store' }}</div>
-            <nav class="nav-links">
-                <a href="/">主頁</a>
-                <a href="/member" class="active">會員中心</a>
-                <a href="/cart">購物車</a>
-            </nav>
-            <div class="user-panel">
-                {% if auth and auth.logged_in %}
-                <div class="user-card">
-                    <div class="user-avatar-sm">
-                        <img src="{{ auth.profile_pic  }}">
-                    </div>
-                    <div class="user-meta">
-                        <span class="user-status-text">登入中</span>
-                        <span class="user-account-text">{{ auth.account }}</span>
-                    </div>
-                </div>
-                <a href="/logout" class="topbar-btn">登出</a>
-                {% else %}
-                <a href="/login" class="topbar-btn">登入</a>
-                {% endif %}
+<div class="ground-strip"></div>
+<header class="topbar">
+    <div class="container topbar-inner">
+        <div class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</div>
+        <nav class="nav-links"><a href="/">⛏ 主頁</a><a href="/member" class="active">👤 會員中心</a><a href="/cart">🎒 購物車</a></nav>
+        <button class="nav-toggle" id="navToggle" aria-label="選單"><span></span><span></span><span></span></button>
+        <div class="user-panel">
+            {% if auth and auth.logged_in %}
+            <div class="user-card">
+                <div class="user-avatar-sm"><img src="{{ auth.profile_pic }}" alt="avatar"></div>
+                <div class="user-meta"><span class="user-status-text">▶ 登入中</span><span class="user-account-text">{{ auth.account }}</span></div>
             </div>
+            <a href="/logout" class="topbar-btn">🚪 登出</a>
+            {% else %}<a href="/login" class="topbar-btn">⚔ 登入</a>{% endif %}
         </div>
-    </header>
+    </div>
+    <nav class="nav-drawer" id="navDrawer"><a href="/">⛏ 主頁</a><a href="/member">👤 會員中心</a><a href="/cart">🎒 購物車</a>{% if auth and auth.logged_in %}<a href="/logout">🚪 登出</a>{% else %}<a href="/login">⚔ 登入</a>{% endif %}</nav>
+</header>
 
-    <main class="panel">
-        <div class="container">
+<main class="panel">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-wrapper">{% for category, message in messages %}<div class="flash-message {{ category }}">{{ message }}</div>{% endfor %}</div>
+        {% endif %}{% endwith %}
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <div class="flash-wrapper">
-                {% for category, message in messages %}
-                <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
-
-            <div class="layout">
-
-                <!-- 左側表單 -->
-                <form method="POST" action="/member/edit" enctype="multipart/form-data">
-                    <div class="card">
+        <div class="layout">
+            <!-- 左側表單 -->
+            <form method="POST" action="/member/edit" enctype="multipart/form-data">
+                <div class="mc-block">
+                    <div class="mc-block-header"><h2>✏ 編輯資料</h2></div>
+                    <div class="mc-block-body">
                         <div class="profile">
                             <div class="avatar-wrap" onclick="document.getElementById('picInput').click()">
-                                <img id="avatarPreview" src="{{ auth.profile_pic }}">
+                                <img id="avatarPreview" src="{{ auth.profile_pic }}" alt="avatar">
                             </div>
                             <input type="file" id="picInput" name="profile_pic" accept="image/*" style="display:none">
                             <div class="profile-name">{{ user.user_name or '使用者' }}</div>
-                            <div class="profile-level">{{ user.level or '一般會員' }}</div>
+                            <div class="profile-level">★ {{ user.level or '一般會員' }}</div>
                         </div>
 
-                        <hr>
+                        <div class="mc-hr"></div>
+
                         <div class="note">帳號不可修改</div>
                         <div class="field-row">
                             <span class="field-label">帳號</span>
                             <input class="field-input" type="text" value="{{ user.user_account or '' }}" disabled>
                         </div>
-                        
-                        <div class="note">信箱不可修改</div>  
+
+                        <div class="note">信箱不可修改</div>
                         <div class="field-row">
                             <span class="field-label">Email</span>
                             <input class="field-input" type="text" value="{{ user.user_email or '' }}" disabled>
                         </div>
-                        
 
                         <div class="field-row">
                             <span class="field-label">姓名</span>
-                            <input class="field-input" type="text" name="name" value="{{ user.user_name or '' }}"
-                                placeholder="請輸入姓名">
+                            <input class="field-input" type="text" name="name" value="{{ user.user_name or '' }}" placeholder="請輸入姓名">
                         </div>
 
                         <div class="field-row">
                             <span class="field-label">電話</span>
-                            <input class="field-input" type="text" name="mobile" value="{{ user.user_mobile or '' }}"
-                                placeholder="請輸入手機號碼">
+                            <input class="field-input" type="text" name="mobile" value="{{ user.user_mobile or '' }}" placeholder="請輸入手機號碼">
                         </div>
 
-                        <button type="submit" class="btn-save">儲存變更</button>
-                        <a href="/member" class="btn-back">返回會員中心</a>
+                        <button type="submit" class="btn btn-save">💾 儲存變更</button>
+                        <a href="/member" class="btn btn-back">← 返回會員中心</a>
                     </div>
-                </form>
-
-                <!-- 右側空白或未來擴充 -->
-                <div></div>
-
-            </div>
+                </div>
+            </form>
+            <div></div>
         </div>
-    </main>
+    </div>
+</main>
 
-    <script>
-        const input = document.getElementById("picInput");
-        const preview = document.getElementById("avatarPreview");
-        input.addEventListener("change", function () {
-            const file = this.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => { preview.src = e.target.result; }
-            reader.readAsDataURL(file);
-        });
-    </script>
+<div class="dirt-divider"></div>
+<footer class="footer"><span class="footer-logo">{{ store_name or 'My Store' }}</span></footer>
 
+<script>
+const t=document.getElementById('navToggle'),d=document.getElementById('navDrawer');
+t.addEventListener('click',()=>{t.classList.toggle('open');d.classList.toggle('open');});
+const input=document.getElementById("picInput"),preview=document.getElementById("avatarPreview");
+input.addEventListener("change",function(){const file=this.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{preview.src=e.target.result;};reader.readAsDataURL(file);});
+</script>
 </body>
-
 </html>

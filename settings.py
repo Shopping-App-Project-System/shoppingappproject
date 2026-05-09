@@ -51,7 +51,7 @@ PROFILE_PIC_PATH = os.path.join(PROFILE_PIC_FOLDER, "{}")
 
 # ________________________PORDUCT PIC___________________
 PRODUCT_PIC_FOLDER = os.path.join("static", "uploads")
-PROFILE_PIC_PATH = os.path.join(PRODUCT_PIC_FOLDER, "{}")
+PRODUCT_PIC_PATH = os.path.join(PRODUCT_PIC_FOLDER, "{}")
 # ________________________MANAGE________________________
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
