@@ -255,6 +255,7 @@ def insert_order_item(cursor, order_id, product_id, quantity, price):
         f'INSERT INTO `{BRANCH_C_ORDER_ITEMS_TABLE}` (order_id, product_id, quantity, price) VALUES (?,?,?,?)',
         (order_id, product_id, quantity, price)
     )
+    return cursor.lastrowid
 
 @db_transaction
 def get_order_items(cursor, order_id):
@@ -345,7 +346,7 @@ def cancel_order(cursor, order_id):
 def deduct_product_stock(cursor, product_id, quantity):
     # 扣減商品庫存，結帳建立訂單後呼叫
     cursor.execute(
-        "UPDATE `product_stock` SET product_quantity = product_quantity - ? WHERE product_id = ?",
+        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity - ? WHERE product_id = ?",
         (quantity, product_id)
     )
 
@@ -353,10 +354,38 @@ def deduct_product_stock(cursor, product_id, quantity):
 def restore_product_stock(cursor, product_id, quantity):
     # 補回商品庫存，取消訂單後呼叫
     cursor.execute(
-        "UPDATE `product_stock` SET product_quantity = product_quantity + ? WHERE product_id = ?",
+        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity + ? WHERE product_id = ?",
         (quantity, product_id)
     )
 
+# 查詢 order_items 裡 serial_code 符合且尚未兌換的那筆資料
+@db_transaction
+def get_order_item_by_serial(cursor, serial_code):
+
+    cursor.execute(
+                    f"""
+                       SELECT * 
+                       FROM {BRANCH_C_ORDER_ITEMS_TABLE}
+                       WHERE `serial_code` = ? AND `is_redeemed` = ?
+                   """,(serial_code,0)
+                   )
+    return cursor.fetchone()
+
+# 將指定序號標記為已兌換，防止重複使用
+@db_transaction
+def redeem_serial(cursor, serial_code):
+    cursor.execute(
+        f"UPDATE `{BRANCH_C_ORDER_ITEMS_TABLE}` SET is_redeemed = 1 WHERE serial_code = ?",
+        (serial_code,)
+    )
+    
+# 將產生的序號寫入指定的訂單明細    
+@db_transaction
+def update_order_item_serial(cursor, order_item_id, serial_code):
+    cursor.execute(
+        f"UPDATE `{BRANCH_C_ORDER_ITEMS_TABLE}` SET serial_code = ? WHERE id = ?",
+        (serial_code, order_item_id)
+    )
 
 # ── Branch D：商品管理（後台） ────────────────────────────────────────────────
 

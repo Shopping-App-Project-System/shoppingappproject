@@ -20,14 +20,14 @@ MC_RCON_PASSWORD = os.getenv("DB_RCON_PASSWORD")
 # ________________________BRANCH TABLES_________________
 BRANCH_A_TABLE = "user"
 
-BRANCH_B_PRODUCTS_TABLE              = "products"
+BRANCH_B_PRODUCTS_TABLE         = "products"
 BRANCH_B_PRODUCT_CATEGORY_TABLE = "product_category"
-BRANCH_B_PRODUCT_PICS_TABLE = "product_pics"
-BRANCH_B_PRODUCT_STOCK_TABLE = "product_stock"
+BRANCH_B_PRODUCT_PICS_TABLE     = "product_pics"
+BRANCH_B_PRODUCT_STOCK_TABLE    = "product_stock"
 
-BRANCH_C_CART_TABLE         = "cart_items"
-BRANCH_C_ORDER_TABLE        = "orders"
-BRANCH_C_ORDER_ITEMS_TABLE  = "order_items"
+BRANCH_C_CART_TABLE             = "cart_items"
+BRANCH_C_ORDER_TABLE            = "orders"
+BRANCH_C_ORDER_ITEMS_TABLE      = "order_items"
 
 # ________________________EMAIL_________________________
 MAIL_SERVER='smtp.gmail.com'

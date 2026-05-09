@@ -63,7 +63,7 @@ from flask import request,redirect,render_template,session,url_for,flash
 
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
-from utils import get_auth,validateMobile,validateCreditCard,requestParsor
+from utils import get_auth,validateMobile,validateCreditCard,requestParsor,getVerifyToken
 from mc_bridge import notify_player, give_item
 from models import (getUser,
                     get_product_by_id,
@@ -83,7 +83,8 @@ from models import (getUser,
                     deduct_product_stock,
                     restore_product_stock,
                     get_cart_item_stock,
-                    update_cart_qty)
+                    update_cart_qty,
+                    update_order_item_serial)
 
 
 # _______________________________________初始化___________________________________________
@@ -231,29 +232,29 @@ def checkout_service(name="",phone="",address="",payment="",shipping="",note="",
     if not shipping:
         flash("請選擇配送方式", "error")
         return redirect(url_for("C.checkout"))
-    if phone and not validateMobile(phone):     # 有填電話但格式不符（非 09 開頭 10 碼）
+    if phone and not validateMobile(phone):
         flash("手機格式錯誤，請輸入09開頭的10位數字", "error")
         return redirect(url_for("C.checkout"))
 
     credit_card_number = None
-    if payment == "信用卡":                      # 付款方式選信用卡時才需要驗證卡號
-        if card_id:                             # 用戶選擇了已儲存的卡
+    if payment == "信用卡":
+        if card_id:
             saved_cards = get_member_cards(user_account)
             matched = next((c for c in saved_cards if str(c["id"]) == card_id), None)
-            if not matched:                     # card_id 不屬於本人，可能是偽造的請求
+            if not matched:
                 flash("所選信用卡不存在", "error")
                 return redirect(url_for("C.checkout"))
-            credit_card_number = matched["card_number"][-4:]    # 取已儲存卡的後四碼
-        else:                                   # 用戶手動輸入卡號
-            if not card_number:                 # 選了信用卡但沒有填卡號
+            credit_card_number = matched["card_number"][-4:]
+        else:
+            if not card_number:
                 flash("請輸入信用卡卡號", "error")
                 return redirect(url_for("C.checkout"))
-            if not validateCreditCard(card_number):     # 卡號不是 16 碼數字
+            if not validateCreditCard(card_number):
                 flash("信用卡卡號格式錯誤，請輸入16位數字", "error")
                 return redirect(url_for("C.checkout"))
-            credit_card_number = card_number.replace(" ", "")[-4:]  # 取手動輸入卡號的後四碼
+            credit_card_number = card_number.replace(" ", "")[-4:]
 
-    for row in rows:                            # 結帳前重新確認商品狀態與庫存
+    for row in rows:                    # 結帳前重新確認商品狀態與庫存
         product = get_product_by_id(row["product_id"])
         if not product or not product.get("is_active"):
             flash(f"「{row['name']}」已下架，請回購物車移除後再結帳", "error")
@@ -266,53 +267,32 @@ def checkout_service(name="",phone="",address="",payment="",shipping="",note="",
 
     total    = sum(row['price'] * row['quantity'] for row in rows) + 60     # 重新計算總額防止前端竄改
     order_id = insert_order(user_account, total, payment, shipping, address, note, credit_card_number)
-    for row in rows:                            # 逐筆將購物車商品寫入訂單明細並扣庫存
-        insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
-        deduct_product_stock(row["product_id"], row['quantity'])
 
-    clear_cart(user_account)
-
-    # ── Minecraft 通知 ──
-    notify_player(user_account, f"🎉 訂單 #{order_id} 建立成功！感謝購買！")
-    
-    # ── Minecraft 道具發放 ──
-    # 逐筆檢查訂單商品，若商品有設定 MC 道具 ID，則直接發放道具給玩家
+    # 逐筆將購物車商品寫入訂單明細、扣庫存、產生序號、發放道具或傳送序號
     for row in rows:
+        # 建立訂單明細並取得 id
+        order_item_id = insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
+        # 扣減庫存
+        deduct_product_stock(row["product_id"], row['quantity'])
+        # 產生唯一序號並存入訂單明細，防止重複兌換
+        serial = getVerifyToken(16)
+        update_order_item_serial(order_item_id, serial)
+        # 查出商品的 MC 道具 ID
         product = get_product_by_id(row["product_id"])
         mc_item_id = product.get("mc_item_id")
         if mc_item_id:
+            # 寶石類：直接發道具進背包
             give_item(user_account, mc_item_id, row["quantity"])
+        else:
+            # 序號類：透過 RCON 傳序號給玩家
+            notify_player(user_account, f"你的兌換序號：{serial}")
 
+    # 清空購物車
+    clear_cart(user_account)
+    # 訂單建立成功通知
+    notify_player(user_account, f"🎉 訂單 #{order_id} 建立成功！感謝購買！")
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
-
-@requestParsor
-def cart_update_service(item_id, qty):
-    if request.method == "GET":
-        return redirect(url_for("C.cart"))
-    
-    user_account = session.get(SESSION_AUTHO)
-    stock = get_cart_item_stock(item_id, user_account)
-    if not stock or int(qty) > stock:
-        return '', 400
-    update_cart_qty(item_id, int(qty))
-    return '', 200
-
-# ── 訂單明細（AJAX）──────────────────────────────────────────────────────────────────────────
-# 對應路由：GET /order/<order_id>/items
-def order_items_service(order_id):
-    from flask import jsonify
-    rows = get_order_items_detail(order_id)
-    result = [
-        {
-            "name"   : r["name"],
-            "qty"    : r["quantity"],
-            "price"  : r["price"],
-            "image"  : r["product_pic"] or "",
-        }
-        for r in rows
-    ]
-    return jsonify(result)
 
 # ── 取消訂單 ──────────────────────────────────────────────────────────────────────────────────
 # 對應路由：POST /order/<order_id>/cancel
