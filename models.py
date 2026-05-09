@@ -358,16 +358,19 @@ def restore_product_stock(cursor, product_id, quantity):
     )
 
 
-# ── Branch E：商品管理（後台） ────────────────────────────────────────────────
+# ── Branch D：商品管理（後台） ────────────────────────────────────────────────
 
+# 新增商品，預設為上架狀態，回傳新商品的 id
+# mc_item_id 為選填，填入 Minecraft 道具 ID（例如 minecraft:diamond）
+# 若為序號類商品則不填，預設為 None
 @db_transaction
-def add_product(cursor, name, original_price, sale_price, description, img_filename):
+def add_product(cursor, name, original_price, sale_price, description, img_filename, mc_item_id):
     # 新增商品，預設為上架狀態，回傳新商品的 id
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
-        (`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?, ?, ?, ?, ?, 1)
-    """, (name, original_price, sale_price, description, img_filename))
+        (`mc_item_id`,`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
+        VALUES (?,?, ?, ?, ?, ?, 1)
+    """, (name, original_price, sale_price, description, img_filename,mc_item_id))
     return cursor.lastrowid
 
 @db_transaction

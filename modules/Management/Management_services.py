@@ -15,10 +15,13 @@ from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 # _______________________________________初始化___________________________________________
 
 # _______________________________________services___________________________________________
+
+# mc_item_id 設為選填，預設 None
+# 寶石類商品填入（例如 minecraft:diamond），序號類商品不填
 @requestParsor
-def manage_add_service(name,original_price,sale_price,description,image,product_quantity):
+def manage_add_service(name,original_price,sale_price,description,image,product_quantity,mc_item_id=None):
     img_filename   = save_image(image, UPLOAD_FOLDER)
-    product_id = add_product(name, original_price, sale_price, description, img_filename)
+    product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id)
     add_product_stock(product_id,int(product_quantity))
     add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
     flash("商品已上架", "success")

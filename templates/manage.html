@@ -210,6 +210,11 @@
                                 <label for="product_quantity">上架數量</label>
                                 <input type="number" id="product_quantity" name="product_quantity" class="form-control" placeholder="輸入上架數量" min="1" required>
                             </div>
+                            <!-- MC 道具 ID，填入後結帳時自動發放道具給玩家，序號類商品留空 -->
+                            <div class="form-group">
+                                <label for="mc_item_id">MC 道具 ID (選填)</label>
+                                <input type="text" id="mc_item_id" name="mc_item_id" class="form-control" placeholder="例如：minecraft:diamond">
+                            </div>
                             <div class="form-group">
                                 <label for="imageInput">商品圖片 (選填)</label>
                                 <input type="file" id="imageInput" name="image" class="form-control" accept="image/*">
