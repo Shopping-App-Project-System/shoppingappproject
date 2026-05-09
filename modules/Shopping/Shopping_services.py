@@ -59,11 +59,12 @@
 
 # __________________________________________內部模組_____________________________________
 from flask import request,redirect,render_template,session,url_for,flash
-from mc_bridge import notify_player
+
 
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
 from utils import get_auth,validateMobile,validateCreditCard,requestParsor
+from mc_bridge import notify_player, give_item
 from models import (getUser,
                     get_product_by_id,
                     get_product_stock,
@@ -273,6 +274,14 @@ def checkout_service(name="",phone="",address="",payment="",shipping="",note="",
 
     # ── Minecraft 通知 ──
     notify_player(user_account, f"🎉 訂單 #{order_id} 建立成功！感謝購買！")
+    
+    # ── Minecraft 道具發放 ──
+    # 逐筆檢查訂單商品，若商品有設定 MC 道具 ID，則直接發放道具給玩家
+    for row in rows:
+        product = get_product_by_id(row["product_id"])
+        mc_item_id = product.get("mc_item_id")
+        if mc_item_id:
+            give_item(user_account, mc_item_id, row["quantity"])
 
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
