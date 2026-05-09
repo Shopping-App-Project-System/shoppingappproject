@@ -2,18 +2,17 @@ import os
 from dotenv import load_dotenv
 
 # ________________________DATABASE______________________
-# HOST = "127.0.0.1"
-# PORT = 3306
-# USER = "root"
-# PASSWORD = "1207"
-# DATABASE = "project"
-
 load_dotenv()  # 讀取 .env 檔案，將其中的鍵值對載入為環境變數
-HOST     = os.getenv("DB_HOST")  # 從環境變數取得資料庫主機位址，覆蓋 settings 預設值
-PORT     = int(os.getenv("DB_PORT"))  # 從環境變數取得資料庫連線埠號，轉為整數
-USER     = os.getenv("DB_USER")  # 從環境變數取得資料庫登入帳號
-PASSWORD = os.getenv("DB_PASSWORD")  # 從環境變數取得資料庫登入密碼
-DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
+DB_HOST     = os.getenv("DB_HOST")  # 從環境變數取得資料庫主機位址，覆蓋 settings 預設值
+DB_PORT     = int(os.getenv("DB_PORT"))  # 從環境變數取得資料庫連線埠號，轉為整數
+DB_USER     = os.getenv("DB_USER")  # 從環境變數取得資料庫登入帳號
+DB_PASSWORD = os.getenv("DB_PASSWORD")  # 從環境變數取得資料庫登入密碼
+DB_DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
+
+# ________________________M.C.__________________________
+MC_RCON_HOST = os.getenv("MC_RCON_HOST")
+MC_RCON_PORT = os.getenv("DB_RCON_PORT")
+MC_RCON_PASSWORD = os.getenv("DB_RCON_PASSWORD")
 
 # # ________________________POOL__________________________
 # POOL_NAME = "pool"

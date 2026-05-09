@@ -6,7 +6,7 @@ from mariadb import IntegrityError
 # _______________________________________自定義模組_______________________________________
 from models import updateUser,createUser,getUser
 from settings import SESSION_AUTHO,MAIL_USERNAME,PROFILE_PIC_PATH,APP_PORT,PROFILE_TEMP_PATH,PROFILE_TEMP_FOLDER
-from utils import checkUserInput,getResponseForm,getVerifyToken,getRandomVerifyCode,move_image,validateMobile,validateEmail,getResponseFile,copy_image,save_image,requestParsor
+from utils import checkUserInput,getResponseForm,getVerifyToken,getRandomVerifyCode,move_image,validateMobile,validateEmail,getResponseFile,copy_image,save_image,requestParsor,validateMCUserAccount
 from extension import mail
 # _______________________________________初始化___________________________________________
 
@@ -173,6 +173,10 @@ def register_service(name,account,password,mobile,email,address,profile_pic):
     # 測試用，手機添加格式驗證（正規表示式）
     if not validateMobile(mobile):
         flash("手機格式錯誤")
+        return render_template("register.html")
+    
+    if not validateMCUserAccount(account):
+        flash("帳號格式錯誤")
         return render_template("register.html")
     
     try:

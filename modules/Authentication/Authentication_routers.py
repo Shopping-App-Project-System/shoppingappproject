@@ -29,30 +29,25 @@ def forgot_verify_account(token):return forgot_verify_account_service()
 @tokenRequired(refresh = True)
 def reset_verify_password(token):return reset_verify_password_service()
 
-
 @bp.route("/login",methods = ["POST","GET"])
 @guestOnly
 def login():return login_service()
-
 
 # 登出：清除 session 中的登入資訊並導回首頁
 @bp.route("/logout")
 @userRequired
 def logout():return logout_service()
 
-
 # 註冊：GET 顯示表單，POST 驗證輸入、建立帳號、複製預設大頭貼、發送驗證信
 @bp.route("/register",methods = ["POST","GET"])
 @guestOnly
 def register():return register_service()
-
 
 # 重設密碼：POST 驗證新舊密碼不同且兩次輸入一致後更新密碼
 @bp.route("/login/reset/password/<token>",methods=["POST","GET"])
 @guestOnly
 @tokenRequired(refresh = True)
 def reset_password(token):return reset_password_service()
-
 
 # 信箱驗證碼確認：GET 顯示輸入頁，POST 比對驗證碼，成功後將大頭貼移至正式路徑並啟用帳號
 @bp.route("/register/email/<token>/verify/code",methods=["POST","GET"])

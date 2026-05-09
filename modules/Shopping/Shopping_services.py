@@ -59,6 +59,7 @@
 
 # __________________________________________內部模組_____________________________________
 from flask import request,redirect,render_template,session,url_for,flash
+from mc_bridge import notify_player
 
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
@@ -269,6 +270,10 @@ def checkout_service(name="",phone="",address="",payment="",shipping="",note="",
         deduct_product_stock(row["product_id"], row['quantity'])
 
     clear_cart(user_account)
+
+    # ── Minecraft 通知 ──
+    notify_player(user_account, f"🎉 訂單 #{order_id} 建立成功！感謝購買！")
+
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
