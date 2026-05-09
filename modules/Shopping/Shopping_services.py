@@ -84,7 +84,9 @@ from models import (getUser,
                     restore_product_stock,
                     get_cart_item_stock,
                     update_cart_qty,
-                    update_order_item_serial)
+                    update_order_item_serial,
+                    get_order_item_by_serial,
+                    redeem_serial)
 
 
 # _______________________________________初始化___________________________________________
@@ -310,3 +312,27 @@ def order_cancel_service(order_id):
         restore_product_stock(item["product_id"], item["quantity"])
     flash("訂單已取消", "success")
     return redirect(url_for("D.member"))
+
+# ── 序號兌換 ──────────────────────────────────────────────────────────────────────────────────
+# 對應路由：POST /redeem
+# 玩家輸入序號後，驗證是否有效且未兌換，成功則標記已兌換並透過 RCON 通知玩家
+@requestParsor
+def redeem_service(serial_code=""):
+    user_account = session[SESSION_AUTHO]
+    
+    if not serial_code:
+        flash("請輸入序號", "error")
+        return redirect(url_for("B.index"))
+    
+    # 查詢序號是否有效且未兌換
+    item = get_order_item_by_serial(serial_code)
+    if not item:
+        flash("序號無效或已使用", "error")
+        return redirect(url_for("B.index"))
+    
+    # 標記為已兌換，防止重複使用
+    redeem_serial(serial_code)
+    # 透過 RCON 通知玩家兌換成功
+    notify_player(user_account, f"✅ 序號兌換成功！道具已發放！")
+    flash("兌換成功！", "success")
+    return redirect(url_for("B.index"))

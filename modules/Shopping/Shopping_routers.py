@@ -61,7 +61,9 @@ from .Shopping_services import (cart_add_service,
                                 checkout_service,
                                 order_cancel_service,
                                 cart_update_service,
-                                order_items_service)
+                                order_items_service,
+                                redeem_service,
+                                redeem_service)
 
 # _______________________________________初始化___________________________________________
 bp = Blueprint("C",__name__)
@@ -97,3 +99,8 @@ def order_items(order_id):return order_items_service(order_id)
 @bp.route("/order/<int:order_id>/cancel", methods=["POST"])
 @userRequired
 def order_cancel(order_id):return order_cancel_service(order_id)
+
+# 玩家在首頁輸入序號按下兌換，表單需要一個路由來接收
+@bp.route("/redeem", methods=["POST"])
+@userRequired
+def redeem():return redeem_service()
