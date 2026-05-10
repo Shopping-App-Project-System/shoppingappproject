@@ -8,26 +8,13 @@ from models import (
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
     get_member_cards,add_member_card,delete_member_card,set_default_card,
+    add_product_stock,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
-from utils import get_auth,validateMobile,save_image,del_imgae
+from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 # _______________________________________初始化___________________________________________
 
 # _______________________________________services___________________________________________
-<<<<<<< HEAD
-def manage_add_service():
-    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
-        return redirect(url_for("D.manage"))
-
-    name           = request.form.get("name")
-    original_price = request.form.get("original_price")
-    sale_price     = request.form.get("sale_price") or None
-    description    = request.form.get("description")
-    file           = request.files.get("image")
-    img_filename   = save_image(file, UPLOAD_FOLDER)
-    add_product(name, original_price, sale_price, description, img_filename)
-    add_log(session.get(SESSION_AUTHO), "上架", None, name)
-=======
 
 # mc_item_id 設為選填，預設 None
 # 寶石類商品填入（例如 minecraft:diamond），序號類商品不填
@@ -37,7 +24,6 @@ def manage_add_service(name,original_price,sale_price,description,image,product_
     product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id)
     add_product_stock(product_id,int(product_quantity))
     add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
->>>>>>> 46cfbea92747a2e4541240166175bf857d68c15f
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
 
