@@ -1,0 +1,45 @@
+{# 訂單明細 partial:由 AJAX 載入 #}
+{% if not_found %}
+    <div style="text-align:center;color:#c0392b;padding:16px 0;">找不到訂單明細(可能訂單不存在或無權限)</div>
+{% elif not items %}
+    <div style="text-align:center;color:#999;padding:16px 0;">這張訂單沒有商品明細</div>
+{% else %}
+<table style="width:100%;border-collapse:collapse;font-size:0.92rem;">
+    <thead>
+        <tr style="background:#f1f5f9;text-align:left;">
+            <th style="padding:9px 12px;border-bottom:2px solid #ccd6e0;">商品</th>
+            <th style="padding:9px 12px;border-bottom:2px solid #ccd6e0;text-align:right;">單價</th>
+            <th style="padding:9px 12px;border-bottom:2px solid #ccd6e0;text-align:right;">數量</th>
+            <th style="padding:9px 12px;border-bottom:2px solid #ccd6e0;text-align:right;">小計</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set ns = namespace(grand_total=0) %}
+        {% for it in items %}
+        {% set subtotal = it.price * it.quantity %}
+        {% set ns.grand_total = ns.grand_total + subtotal %}
+        <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:9px 12px;">
+                {{ it.product_name }}
+                {% if it.serial_code %}
+                <div style="font-size:0.78rem;color:#888;margin-top:2px;">
+                    序號:<code style="background:#f4f4f4;padding:1px 4px;border-radius:3px;">{{ it.serial_code }}</code>
+                </div>
+                {% endif %}
+            </td>
+            <td style="padding:9px 12px;text-align:right;color:#666;">NT$ {{ "{:,}".format(it.price) }}</td>
+            <td style="padding:9px 12px;text-align:right;">× {{ it.quantity }}</td>
+            <td style="padding:9px 12px;text-align:right;color:#c0392b;font-weight:600;">
+                NT$ {{ "{:,}".format(subtotal) }}
+            </td>
+        </tr>
+        {% endfor %}
+        <tr style="background:#fafafa;">
+            <td colspan="3" style="padding:10px 12px;text-align:right;font-weight:600;">合計</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:700;color:#c0392b;">
+                NT$ {{ "{:,}".format(ns.grand_total) }}
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endif %}

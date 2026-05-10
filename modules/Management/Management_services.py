@@ -8,8 +8,9 @@ from models import (
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
     get_member_cards,add_member_card,delete_member_card,set_default_card,
-    add_product_stock,
+    add_product_stock,set_product_stock,
     get_log_months,get_logs_by_month,
+    get_user_accounts_with_orders,search_completed_orders,get_order_items_with_user_check,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -69,12 +70,13 @@ def manage_edit_service():
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id     = request.form.get("product_id")
-    name           = request.form.get("name")
-    original_price = request.form.get("original_price")
-    sale_price     = request.form.get("sale_price") or None
-    category       = request.form.get("category") or None
-    file           = request.files.get("image")
+    product_id       = request.form.get("product_id")
+    name             = request.form.get("name")
+    original_price   = request.form.get("original_price")
+    sale_price       = request.form.get("sale_price") or None
+    category         = request.form.get("category") or None
+    product_quantity = request.form.get("product_quantity")
+    file             = request.files.get("image")
 
     product = get_product_by_id(product_id)
     if not product:
@@ -95,6 +97,17 @@ def manage_edit_service():
         del_imgae(old_pic_path)
 
     update_product(update_data, product_id)
+
+    # 更新庫存(只有有送 product_quantity 才動,空值則保留原庫存)
+    if product_quantity is not None and product_quantity.strip() != "":
+        try:
+            qty = int(product_quantity)
+            if qty < 0:
+                qty = 0
+            set_product_stock(product_id, qty)
+        except ValueError:
+            flash("商品數量格式錯誤,庫存未更新", "error")
+
     add_log(session.get(SESSION_AUTHO), "修改", product_id, name)
     flash("商品資料已更新", "success")
     return redirect(url_for("D.manage"))
@@ -282,3 +295,100 @@ def set_default_card_service():
     set_default_card(user_account, card_id)
     flash("已設定為預設卡", "success")
     return redirect(url_for("D.member_cards"))
+
+
+# ── 已完成訂單查詢 services(管理員/使用者共用模板) ────────────────────────────
+
+def _parse_filters_from_request():
+    """從 request.args 解析篩選條件,回傳一個 dict。"""
+    month       = request.args.get("month", "").strip()
+    target_user = request.args.get("target_user", "").strip()
+    min_total   = request.args.get("min_total", "").strip()
+    max_total   = request.args.get("max_total", "").strip()
+
+    # 月份格式驗證
+    if not (len(month) == 7 and month[4] == '-'
+            and month[:4].isdigit() and month[5:].isdigit()):
+        month = ""
+
+    # 金額轉數字
+    try:
+        min_total_val = int(min_total) if min_total else None
+    except ValueError:
+        min_total_val = None
+    try:
+        max_total_val = int(max_total) if max_total else None
+    except ValueError:
+        max_total_val = None
+
+    return {
+        "month": month,
+        "target_user": target_user,
+        "min_total": min_total_val,
+        "max_total": max_total_val,
+        # 給模板顯示原始字串(避免顯示 None)
+        "min_total_raw": min_total,
+        "max_total_raw": max_total,
+    }
+
+
+def manage_completed_orders_service():
+    """管理員:看所有人的已完成訂單。"""
+    filters = _parse_filters_from_request()
+    orders = search_completed_orders(
+        user_account=None,
+        target_user=filters["target_user"] or None,
+        month=filters["month"] or None,
+        min_total=filters["min_total"],
+        max_total=filters["max_total"],
+    )
+    user_options = get_user_accounts_with_orders()
+
+    return render_template("orders.html",
+        orders=orders,
+        filters=filters,
+        user_options=user_options,
+        is_admin=True,
+        items_url_base="/manage/orders",  # 配合下面的 partial route
+        page_title="交易成功訂單(全部使用者)"
+    )
+
+
+def member_completed_orders_service():
+    """使用者:看自己的已完成訂單。"""
+    user_account = session[SESSION_AUTHO]
+    filters = _parse_filters_from_request()
+    orders = search_completed_orders(
+        user_account=user_account,
+        target_user=None,
+        month=filters["month"] or None,
+        min_total=filters["min_total"],
+        max_total=filters["max_total"],
+    )
+
+    return render_template("orders.html",
+        orders=orders,
+        filters=filters,
+        user_options=[],  # 使用者頁不需要使用者下拉
+        is_admin=False,
+        items_url_base="/member/orders",
+        page_title="我的交易成功訂單"
+    )
+
+
+def manage_order_items_service(order_id):
+    """管理員:取單張訂單明細(AJAX partial)。"""
+    items = get_order_items_with_user_check(order_id, user_account=None)
+    if items is None:
+        return render_template("_order_items.html", items=[], not_found=True)
+    return render_template("_order_items.html", items=items, not_found=False)
+
+
+def member_order_items_service(order_id):
+    """使用者:取自己的訂單明細(AJAX partial)。"""
+    user_account = session[SESSION_AUTHO]
+    items = get_order_items_with_user_check(order_id, user_account=user_account)
+    if items is None:
+        # 不是這個人的訂單就直接拒,不洩漏訂單資訊
+        return render_template("_order_items.html", items=[], not_found=True)
+    return render_template("_order_items.html", items=items, not_found=False)

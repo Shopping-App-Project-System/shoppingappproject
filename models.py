@@ -413,6 +413,22 @@ def add_product_stock(cursor, product_id, quantity):
     """, (product_id, quantity))
 
 @db_transaction
+def set_product_stock(cursor, product_id, quantity):
+    # 直接把商品庫存設為指定數量(修改商品時使用)。
+    # 若該商品還沒有庫存紀錄,自動建立一筆;否則更新。
+    cursor.execute("""
+        SELECT 1 FROM `product_stock` WHERE product_id = ?
+    """, (product_id,))
+    if cursor.fetchone():
+        cursor.execute("""
+            UPDATE `product_stock` SET product_quantity = ? WHERE product_id = ?
+        """, (quantity, product_id))
+    else:
+        cursor.execute("""
+            INSERT INTO `product_stock` (product_id, product_quantity) VALUES (?, ?)
+        """, (product_id, quantity))
+
+@db_transaction
 def set_product_active(cursor, product_id, is_active):
     # 設定商品上下架狀態，is_active=1 為上架，0 為下架
     cursor.execute(f"""
@@ -592,4 +608,100 @@ def get_logs_by_month(cursor, month):
         WHERE DATE_FORMAT(created_at, '%Y-%m') = ?
         ORDER BY created_at DESC
     """, (month,))
+    return cursor.fetchall()
+
+
+# ── 已完成訂單查詢(報表/篩選用) ─────────────────────────────────────────────
+
+@db_transaction
+def get_user_accounts_with_orders(cursor):
+    """取得有過訂單(含已完成的)的所有使用者帳號清單,給管理員下拉用。"""
+    cursor.execute(f"""
+        SELECT DISTINCT u.user_account
+        FROM `{BRANCH_A_TABLE}` u
+        JOIN `{BRANCH_C_ORDER_TABLE}` o ON o.user_id = u.id
+        WHERE o.status = '已完成'
+        ORDER BY u.user_account
+    """)
+    return [row['user_account'] for row in cursor.fetchall()]
+
+
+@db_transaction
+def search_completed_orders(cursor, user_account=None, target_user=None,
+                            month=None, min_total=None, max_total=None):
+    """
+    篩選「已完成」訂單。
+    user_account:None=管理員模式撈全部;傳帳號=只撈該人(使用者模式)
+    target_user :管理員可指定要看哪個使用者(None=全部使用者)
+    month       :YYYY-MM 格式
+    min_total/max_total:金額範圍
+    """
+    sql = f"""
+        SELECT o.id, o.total, o.payment_method, o.delivery_method,
+               o.address, o.note, o.status, o.created_at,
+               u.user_account
+        FROM `{BRANCH_C_ORDER_TABLE}` o
+        JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+        WHERE o.status = '已完成'
+    """
+    params = []
+
+    if user_account is not None:
+        # 使用者模式:強制只看自己
+        sql += " AND u.user_account = ?"
+        params.append(user_account)
+    elif target_user:
+        # 管理員指定看某人
+        sql += " AND u.user_account = ?"
+        params.append(target_user)
+
+    if month:
+        sql += " AND DATE_FORMAT(o.created_at, '%Y-%m') = ?"
+        params.append(month)
+
+    if min_total is not None:
+        sql += " AND o.total >= ?"
+        params.append(min_total)
+
+    if max_total is not None:
+        sql += " AND o.total <= ?"
+        params.append(max_total)
+
+    sql += " ORDER BY o.created_at DESC"
+    cursor.execute(sql, tuple(params))
+    return cursor.fetchall()
+
+
+@db_transaction
+def get_order_items_with_user_check(cursor, order_id, user_account=None):
+    """
+    取得訂單明細(含商品名稱/圖片)。
+    user_account=None : 管理員模式,不檢查擁有者
+    user_account=帳號 : 使用者模式,訂單必須屬於該人,否則回 None
+    """
+    if user_account is not None:
+        # 先驗證訂單屬於這個人
+        cursor.execute(f"""
+            SELECT 1 FROM `{BRANCH_C_ORDER_TABLE}` o
+            JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+            WHERE o.id = ? AND u.user_account = ? AND o.status = '已完成'
+        """, (order_id, user_account))
+        if not cursor.fetchone():
+            return None  # 不是你的訂單 / 訂單不存在 / 不是已完成
+    else:
+        # 管理員只要驗證訂單存在且已完成
+        cursor.execute(f"""
+            SELECT 1 FROM `{BRANCH_C_ORDER_TABLE}`
+            WHERE id = ? AND status = '已完成'
+        """, (order_id,))
+        if not cursor.fetchone():
+            return None
+
+    cursor.execute(f"""
+        SELECT oi.quantity, oi.price, oi.serial_code,
+               p.name AS product_name, p.product_pic
+        FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
+        JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON p.id = oi.product_id
+        WHERE oi.order_id = ?
+    """, (order_id,))
     return cursor.fetchall()

@@ -162,6 +162,8 @@
             <a href="/manage" class="active">⛏ 商品管理</a>
             <span class="tab-sep">|</span>
             <a href="/manage/log">📋 操作紀錄</a>
+            <span class="tab-sep">|</span>
+            <a href="/manage/orders">📊 交易成功訂單</a>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -257,6 +259,7 @@
                                 <th>原價</th>
                                 <th>特價</th>
                                 <th>類別</th>
+                                <th>庫存</th>
                                 <th>狀態</th>
                                 <th style="width:240px">操作</th>
                             </tr>
@@ -276,6 +279,19 @@
                                 <td>{{ p.sale_price if p.sale_price else '-' }}</td>
                                 <td>{{ p.category if p.category else '-' }}</td>
                                 <td>
+                                    {% if p.product_quantity is not none %}
+                                        {% if p.product_quantity == 0 %}
+                                            <span style="color:#c0392b;font-weight:600;">缺貨</span>
+                                        {% elif p.product_quantity < 10 %}
+                                            <span style="color:#e67e22;font-weight:600;">{{ p.product_quantity }}</span>
+                                        {% else %}
+                                            {{ p.product_quantity }}
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color:#999;">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     {% if p.is_active %}
                                     <span class="status-active">銷售中</span>
                                     {% else %}
@@ -292,7 +308,8 @@
                                             data-original-price="{{ p.original_price }}"
                                             data-sale-price="{{ p.sale_price if p.sale_price else '' }}"
                                             data-product-pic="{{ p.product_pic if p.product_pic else '' }}"
-                                            data-category="{{ p.category if p.category else '' }}">✏ 修改</button>
+                                            data-category="{{ p.category if p.category else '' }}"
+                                            data-quantity="{{ p.product_quantity if p.product_quantity is not none else '' }}">✏ 修改</button>
 
                                         {% if p.is_active %}
                                         <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')" style="display:inline;">
@@ -339,7 +356,7 @@
                     <input type="text" id="edit_name" name="name" class="form-control" required>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
                     <div class="form-group">
                         <label for="edit_original_price">原價</label>
                         <input type="number" id="edit_original_price" name="original_price" class="form-control" required>
@@ -347,6 +364,10 @@
                     <div class="form-group">
                         <label for="edit_sale_price">特價 (選填)</label>
                         <input type="number" id="edit_sale_price" name="sale_price" class="form-control" placeholder="若無特價請留空">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_product_quantity">商品數量</label>
+                        <input type="number" id="edit_product_quantity" name="product_quantity" class="form-control" min="0" placeholder="留空則不變">
                     </div>
                 </div>
 
@@ -410,17 +431,19 @@
                 this.dataset.originalPrice,
                 this.dataset.salePrice,
                 this.dataset.productPic,
-                this.dataset.category
+                this.dataset.category,
+                this.dataset.quantity
             );
         });
     });
 
-    function openEditModal(id, name, originalPrice, salePrice, productPic, category) {
+    function openEditModal(id, name, originalPrice, salePrice, productPic, category, quantity) {
         document.getElementById("edit_product_id").value = id;
         document.getElementById("edit_name").value = name;
         document.getElementById("edit_original_price").value = originalPrice;
         document.getElementById("edit_sale_price").value = salePrice || "";
         document.getElementById("edit_category").value = category || "";
+        document.getElementById("edit_product_quantity").value = (quantity !== undefined && quantity !== "") ? quantity : "";
 
         const curImg = document.getElementById("edit_current_pic");
         const curBox = document.getElementById("edit_current_pic_box");

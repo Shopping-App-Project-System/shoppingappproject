@@ -11,6 +11,9 @@ from .Management_services import (
     member_cards_service,add_card_service,delete_card_service,set_default_card_service,
     # 後台操作日誌(月份分組)的 partial
     manage_log_month_service,
+    # 已完成訂單查詢
+    manage_completed_orders_service,member_completed_orders_service,
+    manage_order_items_service,member_order_items_service,
 )
 
 # _______________________________________初始化___________________________________________
@@ -80,3 +83,20 @@ def delete_card():return delete_card_service()
 @bp.route("/member/cards/set_default", methods=["GET", "POST"])
 @userRequired
 def set_default_card_route():return set_default_card_service()
+
+# ── 已完成訂單查詢(管理員 / 使用者) ────────────────────────────────────────
+@bp.route("/manage/orders", methods=["GET"])
+@adminRequired
+def manage_completed_orders():return manage_completed_orders_service()
+
+@bp.route("/manage/orders/<int:order_id>/items", methods=["GET"])
+@adminRequired
+def manage_order_items(order_id):return manage_order_items_service(order_id)
+
+@bp.route("/member/orders", methods=["GET"])
+@userRequired
+def member_completed_orders():return member_completed_orders_service()
+
+@bp.route("/member/orders/<int:order_id>/items", methods=["GET"])
+@userRequired
+def member_order_items(order_id):return member_order_items_service(order_id)

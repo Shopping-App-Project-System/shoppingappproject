@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>{{ page_title }}</title>
+<style>
+    body {
+        font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+        color: #222;
+    }
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 24px 28px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    h1 {
+        font-size: 1.4rem;
+        margin: 0 0 6px;
+    }
+    .subtitle {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+    .back-link {
+        display: inline-block;
+        margin-bottom: 14px;
+        color: #555;
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+    .back-link:hover { color: #000; }
+
+    /* 篩選列 */
+    .filter-bar {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+    }
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    .filter-grid .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .filter-grid label {
+        font-size: 0.82rem;
+        color: #555;
+        font-weight: 600;
+    }
+    .filter-grid input,
+    .filter-grid select {
+        padding: 6px 10px;
+        border: 1px solid #cbd5e0;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-family: inherit;
+    }
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+    .filter-actions button {
+        background: #2c5fa8;
+        color: #fff;
+        border: 0;
+        border-radius: 4px;
+        padding: 8px 18px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    .filter-actions button:hover { background: #234b86; }
+    .filter-actions .reset-link {
+        color: #2c5fa8;
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+    .filter-actions .reset-link:hover { text-decoration: underline; }
+    .summary {
+        margin-left: auto;
+        font-size: 0.88rem;
+        color: #666;
+    }
+    .summary strong {
+        color: #c0392b;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    /* 訂單卡片 */
+    .order-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .order-item {
+        border: 1px solid #e2e2e2;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        overflow: hidden;
+        transition: box-shadow 0.15s;
+    }
+    .order-item:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .order-header {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto auto;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        cursor: pointer;
+        background: #fafafa;
+        user-select: none;
+    }
+    .order-header.active {
+        background: #eef5ff;
+        border-bottom: 1px solid #d3e2f5;
+    }
+    .toggle-icon {
+        color: #888;
+        transition: transform 0.2s;
+    }
+    .order-header.active .toggle-icon {
+        transform: rotate(90deg);
+    }
+    .order-id {
+        font-weight: 700;
+        color: #2c5fa8;
+        font-size: 1.02rem;
+    }
+    .order-meta-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 0.85rem;
+        color: #666;
+    }
+    .order-meta-block .row { display: flex; gap: 6px; align-items: baseline; }
+    .order-meta-block .label { color: #999; font-size: 0.78rem; min-width: 56px; }
+    .order-user {
+        font-size: 0.85rem;
+        color: #555;
+        background: #fff7e6;
+        border: 1px solid #f5d97a;
+        padding: 2px 8px;
+        border-radius: 3px;
+    }
+    .order-payment {
+        font-size: 0.82rem;
+        color: #555;
+    }
+    .order-total {
+        font-weight: 700;
+        color: #c0392b;
+        font-size: 1.05rem;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .order-body {
+        display: none;
+        padding: 14px 18px 18px;
+        background: #fff;
+        border-top: 1px dashed #ddd;
+    }
+    .order-body.visible { display: block; }
+    .order-body .extra-info {
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        background: #fafafa;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #555;
+    }
+    .order-body .extra-info > div { margin: 2px 0; }
+    .order-body .extra-info .label { color: #999; margin-right: 6px; }
+
+    .loading {
+        color: #888;
+        font-size: 0.9rem;
+        padding: 8px 0;
+    }
+    .empty {
+        text-align: center;
+        color: #999;
+        padding: 40px 0;
+    }
+
+    @media (max-width: 700px) {
+        .order-header {
+            grid-template-columns: auto 1fr auto;
+            row-gap: 6px;
+        }
+        .order-user, .order-payment {
+            grid-column: 2 / 4;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <a class="back-link" href="{% if is_admin %}/manage{% else %}/member{% endif %}">← 返回</a>
+    <h1>{{ page_title }}</h1>
+    <div class="subtitle">
+        僅顯示狀態為「已完成」的訂單。可依條件篩選,點訂單號展開明細(部分渲染)。
+    </div>
+
+    {# ── 篩選列 ────────────────────────────── #}
+    <form class="filter-bar" method="GET">
+        <div class="filter-grid">
+            <div class="field">
+                <label for="month">月份</label>
+                <input type="month" id="month" name="month" value="{{ filters.month or '' }}">
+            </div>
+
+            {% if is_admin %}
+            <div class="field">
+                <label for="target_user">使用者</label>
+                <select id="target_user" name="target_user">
+                    <option value="">— 全部使用者 —</option>
+                    {% for acc in user_options %}
+                    <option value="{{ acc }}" {% if filters.target_user == acc %}selected{% endif %}>{{ acc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="field">
+                <label for="min_total">金額下限</label>
+                <input type="number" id="min_total" name="min_total" min="0" placeholder="例如 100" value="{{ filters.min_total_raw or '' }}">
+            </div>
+            <div class="field">
+                <label for="max_total">金額上限</label>
+                <input type="number" id="max_total" name="max_total" min="0" placeholder="例如 5000" value="{{ filters.max_total_raw or '' }}">
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit">🔍 查詢</button>
+            <a class="reset-link" href="{{ items_url_base }}">清除篩選</a>
+            <span class="summary">
+                共 <strong>{{ orders|length }}</strong> 筆已完成訂單
+                {% if orders %}
+                    {% set total_sum = orders|sum(attribute='total') %}
+                    / 總金額 <strong>NT$ {{ "{:,}".format(total_sum) }}</strong>
+                {% endif %}
+            </span>
+        </div>
+    </form>
+
+    {# ── 訂單清單 ────────────────────────────── #}
+    {% if not orders %}
+        <div class="empty">沒有符合條件的已完成訂單</div>
+    {% else %}
+    <ul class="order-list">
+        {% for o in orders %}
+        <li class="order-item" data-order-id="{{ o.id }}">
+            <div class="order-header" onclick="toggleOrder(this)">
+                <span class="toggle-icon">▶</span>
+                <span class="order-id">#{{ o.id }}</span>
+                <div class="order-meta-block">
+                    <div class="row">
+                        <span class="label">時間</span><span>{{ o.created_at }}</span>
+                    </div>
+                    {% if is_admin %}
+                    <div class="row">
+                        <span class="label">使用者</span><span class="order-user">{{ o.user_account }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <span class="order-payment">{{ o.payment_method or '-' }}</span>
+                <span class="order-total">NT$ {{ "{:,}".format(o.total) }}</span>
+            </div>
+            <div class="order-body">
+                {# 展開後上方先列幾個欄位,然後下方插入 AJAX 載入的明細 #}
+                <div class="extra-info">
+                    <div><span class="label">配送方式</span>{{ o.delivery_method or '-' }}</div>
+                    <div><span class="label">收件地址</span>{{ o.address or '-' }}</div>
+                    {% if o.note %}<div><span class="label">備註</span>{{ o.note }}</div>{% endif %}
+                </div>
+                <div class="items-container">
+                    <div class="loading">載入訂單明細中…</div>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+
+<script>
+    const ITEMS_URL_BASE = "{{ items_url_base }}";
+
+    async function toggleOrder(headerEl) {
+        const item = headerEl.closest(".order-item");
+        const body = item.querySelector(".order-body");
+        const orderId = item.dataset.orderId;
+        const isOpen = body.classList.contains("visible");
+
+        if (isOpen) {
+            body.classList.remove("visible");
+            headerEl.classList.remove("active");
+            return;
+        }
+
+        headerEl.classList.add("active");
+        body.classList.add("visible");
+
+        if (item.dataset.loaded === "true") return;
+
+        const container = body.querySelector(".items-container");
+        try {
+            const res = await fetch(ITEMS_URL_BASE + "/" + orderId + "/items");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const html = await res.text();
+            container.innerHTML = html;
+            item.dataset.loaded = "true";
+        } catch (err) {
+            container.innerHTML = '<div class="empty" style="color:#c0392b;">載入失敗：' + err.message + '</div>';
+        }
+    }
+</script>
+</body>
+</html>

@@ -292,7 +292,10 @@
 
             <!-- ── 右側：訂單紀錄 ── -->
             <div class="mc-block">
-                <div class="mc-block-header"><h2>📜 訂單紀錄</h2></div>
+                <div class="mc-block-header" style="display:flex;justify-content:space-between;align-items:center;">
+                    <h2 style="margin:0;">📜 訂單紀錄</h2>
+                    <a href="/member/orders" class="btn btn-orders" style="font-size:0.78rem;padding:6px 12px;">📊 已完成訂單查詢</a>
+                </div>
                 <div class="mc-block-body" style="padding:0;">
 
                     {% if orders %}
