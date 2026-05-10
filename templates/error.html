@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統錯誤</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root{--redstone:#E03030;--gold-ore:#F0C93A;--stone:#7F7F7F;--stone-light:#A5A5A5;--stone-dark:#545454;--white-mc:#F0F0F0;--shadow-inset:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25);--shadow-block:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),5px 5px 0 #000;--font-pixel:"Press Start 2P",monospace;--border-block:4px solid #000;}
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        body{min-height:100vh;background:repeating-linear-gradient(180deg,#1a1a2e 0,#1a1a2e 8px,#0d0d1f 8px,#0d0d1f 16px);display:flex;align-items:center;justify-content:center;padding:40px;font-family:var(--font-pixel);cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23fff'/%3E%3Crect x='2' y='2' width='12' height='12' fill='%23222'/%3E%3Crect x='5' y='5' width='6' height='6' fill='%23fff'/%3E%3C/svg%3E") 8 8,crosshair;}
+
+        .error-box{text-align:center;max-width:480px;}
+
+        /* Pixel TNT / warning block */
+        .error-block{
+            width:96px;height:96px;margin:0 auto 28px;
+            border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;
+            background:
+                repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 8px,#a02020 8px,#a02020 16px);
+            position:relative;image-rendering:pixelated;
+            animation:blink 1s steps(2) infinite;
+        }
+        /* TNT text pattern */
+        .error-block::before{content:'!';font-family:var(--font-pixel);font-size:2.5rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+        @keyframes blink{0%,100%{filter:brightness(1);}50%{filter:brightness(1.4);}}
+
+        .error-message{font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;margin-bottom:20px;line-height:2;}
+        .countdown-box{font-size:.65rem;color:#aaa;text-shadow:1px 1px 0 #000;line-height:2.4;}
+        .countdown-box span{color:var(--redstone);text-shadow:2px 2px 0 #000;}
+
+        /* pixel stars */
+        .stars{position:fixed;top:0;left:0;right:0;height:80px;pointer-events:none;background:linear-gradient(#fff 0,#fff 100%) 10% 12px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 30% 28px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 55% 8px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 75% 36px/4px 4px no-repeat,linear-gradient(var(--gold-ore) 0,var(--gold-ore) 100%) 20% 44px/4px 4px no-repeat,linear-gradient(#5DECF5 0,#5DECF5 100%) 65% 20px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 88% 14px/4px 4px no-repeat;}
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="error-box">
+        <div class="error-block"></div>
+        <div class="error-message">
+            {% if error %}{{ error }}{% else %}系統出現錯誤{% endif %}
+        </div>
+        <div class="countdown-box"><span id="sec">3</span> 秒後返回首頁...</div>
+    </div>
+    <script>
+        let sec=3;const el=document.getElementById('sec');
+        const timer=setInterval(()=>{sec--;el.textContent=sec;if(sec<=0){clearInterval(timer);window.location.href='/';}},1000);
+    </script>
+</body>
+</html>

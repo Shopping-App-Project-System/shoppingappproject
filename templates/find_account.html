@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>忘記帳號｜{{ store_name or 'My Store' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root{--dirt:#8B5E3C;--dirt-dark:#5C3A1E;--grass-top:#5D9E3F;--leaf-dark:#2A6320;--stone:#7F7F7F;--stone-light:#A5A5A5;--stone-dark:#545454;--wood:#B5892D;--wood-dark:#7A5C1E;--diamond:#5DECF5;--diamond-dk:#1ABAC8;--gold-ore:#F0C93A;--redstone:#E03030;--sky-top:#7DC6FF;--sky-bot:#B8E0FF;--white-mc:#F0F0F0;--black-mc:#1A1A1A;--obsidian:#1a0a2e;--obsidian-dk:#120820;--shadow-inset:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25);--shadow-block:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),5px 5px 0 #000;--font-pixel:"Press Start 2P",monospace;--font-ui:"Noto Sans TC",sans-serif;--border-block:4px solid #000;}
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        html{image-rendering:pixelated;}
+        body{font-family:var(--font-ui);min-height:100vh;background:linear-gradient(#fff 0,#fff 100%) 5% 20px/120px 24px no-repeat,linear-gradient(#fff 0,#fff 100%) 3% 32px/80px 24px no-repeat,linear-gradient(#fff 0,#fff 100%) 9% 12px/160px 24px no-repeat,linear-gradient(#fff 0,#fff 100%) 55% 22px/100px 24px no-repeat,linear-gradient(#fff 0,#fff 100%) 80% 18px/90px 24px no-repeat,linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bot) 60%,#a0d060 60%,#5D9E3F 63%,#8B5E3C 63%,#5C3A1E 100%);color:var(--black-mc);overflow-x:hidden;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23fff'/%3E%3Crect x='2' y='2' width='12' height='12' fill='%23222'/%3E%3Crect x='5' y='5' width='6' height='6' fill='%23fff'/%3E%3C/svg%3E") 8 8,crosshair;}
+        a{text-decoration:none;color:inherit;}
+        .container{width:min(1400px,94%);margin:auto;}
+        .ground-strip{height:24px;background:repeating-linear-gradient(90deg,var(--grass-top) 0,var(--grass-top) 24px,#4e8a33 24px,#4e8a33 48px);border-bottom:var(--border-block);box-shadow:0 4px 0 #000;}
+        .topbar{position:sticky;top:0;z-index:100;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);box-shadow:0 6px 0 #000;}
+        .topbar-inner{display:flex;justify-content:center;align-items:center;min-height:80px;position:relative;padding:0 8px;}
+        .logo{position:absolute;left:0;font-family:var(--font-pixel);font-size:clamp(.7rem,1.5vw,1rem);color:var(--gold-ore);text-shadow:3px 3px 0 #000,-2px -2px 0 #000;display:flex;align-items:center;gap:10px;}
+        .logo-gem{width:22px;height:22px;flex-shrink:0;border:2px solid #000;box-shadow:var(--shadow-inset);background:linear-gradient(#5DECF5 0,#5DECF5 100%) 0 0/22px 22px no-repeat,linear-gradient(#1ABAC8 0,#1ABAC8 100%) 3px 3px/9px 9px no-repeat,linear-gradient(#fff 0,#fff 100%) 3px 3px/5px 5px no-repeat;}
+        .nav-links{display:flex;gap:8px;align-items:center;}
+        .nav-links a{font-family:var(--font-pixel);font-size:1rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;padding:10px 18px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);}
+        .nav-links a:hover{filter:brightness(1.25);transform:translateY(-3px);box-shadow:var(--shadow-inset),5px 8px 0 #000;}
+        .nav-toggle{display:none;position:absolute;right:0;flex-direction:column;gap:6px;background:none;border:none;cursor:pointer;padding:8px;}
+        .nav-toggle span{display:block;width:26px;height:5px;background:var(--white-mc);border:2px solid #000;transition:transform .2s steps(4),opacity .2s;}
+        .nav-toggle.open span:nth-child(1){transform:translateY(11px) rotate(45deg);}
+        .nav-toggle.open span:nth-child(2){opacity:0;}
+        .nav-toggle.open span:nth-child(3){transform:translateY(-11px) rotate(-45deg);}
+        .nav-drawer{display:none;flex-direction:column;gap:4px;padding:12px 16px;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);}
+        .nav-drawer.open{display:flex;}
+        .nav-drawer a{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:12px 16px;border:var(--border-block);background:var(--stone);box-shadow:var(--shadow-block);}
+        .auth-layout{min-height:calc(100vh - 130px);display:grid;place-items:center;padding:40px 16px;}
+        .auth-card{width:min(960px,100%);display:grid;grid-template-columns:1fr 1fr;border:var(--border-block);box-shadow:var(--shadow-inset),8px 8px 0 #000;overflow:hidden;}
+        .auth-visual{padding:44px 36px;background:repeating-linear-gradient(180deg,var(--obsidian) 0,var(--obsidian) 8px,var(--obsidian-dk) 8px,var(--obsidian-dk) 16px);border-right:var(--border-block);display:flex;flex-direction:column;justify-content:flex-end;gap:16px;position:relative;overflow:hidden;}
+        .auth-visual::before{content:'';position:absolute;top:24px;left:20px;right:20px;height:60px;background:linear-gradient(#fff 0,#fff 100%) 10% 0/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 30% 12px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 55% 4px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 75% 20px/4px 4px no-repeat,linear-gradient(var(--gold-ore) 0,var(--gold-ore) 100%) 20% 28px/4px 4px no-repeat,linear-gradient(var(--diamond) 0,var(--diamond) 100%) 45% 36px/4px 4px no-repeat;}
+        .auth-visual::after{content:'';position:absolute;top:16px;right:28px;width:28px;height:28px;background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);border:3px solid #000;box-shadow:var(--shadow-inset),2px 2px 0 #000;}
+        .auth-visual h2{font-family:var(--font-pixel);font-size:clamp(.85rem,1.8vw,1.1rem);color:var(--white-mc);text-shadow:3px 3px 0 #000;line-height:2;}
+        .auth-visual p{font-family:var(--font-pixel);font-size:.6rem;color:rgba(255,255,255,.75);text-shadow:1px 1px 0 #000;line-height:2.4;}
+        .visual-chars{display:flex;gap:12px;align-items:flex-end;margin-bottom:8px;}
+        .pixel-char{display:inline-flex;flex-direction:column;align-items:center;image-rendering:pixelated;}
+        .pc-head{width:44px;height:44px;border:var(--border-block);box-shadow:var(--shadow-inset);background:linear-gradient(#5a3a1a 0,#5a3a1a 100%) 0 0/44px 7px no-repeat,linear-gradient(#c8a068 0,#c8a068 100()) 0 7px/44px 26px no-repeat,linear-gradient(#fff 0,#fff 100%) 4px 12px/12px 10px no-repeat,linear-gradient(#fff 0,#fff 100%) 28px 12px/12px 10px no-repeat,linear-gradient(#3a6fff 0,#3a6fff 100%) 5px 13px/10px 8px no-repeat,linear-gradient(#3a6fff 0,#3a6fff 100%) 29px 13px/10px 8px no-repeat,linear-gradient(#7a3010 0,#7a3010 100%) 12px 28px/20px 4px no-repeat,#c8a068;}
+        .pc-body{width:36px;height:32px;margin-top:2px;border:var(--border-block);box-shadow:var(--shadow-inset);background:repeating-linear-gradient(180deg,#1a5caa 0,#1a5caa 6px,#0d3a7a 6px,#0d3a7a 12px);}
+        .pc-legs{display:flex;gap:2px;margin-top:2px;}
+        .pc-leg{width:14px;height:22px;border:var(--border-block);box-shadow:var(--shadow-inset);background:repeating-linear-gradient(180deg,#3a5cff 0,#3a5cff 6px,#1a3ccc 6px,#1a3ccc 12px);}
+        .auth-form{padding:40px 36px;background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);display:flex;flex-direction:column;justify-content:center;}
+        .form-title{font-family:var(--font-pixel);font-size:clamp(.85rem,1.8vw,1.1rem);color:var(--white-mc);text-shadow:3px 3px 0 #000;margin-bottom:8px;line-height:1.8;}
+        .form-subtitle{font-family:var(--font-pixel);font-size:.6rem;color:#bbb;text-shadow:1px 1px 0 #000;margin-bottom:24px;line-height:2.2;}
+        .flash{font-family:var(--font-pixel);font-size:.65rem;line-height:2;padding:12px 16px;border:var(--border-block);margin-bottom:16px;box-shadow:var(--shadow-inset),2px 2px 0 #000;background:repeating-linear-gradient(180deg,#6a1010 0,#6a1010 6px,#420a0a 6px,#420a0a 12px);color:#ff8080;text-shadow:1px 1px 0 #000;}
+        .success{font-family:var(--font-pixel);font-size:.65rem;line-height:2;padding:12px 16px;border:var(--border-block);margin-bottom:16px;box-shadow:var(--shadow-inset),2px 2px 0 #000;background:repeating-linear-gradient(180deg,#1a5c2a 0,#1a5c2a 6px,#0d3a1a 6px,#0d3a1a 12px);color:#7fff7f;text-shadow:1px 1px 0 #000;}
+        .form-group{margin-bottom:14px;display:flex;flex-direction:column;gap:8px;}
+        .form-group label{font-family:var(--font-pixel);font-size:.65rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;}
+        .form-group input{font-family:var(--font-pixel);font-size:.65rem;background:repeating-linear-gradient(180deg,#1a1a1a 0,#1a1a1a 6px,#222 6px,#222 12px);border:3px solid #444;color:var(--white-mc);padding:12px 14px;outline:none;box-shadow:inset 2px 2px 0 rgba(255,255,255,.08);transition:border-color .15s steps(2);width:100%;}
+        .form-group input:focus{border-color:var(--diamond);}
+        .form-group input::placeholder{color:#666;}
+        .btn-main{width:100%;margin-top:6px;font-family:var(--font-pixel);font-size:.85rem;color:var(--black-mc);background:repeating-linear-gradient(180deg,var(--grass-top) 0,var(--grass-top) 6px,var(--leaf-dark) 6px,var(--leaf-dark) 12px);border:var(--border-block);padding:14px;cursor:pointer;box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);}
+        .btn-main:hover{filter:brightness(1.2);transform:translateY(-3px);box-shadow:var(--shadow-inset),3px 8px 0 #000;}
+        .btn-main:active{transform:translateY(3px);box-shadow:var(--shadow-inset),1px 1px 0 #000;}
+        .helper-panel{margin-top:18px;padding:14px 16px;border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;background:repeating-linear-gradient(180deg,#2a2a2a 0,#2a2a2a 6px,#1a1a1a 6px,#1a1a1a 12px);}
+        .helper-title{font-family:var(--font-pixel);font-size:.65rem;color:var(--gold-ore);text-shadow:1px 1px 0 #000;margin-bottom:10px;}
+        .helper-text{font-family:var(--font-pixel);font-size:.55rem;color:#aaa;text-shadow:1px 1px 0 #000;line-height:2.4;}
+        .bottom-links{margin-top:16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+        .bottom-links a{font-family:var(--font-pixel);font-size:.6rem;color:var(--diamond);text-shadow:1px 1px 0 #000;text-decoration:underline;}
+        .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);}
+        @media(max-width:800px){.auth-card{grid-template-columns:1fr;}.auth-visual{min-height:200px;padding:28px 24px;}.auth-form{padding:28px 24px;}.nav-links{display:none;}.nav-toggle{display:flex;}}
+    </style>
+</head>
+<body>
+<div class="ground-strip"></div>
+<header class="topbar">
+    <div class="container topbar-inner">
+        <div class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</div>
+        <nav class="nav-links"><a href="/">⛏ 主頁</a><a href="/member">👤 會員中心</a><a href="/cart">🎒 購物車</a></nav>
+        <button class="nav-toggle" id="navToggle" aria-label="選單"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="nav-drawer" id="navDrawer"><a href="/">⛏ 主頁</a><a href="/member">👤 會員中心</a><a href="/cart">🎒 購物車</a></nav>
+</header>
+
+<main class="auth-layout">
+    <div class="auth-card">
+        <div class="auth-visual">
+            <div class="visual-chars">
+                <div class="pixel-char">
+                    <div class="pc-head"></div>
+                    <div class="pc-body"></div>
+                    <div class="pc-legs"><div class="pc-leg"></div><div class="pc-leg"></div></div>
+                </div>
+            </div>
+            <h2>找回您的帳號</h2>
+            <p>請輸入註冊時使用的信箱，系統會寄送帳號資訊給您。</p>
+        </div>
+
+        <div class="auth-form">
+            <h1 class="form-title">👤 忘記帳號</h1>
+            <p class="form-subtitle">我們會透過信箱協助您找回帳號</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% if category == "success" %}<div class="success">{{ message }}</div>
+                    {% else %}<div class="flash">{{ message }}</div>{% endif %}
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/login/find/account">
+                <div class="form-group">
+                    <label>註冊信箱</label>
+                    <input type="email" name="email" placeholder="請輸入您的信箱">
+                </div>
+                <button type="submit" class="btn-main">📧 寄送帳號資訊</button>
+            </form>
+
+            <div class="helper-panel">
+                <div class="helper-title">💡 小提醒</div>
+                <div class="helper-text">若該信箱已註冊，我們會寄送帳號資訊至您的信箱。若您同時忘記密碼，可再使用「忘記密碼」功能。</div>
+            </div>
+
+            <div class="bottom-links">
+                <a href="/login">← 返回登入</a>
+                <a href="/login/find/password">忘記密碼？</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="dirt-divider"></div>
+<script>const t=document.getElementById('navToggle'),d=document.getElementById('navDrawer');t.addEventListener('click',()=>{t.classList.toggle('open');d.classList.toggle('open');});</script>
+</body>
+</html>
