@@ -1,126 +1,176 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ product.product_id }}｜{{ store_name or 'My Store' }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name or product.product_id }}｜{{ store_name or 'My Store' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root{--dirt:#8B5E3C;--dirt-dark:#5C3A1E;--grass-top:#5D9E3F;--leaf-dark:#2A6320;--stone:#7F7F7F;--stone-light:#A5A5A5;--stone-dark:#545454;--wood:#B5892D;--wood-dark:#7A5C1E;--diamond:#5DECF5;--diamond-dk:#1ABAC8;--gold-ore:#F0C93A;--redstone:#E03030;--emerald:#17B85A;--emerald-dk:#0d7a3a;--sky-top:#7DC6FF;--sky-bot:#B8E0FF;--white-mc:#F0F0F0;--black-mc:#1A1A1A;--shadow-inset:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25);--shadow-block:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),5px 5px 0 #000;--font-pixel:"Press Start 2P",monospace;--font-ui:"Noto Sans TC",sans-serif;--border-block:4px solid #000;}
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        html{image-rendering:pixelated;}
+        body{font-family:var(--font-ui);background:linear-gradient(#fff 0,#fff 100%) 5% 20px/120px 24px no-repeat,linear-gradient(#fff 0,#fff 100%) 55% 22px/100px 24px no-repeat,linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bot) 100%);color:var(--black-mc);overflow-x:hidden;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23fff'/%3E%3Crect x='2' y='2' width='12' height='12' fill='%23222'/%3E%3Crect x='5' y='5' width='6' height='6' fill='%23fff'/%3E%3C/svg%3E") 8 8,crosshair;}
+        a{text-decoration:none;color:inherit;}
+        .container{width:min(1300px,94%);margin:auto;}
+        .ground-strip{height:24px;background:repeating-linear-gradient(90deg,var(--grass-top) 0,var(--grass-top) 24px,#4e8a33 24px,#4e8a33 48px);border-bottom:var(--border-block);box-shadow:0 4px 0 #000;}
+        .topbar{position:sticky;top:0;z-index:100;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);box-shadow:0 6px 0 #000;}
+        .topbar-inner{display:flex;justify-content:space-between;align-items:center;min-height:80px;padding:0 8px;}
+        .logo{font-family:var(--font-pixel);font-size:clamp(.7rem,1.5vw,1rem);color:var(--gold-ore);text-shadow:3px 3px 0 #000,-2px -2px 0 #000;display:flex;align-items:center;gap:10px;}
+        .logo-gem{width:22px;height:22px;flex-shrink:0;border:2px solid #000;box-shadow:var(--shadow-inset);background:linear-gradient(#5DECF5 0,#5DECF5 100%) 0 0/22px 22px no-repeat,linear-gradient(#1ABAC8 0,#1ABAC8 100%) 3px 3px/9px 9px no-repeat,linear-gradient(#fff 0,#fff 100%) 3px 3px/5px 5px no-repeat;}
+        .back-btn{font-family:var(--font-pixel);font-size:.75rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:10px 18px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);box-shadow:var(--shadow-block);transition:transform .08s steps(2);}
+        .back-btn:hover{filter:brightness(1.25);transform:translateY(-2px);}
 
-<style>
-/* 延續主頁風格 */
-*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft JhengHei",Arial}
-body{background:#f7f9ff;color:#1f2937;line-height:1.6}
-a{text-decoration:none;color:inherit}
-.container{width:min(1200px,92%);margin:auto}
+        .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);}
 
-/* Topbar 略，建議使用 Flask 的 extends base.html 簡化 */
-.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:20px 0}
-.topbar-inner{display:flex;justify-content:space-between;align-items:center}
-.logo{font-weight:800;font-size:1.2rem}
+        /* main */
+        .product-section{padding:40px 0 80px;}
+        .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
 
-.product-detail-section{padding:60px 0}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+        /* image gallery */
+        .image-gallery{display:flex;flex-direction:column;gap:14px;}
+        .main-image{width:100%;aspect-ratio:1/1;border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;overflow:hidden;background:repeating-linear-gradient(45deg,#333 0,#333 10px,#2a2a2a 10px,#2a2a2a 20px);image-rendering:pixelated;}
+        .main-image img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated;transition:transform .3s steps(8),filter .3s;filter:contrast(1.08) saturate(1.1);}
+        .main-image:hover img{transform:scale(1.06);filter:contrast(1.15) saturate(1.25);}
+        .sub-images{display:flex;gap:10px;flex-wrap:wrap;}
+        .sub-image-item{width:72px;height:72px;border:var(--border-block);box-shadow:var(--shadow-inset),3px 3px 0 #000;overflow:hidden;cursor:pointer;image-rendering:pixelated;transition:filter .1s;}
+        .sub-image-item:hover{filter:brightness(1.3);}
+        .sub-image-item img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;}
 
-/* 左側圖片區 */
-.image-gallery{display:flex;flex-direction:column;gap:15px}
-.main-image{width:100%;aspect-ratio:1/1;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05)}
-.main-image img{width:100%;height:100%;object-fit:cover}
-.sub-images{display:flex;gap:10px}
-.sub-image-item{width:80px;height:80px;border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent}
-.sub-image-item:hover{border-color:#1d4ed8}
-.sub-image-item img{width:100%;height:100%;object-fit:cover}
+        /* info card */
+        .info-card{border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);overflow:hidden;}
+        .info-header{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:14px 20px;}
+        .category-badge{font-family:var(--font-pixel);font-size:.55rem;color:var(--black-mc);background:repeating-linear-gradient(180deg,var(--diamond) 0,var(--diamond) 6px,var(--diamond-dk) 6px,var(--diamond-dk) 12px);border:var(--border-block);padding:5px 12px;box-shadow:var(--shadow-inset),2px 2px 0 #000;display:inline-block;}
+        .info-body{padding:24px;}
+        .product-name{font-family:var(--font-pixel);font-size:clamp(.85rem,1.8vw,1.1rem);color:var(--white-mc);text-shadow:3px 3px 0 #000;margin-bottom:20px;line-height:1.9;}
 
-/* 右側資訊區 */
-.info-card{padding:20px}
-.category-badge{display:inline-block;background:#dbeafe;color:#1d4ed8;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:700;margin-bottom:15px}
-.product-name{font-size:2.5rem;font-weight:800;margin-bottom:10px}
-.barcode{color:#9ca3af;font-size:0.9rem;margin-bottom:20px}
-.price-box{margin:30px 0;display:flex;align-items:baseline;gap:15px}
-.sale-price{font-size:2rem;font-weight:800;color:#1d4ed8}
-.original-price{text-decoration:line-through;color:#9ca3af}
+        /* price */
+        .price-box{margin:20px 0;padding:16px;border:var(--border-block);background:repeating-linear-gradient(180deg,#1a1a1a 0,#1a1a1a 6px,#222 6px,#222 12px);box-shadow:var(--shadow-inset),2px 2px 0 #000;}
+        .sale-price{font-family:var(--font-pixel);font-size:1.1rem;color:var(--gold-ore);text-shadow:2px 2px 0 #000;display:block;margin-bottom:6px;}
+        .original-price{font-family:var(--font-pixel);font-size:.65rem;color:#666;text-shadow:1px 1px 0 #000;text-decoration:line-through;}
+        .normal-price{font-family:var(--font-pixel);font-size:1rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;}
 
-.stock-status{margin-bottom:30px;font-size:0.95rem}
-.stock-count{font-weight:700;color:#059669} /* 綠色代表有貨 */
+        /* stock */
+        .stock-box{margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+        .stock-dot{width:12px;height:12px;border:2px solid #000;flex-shrink:0;}
+        .stock-dot.in{background:var(--emerald);box-shadow:0 0 6px var(--emerald);}
+        .stock-dot.out{background:var(--redstone);box-shadow:0 0 6px var(--redstone);}
+        .stock-text{font-family:var(--font-pixel);font-size:.65rem;text-shadow:1px 1px 0 #000;}
+        .stock-in{color:var(--emerald);}
+        .stock-out{color:var(--redstone);}
 
-.description-box{border-top:1px solid #e5e7eb;padding-top:30px;margin-top:30px}
-.description-title{font-weight:800;margin-bottom:15px}
-.description-content{color:#4b5563;white-space:pre-line}
+        /* description */
+        .desc-box{border-top:4px solid #000;padding-top:20px;margin-top:20px;}
+        .desc-title{font-family:var(--font-pixel);font-size:.75rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+        .desc-content{font-family:var(--font-ui);font-size:.9rem;color:#ccc;text-shadow:1px 1px 0 #000;white-space:pre-line;line-height:1.9;}
 
-.action-bar{margin-top:40px;display:flex;gap:15px}
-.btn-large{flex:1;background:#1d4ed8;color:#fff;text-align:center;padding:18px;border-radius:15px;font-weight:800;font-size:1.1rem;transition:0.3s}
-.btn-large:hover{background:#1e40af;transform:translateY(-2px)}
+        /* action bar */
+        .action-bar{margin-top:24px;display:flex;flex-direction:column;gap:10px;}
+        .btn-large{font-family:var(--font-pixel);font-size:.85rem;color:var(--black-mc);background:repeating-linear-gradient(180deg,var(--grass-top) 0,var(--grass-top) 6px,var(--leaf-dark) 6px,var(--leaf-dark) 12px);border:var(--border-block);padding:16px;cursor:pointer;box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);text-align:center;width:100%;}
+        .btn-large:hover{filter:brightness(1.2);transform:translateY(-3px);box-shadow:var(--shadow-inset),3px 9px 0 #000;}
+        .btn-large:active{transform:translateY(3px);box-shadow:var(--shadow-inset),1px 1px 0 #000;}
+        .btn-admin-remove{background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,#a02020 6px,#a02020 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
 
-</style>
+        /* footer */
+        .footer{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 10px,var(--dirt-dark) 10px,var(--dirt-dark) 20px);border-top:var(--border-block);padding:36px 40px;text-align:center;position:relative;overflow:hidden;}
+        .footer::before{content:'';position:absolute;right:64px;top:20px;width:40px;height:40px;background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);border:var(--border-block);box-shadow:var(--shadow-inset),3px 3px 0 #000;}
+        .footer-logo{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;display:block;margin-bottom:12px;}
+        .footer p{font-family:var(--font-pixel);font-size:.55rem;color:rgba(255,255,255,.5);text-shadow:1px 1px 0 #000;line-height:2.4;}
+
+        @media(max-width:800px){.detail-grid{grid-template-columns:1fr;}.sub-images{display:none;}}
+    </style>
 </head>
-
 <body>
-
+<div class="ground-strip"></div>
 <header class="topbar">
     <div class="container topbar-inner">
-        <div class="logo"><a href="/">{{ store_name or 'My Store' }}</a></div>
-        <a href="/" style="font-weight:700;color:#1d4ed8">← 回主頁</a>
+        <a href="/" class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</a>
+        <a href="/" class="back-btn">← 回主頁</a>
     </div>
 </header>
 
 <main class="container">
-    <section class="product-detail-section">
+    <section class="product-section">
         <div class="detail-grid">
-            
+
+            <!-- 左側圖片 -->
             <div class="image-gallery">
                 <div class="main-image">
-                    <img id="mainProductImage" src="/{{ product.product_pic }}" alt="主圖">
+                    <img id="mainProductImage" src="{{ product.product_pic }}" alt="{{ product.name }}">
                 </div>
-
-
                 <div class="sub-images">
                     {% for pic in extra_pics %}
-                        <div class="sub-image-item">
-                            <img src="/{{ pic.product_pic }}" width="100" onclick="changeImage(this.src)" alt="細節圖">
-                        </div>
+                    <div class="sub-image-item">
+                        <img src="{{ pic.product_pic }}" onclick="changeImage(this.src)" alt="細節圖">
+                    </div>
                     {% endfor %}
                 </div>
             </div>
 
+            <!-- 右側資訊 -->
             <div class="info-card">
-                <span class="category-badge">商品分類：{{ product.category }}</span>
-                <h1 class="product-name">{{ product.name }}</h1>
+                <div class="info-header">
+                    <span class="category-badge">📦 {{ product.category or '未分類' }}</span>
+                </div>
+                <div class="info-body">
+                    <h1 class="product-name">{{ product.name }}</h1>
 
-                <div class="price-box">
-                    {% if product.sale_price %}
+                    <div class="price-box">
+                        {% if product.sale_price %}
                         <span class="sale-price">特價：NT$ {{ product.sale_price }}</span>
                         <span class="original-price">原價：NT$ {{ product.original_price }}</span>
-                    {% else %}
-                        <span class="original-price">售價：NT$ {{ product.original_price }}</span>
-                    {% endif %}
-                </div>
+                        {% else %}
+                        <span class="normal-price">售價：NT$ {{ product.original_price }}</span>
+                        {% endif %}
+                    </div>
 
-                <div class="stock-status">
-                    庫存狀態：
-                    {% if stock and stock.product_quantity > 0 %}
-                        <span class="stock-count">現貨:({{ stock.product_quantity }})</span>
-                    {% else %}
-                        <span style="color:#ef4444; font-weight:700;">缺貨中</span>
-                    {% endif %}
-                </div>
+                    <div class="stock-box">
+                        {% if stock and stock.product_quantity > 0 %}
+                        <div class="stock-dot in"></div>
+                        <span class="stock-text stock-in">現貨 {{ stock.product_quantity }} 件</span>
+                        {% else %}
+                        <div class="stock-dot out"></div>
+                        <span class="stock-text stock-out">缺貨中</span>
+                        {% endif %}
+                    </div>
 
-                <div class="description-box">
-                    <div class="description-title">商品介紹</div>
-                    <div class="description-content">{{ product.description }}</div>
-                </div>
+                    <div class="desc-box">
+                        <div class="desc-title">📜 商品介紹</div>
+                        <div class="desc-content">{{ product.description }}</div>
+                    </div>
 
-                <form action="/cart/add" method="post" class="action-bar">
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <input type="hidden" name="next" value="/">
-                    <button type="submit" class="btn-large">加入購物車</button>
-                </form>
+                    <div class="action-bar">
+                        <form action="/cart/add" method="post">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="next" value="/">
+                            <button type="submit" class="btn-large">🎒 加入購物車</button>
+                        </form>
+
+                        {% if session.get('is_admin') %}
+                        <form action="/manage/remove" method="post" onsubmit="return confirm('確定要將此商品下架嗎？')">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="next" value="/">
+                            <button type="submit" class="btn-large btn-admin-remove">▼ 下架此商品</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
 
         </div>
     </section>
 </main>
 
-<footer style="text-align:center; padding:60px 0; color:#9ca3af">
-    &copy; {{ store_name }} All Rights Reserved.
+<div class="dirt-divider"></div>
+<footer class="footer">
+    <span class="footer-logo">{{ store_name or 'My Store' }}</span>
+    <p>{{ footer_text or '' }}</p>
 </footer>
 
+<script>
+function changeImage(src) {
+    document.getElementById('mainProductImage').src = src;
+}
+</script>
 </body>
 </html>

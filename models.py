@@ -1,4 +1,14 @@
-from settings import BRANCH_A_TABLE,BRANCH_C_CART_TABLE,BRANCH_B_TABLE,BRANCH_C_ORDER_TABLE,BRANCH_C_ORDER_ITEMS_TABLE
+from settings import (BRANCH_A_TABLE,
+                      
+                      BRANCH_B_PRODUCTS_TABLE,
+                      BRANCH_B_PRODUCT_CATEGORY_TABLE,
+                      BRANCH_B_PRODUCT_PICS_TABLE,
+                      BRANCH_B_PRODUCT_STOCK_TABLE,
+                      
+                      BRANCH_C_CART_TABLE,
+                      BRANCH_C_ORDER_TABLE,
+                      BRANCH_C_ORDER_ITEMS_TABLE)
+
 from db import db_transaction
 
 
@@ -6,6 +16,7 @@ from db import db_transaction
 
 @db_transaction
 def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
+    # 新增會員帳號
     cursor.execute(f"""
         INSERT INTO `{BRANCH_A_TABLE}`
         (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
@@ -14,6 +25,7 @@ def createUser(cursor, user_name, user_account, user_password, user_mobile, user
 
 @db_transaction
 def updateUser(cursor, set_: dict, where: dict):
+    # 更新會員資料，set_ 為要更新的欄位，where 為篩選條件
     set_key, set_value = tuple(set_.keys()), tuple(set_.values())
     where_key, where_value = tuple(where.keys()), tuple(where.values())
 
@@ -28,6 +40,8 @@ def updateUser(cursor, set_: dict, where: dict):
 
 @db_transaction
 def getUser(cursor, where: dict, *selections):
+    # 依條件查詢會員資料，selections 為要取得的欄位，不傳則取全部
+    # 只有一個欄位時直接回傳值，多個欄位回傳 dict，找不到回傳 None
     where_key, where_value = tuple(where.keys()), tuple(where.values())
 
     if selections == ():
@@ -56,6 +70,7 @@ def getUser(cursor, where: dict, *selections):
 
 @db_transaction
 def search_categories(cursor, cat_id, keyword):
+    # 依分類 id 與關鍵字搜尋上架商品，兩個條件都是選填
     sql = """
      SELECT p.id, p.product_pic, p.original_price, p.sale_price, 
             p.name, p.description, p.category, p.tag,
@@ -80,6 +95,7 @@ def search_categories(cursor, cat_id, keyword):
 
 @db_transaction
 def get_all_categories(cursor):
+    # 取得所有上架商品的不重複分類清單
     cursor.execute("""
         SELECT DISTINCT category
         FROM products
@@ -89,6 +105,7 @@ def get_all_categories(cursor):
 
 @db_transaction
 def index(cursor):
+    # 取得所有上架且有庫存的商品，供首頁列表使用
     cursor.execute("""
         SELECT
             p.id,
@@ -107,16 +124,19 @@ def index(cursor):
 
 @db_transaction
 def get_product_by_id(cursor, product_id):
+    # 依 id 取得單一商品的完整資料
     cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     return cursor.fetchone()
 
 @db_transaction
 def get_product_stock(cursor, product_id):
+    # 依商品 id 取得庫存紀錄
     cursor.execute("SELECT * FROM product_stock WHERE product_id = %s", (product_id,))
     return cursor.fetchone()
 
 @db_transaction
 def get_product_pics(cursor, product_id):
+    # 取得商品的所有附圖
     cursor.execute("SELECT product_pic FROM product_pics WHERE product_id = %s", (product_id,))
     return cursor.fetchall()
 
@@ -125,27 +145,36 @@ def get_product_pics(cursor, product_id):
 
 @db_transaction
 def get_cart_items(cursor, user_account):
+    # 取得該會員的所有購物車商品，JOIN 商品表取得名稱、價格、圖片，JOIN 庫存表取得剩餘庫存
     cursor.execute(
         f'''SELECT c.id, c.user_id, c.product_id, c.quantity,
-                    p.name, COALESCE(p.sale_price, p.original_price) AS price, p.product_pic AS image_path
+                    p.name, COALESCE(p.sale_price, p.original_price) AS price, p.product_pic AS image_path,
+                    p.is_active,
+                    stock.product_quantity AS stock
             FROM `{BRANCH_C_CART_TABLE}` c
-            JOIN `{BRANCH_B_TABLE}` p ON c.product_id = p.id
+            JOIN `{BRANCH_B_PRODUCT_STOCK_TABLE}` stock ON c.product_id = stock.product_id
+            JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON c.product_id = p.id
             WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
         (user_account,)
     )
     return cursor.fetchall()
 
-
 @db_transaction
 def get_product(cursor, product_id):
+    # 依商品 id 取得商品基本資料（id、名稱）
     cursor.execute(
-        f'SELECT id, name FROM `{BRANCH_B_TABLE}` WHERE id = ?',
+        f'SELECT id, name FROM `{BRANCH_B_PRODUCTS_TABLE}` WHERE id = ?',
         (product_id,)
     )
     return cursor.fetchone()
 
+# @db_transaction
+# # def get_product_stock(cursor, product_id):
+    
+
 @db_transaction
 def find_cart_item(cursor, user_account, product_id):
+    # 查詢該會員購物車中是否已存在指定商品，回傳購物車 id 與數量，不存在回傳 None
     cursor.execute(
         f'''SELECT c.id, c.quantity FROM `{BRANCH_C_CART_TABLE}` c
             WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
@@ -156,13 +185,17 @@ def find_cart_item(cursor, user_account, product_id):
 
 @db_transaction
 def update_cart_qty(cursor, item_id, quantity):
+    # 更新購物車中指定項目的數量
     cursor.execute(
         f'UPDATE `{BRANCH_C_CART_TABLE}` SET quantity = ? WHERE id = ?',
         (quantity, item_id)
     )
+    
+
 
 @db_transaction
 def upsert_cart(cursor, user_account, product_id):
+    # 加入購物車，若該商品已存在則數量 +1，不存在則新增一筆數量為 1 的記錄
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_CART_TABLE}` (user_id, product_id, quantity)
             VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?), ?, 1)
@@ -172,6 +205,7 @@ def upsert_cart(cursor, user_account, product_id):
 
 @db_transaction
 def remove_cart_item(cursor, item_id, user_account):
+    # 從購物車移除指定商品，驗證必須屬於本人才能刪除
     cursor.execute(
         f'''DELETE FROM `{BRANCH_C_CART_TABLE}`
             WHERE id = ?
@@ -181,17 +215,31 @@ def remove_cart_item(cursor, item_id, user_account):
 
 @db_transaction
 def clear_cart(cursor, user_account):
+    # 清空該會員的整個購物車，結帳完成後呼叫
     cursor.execute(
         f'''DELETE FROM `{BRANCH_C_CART_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
         (user_account,)
     )
 
+@db_transaction
+def get_cart_item_stock(cursor, item_id, user_account):
+    cursor.execute(
+        f'''SELECT stock.product_quantity
+            FROM `{BRANCH_C_CART_TABLE}` c
+            JOIN `{BRANCH_B_PRODUCT_STOCK_TABLE}` stock ON c.product_id = stock.product_id
+            WHERE c.id = ? AND c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
+        (item_id, user_account)
+    )
+    row = cursor.fetchone()
+    return row['product_quantity'] if row else None
+
 
 # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
 @db_transaction
 def insert_order(cursor, user_account, total, payment_method, delivery_method, address, note, credit_card_number=None):
+    # 建立新訂單，狀態預設為「處理中」，回傳新訂單的 id
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
             (user_id, total, payment_method, delivery_method, address, note, status, credit_card_number)
@@ -202,13 +250,38 @@ def insert_order(cursor, user_account, total, payment_method, delivery_method, a
 
 @db_transaction
 def insert_order_item(cursor, order_id, product_id, quantity, price):
+    # 新增一筆訂單明細，記錄下單當下的價格
     cursor.execute(
         f'INSERT INTO `{BRANCH_C_ORDER_ITEMS_TABLE}` (order_id, product_id, quantity, price) VALUES (?,?,?,?)',
         (order_id, product_id, quantity, price)
     )
+    return cursor.lastrowid
+
+@db_transaction
+def get_order_items(cursor, order_id):
+    # 取得指定訂單的所有商品明細（商品 id 與數量），取消訂單補回庫存時使用
+    cursor.execute(
+        f'SELECT product_id, quantity FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` WHERE order_id = ?',
+        (order_id,)
+    )
+    return cursor.fetchall()
+
+@db_transaction
+def get_order_items_detail(cursor, order_id):
+    # 取得訂單明細並 JOIN 商品名稱，供會員頁訂單展開顯示使用
+    cursor.execute(
+        f'''SELECT oi.quantity, oi.price,
+                   p.name, p.product_pic
+            FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
+            JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON oi.product_id = p.id
+            WHERE oi.order_id = ?''',
+        (order_id,)
+    )
+    return cursor.fetchall()
 
 @db_transaction
 def get_all_orders(cursor, user_account):
+    # 取得該會員所有訂單（含已取消），依建立時間升冪排列
     cursor.execute(
         f'''SELECT id, total, payment_method, delivery_method,
                    address, note, status, created_at
@@ -221,6 +294,7 @@ def get_all_orders(cursor, user_account):
 
 @db_transaction
 def get_orders(cursor, user_account):
+    # 取得該會員的有效訂單（排除已取消），依建立時間升冪排列
     cursor.execute(
         f'''SELECT id, total, payment_method, delivery_method,
                    address, note, status, created_at
@@ -234,6 +308,7 @@ def get_orders(cursor, user_account):
 
 @db_transaction
 def search_orders(cursor, user_account, keyword):
+    # 依關鍵字搜尋該會員的有效訂單（比對地址或狀態），依建立時間降冪排列
     like_keyword = "%" + keyword + "%"
     cursor.execute(
         f'''SELECT id, total, payment_method, delivery_method,
@@ -249,6 +324,7 @@ def search_orders(cursor, user_account, keyword):
 
 @db_transaction
 def get_order(cursor, order_id, user_account):
+    # 取得指定訂單，驗證必須屬於本人且狀態為「處理中」，取消訂單前呼叫
     cursor.execute(
         f'''SELECT id FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE id = ?
@@ -260,27 +336,75 @@ def get_order(cursor, order_id, user_account):
 
 @db_transaction
 def cancel_order(cursor, order_id):
+    # 將指定訂單狀態更新為「已取消」
     cursor.execute(
         f"UPDATE `{BRANCH_C_ORDER_TABLE}` SET status = '已取消' WHERE id = ?",
         (order_id,)
     )
 
-
-# _______________________________________________________________
-# 商品管理
 @db_transaction
-def add_product(cursor, name, original_price, sale_price, description, img_filename):
-    cursor.execute(f"""
-        INSERT INTO `{BRANCH_B_TABLE}`
-        (`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?, ?, ?, ?, ?, 1)
-    """, (name, original_price, sale_price, description, img_filename))
-    return cursor.lastrowid
-    
+def deduct_product_stock(cursor, product_id, quantity):
+    # 扣減商品庫存，結帳建立訂單後呼叫
+    cursor.execute(
+        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity - ? WHERE product_id = ?",
+        (quantity, product_id)
+    )
 
-# 商品入庫
+@db_transaction
+def restore_product_stock(cursor, product_id, quantity):
+    # 補回商品庫存，取消訂單後呼叫
+    cursor.execute(
+        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity + ? WHERE product_id = ?",
+        (quantity, product_id)
+    )
+
+# 查詢 order_items 裡 serial_code 符合且尚未兌換的那筆資料
+@db_transaction
+def get_order_item_by_serial(cursor, serial_code):
+
+    cursor.execute(
+                    f"""
+                       SELECT * 
+                       FROM {BRANCH_C_ORDER_ITEMS_TABLE}
+                       WHERE `serial_code` = ? AND `is_redeemed` = ?
+                   """,(serial_code,0)
+                   )
+    return cursor.fetchone()
+
+# 將指定序號標記為已兌換，防止重複使用
+@db_transaction
+def redeem_serial(cursor, serial_code):
+    cursor.execute(
+        f"UPDATE `{BRANCH_C_ORDER_ITEMS_TABLE}` SET is_redeemed = 1 WHERE serial_code = ?",
+        (serial_code,)
+    )
+    
+# 將產生的序號寫入指定的訂單明細    
+@db_transaction
+def update_order_item_serial(cursor, order_item_id, serial_code):
+    cursor.execute(
+        f"UPDATE `{BRANCH_C_ORDER_ITEMS_TABLE}` SET serial_code = ? WHERE id = ?",
+        (serial_code, order_item_id)
+    )
+
+# ── Branch D：商品管理（後台） ────────────────────────────────────────────────
+
+# 新增商品，預設為上架狀態，回傳新商品的 id
+# mc_item_id 為選填，填入 Minecraft 道具 ID（例如 minecraft:diamond）
+# 若為序號類商品則不填，預設為 None
+@db_transaction
+def add_product(cursor, name, original_price, sale_price, description, img_filename, mc_item_id):
+    # 新增商品，預設為上架狀態，回傳新商品的 id
+    cursor.execute(f"""
+        INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
+        (`mc_item_id`,`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
+        VALUES (?,?, ?, ?, ?, ?, 1)
+    """, (name, original_price, sale_price, description, img_filename,mc_item_id))
+    return cursor.lastrowid
+
 @db_transaction
 def add_product_stock(cursor, product_id, quantity):
+    # 為商品建立庫存紀錄（商品入庫）
     cursor.execute("""
         INSERT INTO `product_stock` (product_id, product_quantity)
         VALUES (?, ?)
@@ -288,8 +412,9 @@ def add_product_stock(cursor, product_id, quantity):
 
 @db_transaction
 def set_product_active(cursor, product_id, is_active):
+    # 設定商品上下架狀態，is_active=1 為上架，0 為下架
     cursor.execute(f"""
-        UPDATE `{BRANCH_B_TABLE}`
+        UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET `is_active` = ?
         WHERE `id` = ?
     """, (is_active, product_id))
@@ -306,17 +431,18 @@ def update_product(cursor, set_: dict, product_id):
     set_key, set_value = tuple(set_.keys()), tuple(set_.values())
     set_sql = ", ".join(f"`{key}` = ?" for key in set_key)
     cursor.execute(f"""
-        UPDATE `{BRANCH_B_TABLE}`
+        UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET {set_sql}
         WHERE `id` = ?
     """, set_value + (product_id,))
 
 @db_transaction
 def get_all_products(cursor):
+    # 取得所有未刪除的商品清單（含庫存），供後台管理頁使用
     cursor.execute(f"""
         SELECT p.id, p.name, p.product_pic, p.original_price,
                p.sale_price, p.is_active, ps.product_quantity
-        FROM `{BRANCH_B_TABLE}` p
+        FROM `{BRANCH_B_PRODUCTS_TABLE}` p
         LEFT JOIN product_stock ps ON p.id = ps.product_id
         WHERE p.is_deleted = 0
     """)
@@ -324,14 +450,16 @@ def get_all_products(cursor):
 
 @db_transaction
 def soft_delete_product(cursor, product_id):
+    # 軟刪除商品，將 is_deleted 設為 1，資料不實際移除
     cursor.execute(f"""
-        UPDATE `{BRANCH_B_TABLE}`
+        UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET is_deleted = 1
         WHERE id = ?
     """, (product_id,))
 
 @db_transaction
 def add_log(cursor, admin_account, action, product_id, product_name):
+    # 新增一筆後台操作記錄
     cursor.execute("""
         INSERT INTO manage_log
         (admin_account, action, product_id, product_name)
@@ -340,6 +468,7 @@ def add_log(cursor, admin_account, action, product_id, product_name):
 
 @db_transaction
 def get_logs(cursor):
+    # 取得所有後台操作記錄，依時間降冪排列
     cursor.execute("""
         SELECT * FROM manage_log
         ORDER BY created_at DESC
@@ -348,8 +477,9 @@ def get_logs(cursor):
 
 @db_transaction
 def restore_product(cursor, product_id):
+    # 還原已軟刪除的商品
     cursor.execute(f"""
-        UPDATE `{BRANCH_B_TABLE}`
+        UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET is_deleted = 0
         WHERE id = ?
     """, (product_id,))
@@ -402,25 +532,6 @@ def delete_member_card(cursor, user_account, card_id):
         (card_id, user_account)
     )
 
-# @db_transaction
-# def set_default_card(cursor, user_account, card_id):
-#     """
-#     把指定卡片設為預設卡，同時把該會員其他卡設為非預設。
-#     """
-#     cursor.execute(
-#         f"""UPDATE `member_cards`
-#             SET is_default = 0
-#             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
-#         (user_account,)
-#     )
-#     cursor.execute(
-#         f"""UPDATE `member_cards`
-#             SET is_default = 1
-#             WHERE id = ?
-#             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
-#         (card_id, user_account)
-#     )
-
 @db_transaction
 def clear_default_cards(cursor, user_account):
     """
@@ -445,5 +556,6 @@ def set_default_card(cursor, user_account, card_id):
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (card_id, user_account)
     )
+
 if __name__ == "__main__":
     ...
