@@ -7,25 +7,33 @@ from models import (
     add_product,add_log,get_product_by_id,soft_delete_product,
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
-    get_member_cards,add_member_card,delete_member_card,set_default_card,clear_default_cards,
-    get_all_categories,add_product_stock
+    get_member_cards,add_member_card,delete_member_card,set_default_card,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
-from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
+from utils import get_auth,validateMobile,save_image,del_imgae
 # _______________________________________初始化___________________________________________
 
 # _______________________________________services___________________________________________
-@requestParsor
-def manage_add_service(name,original_price,sale_price,description,image,product_quantity):
-    img_filename   = save_image(image, UPLOAD_FOLDER)
-    product_id = add_product(name, original_price, sale_price, description, img_filename)
-    add_product_stock(product_id,int(product_quantity))
-    add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
+def manage_add_service():
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
+        return redirect(url_for("D.manage"))
+
+    name           = request.form.get("name")
+    original_price = request.form.get("original_price")
+    sale_price     = request.form.get("sale_price") or None
+    description    = request.form.get("description")
+    file           = request.files.get("image")
+    img_filename   = save_image(file, UPLOAD_FOLDER)
+    add_product(name, original_price, sale_price, description, img_filename)
+    add_log(session.get(SESSION_AUTHO), "上架", None, name)
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
 
-@requestParsor
-def manage_clear_service(product_id):
+def manage_clear_service():
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
+        return redirect(url_for("D.manage"))
+
+    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     soft_delete_product(product_id)
     add_log(session.get(SESSION_AUTHO), "刪除", product_id, product["name"])
@@ -34,30 +42,41 @@ def manage_clear_service(product_id):
 
 def manage_service():
     products = get_all_products()
-    categories = get_all_categories()
-    return render_template("manage.html", products=products, category_list = categories)
+    return render_template("manage.html", products=products)
 
-@requestParsor
-def manage_remove_service(product_id):
+def manage_remove_service():
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
+        return redirect(url_for("D.manage"))
+
+    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     set_product_active(product_id, 0)
     add_log(session.get(SESSION_AUTHO), "下架", product_id, product["name"])
     flash("商品已下架", "success")
     return redirect(url_for("D.manage"))
 
-@requestParsor
-def manage_restock_service(product_id):
+def manage_restock_service():
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
+        return redirect(url_for("D.manage"))
+
+    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     set_product_active(product_id, 1)
     add_log(session.get(SESSION_AUTHO), "重新上架", product_id, product["name"])
     flash("商品已重新上架", "success")
     return redirect(url_for("D.manage"))
 
-@requestParsor
-def manage_edit_service(product_id,name,original_price,sale_price,image,product_pic):
-    '''這裡少一個GET method 補上後即可跳至網頁 同時要新增一張修改頁面 或者也可以畫面上直接操作'''
-    # if request.method == "GET":
-    #     return render_template()
+def manage_edit_service():
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
+        return redirect(url_for("D.manage"))
+
+    product_id     = request.form.get("product_id")
+    name           = request.form.get("name")
+    original_price = request.form.get("original_price")
+    sale_price     = request.form.get("sale_price") or None
+    category       = request.form.get("category") or None
+    file           = request.files.get("image")
+
     product = get_product_by_id(product_id)
     if not product:
         flash("找不到該商品", "error")
@@ -67,28 +86,21 @@ def manage_edit_service(product_id,name,original_price,sale_price,image,product_
         "name": name,
         "original_price": original_price,
         "sale_price": sale_price,
+        "category": category,
     }
 
-    if image and image.filename != "":
-        new_pic_path = save_image(image, UPLOAD_FOLDER)
+    if file and file.filename != "":
+        old_pic_path = product.get("product_pic")
+        new_pic_path = save_image(file, UPLOAD_FOLDER)
         update_data["product_pic"] = new_pic_path
-        del_imgae(product_pic)
+        del_imgae(old_pic_path)
 
     update_product(update_data, product_id)
     add_log(session.get(SESSION_AUTHO), "修改", product_id, name)
     flash("商品資料已更新", "success")
     return redirect(url_for("D.manage"))
 
-def manage_logout_service():
-    session.pop(SESSION_AUTHO,None)
-    flash("已登出")
-    return redirect(url_for("B.index"))
-
-def manage_log_service():
-    return render_template("manage_log.html")
-
-@requestParsor
-def member_edit_service(name,mobile,profile_pic):
+def member_edit_service():
     user_account = session.get(SESSION_AUTHO)
 
     if request.method == "GET":
@@ -102,15 +114,19 @@ def member_edit_service(name,mobile,profile_pic):
             auth=get_auth(user_account)
         )
 
+    name   = request.form.get("name")
+    mobile = request.form.get("mobile")
+    file   = request.files.get("profile_pic")
+
     if mobile and not validateMobile(mobile):
         flash("手機格式錯誤", "error")
         return redirect(url_for("D.member_edit"))
 
     update_data = {"user_name": name, "user_mobile": mobile}
 
-    if profile_pic and profile_pic.filename != "":
+    if file and file.filename != "":
         old_pic_path = getUser({"user_account":user_account}, "pic_path")
-        new_pic_path = save_image(profile_pic, PROFILE_PIC_FOLDER, filename=user_account)
+        new_pic_path = save_image(file, PROFILE_PIC_FOLDER, filename=user_account)
         update_data["pic_path"] = new_pic_path
         del_imgae(old_pic_path)
 
@@ -118,11 +134,10 @@ def member_edit_service(name,mobile,profile_pic):
     flash("資料更新成功", "success")
     return redirect(url_for("D.member"))
 
-@requestParsor
-def member_service(keyword=""):
+def member_service():
     user_account = session[SESSION_AUTHO]
-    
-    keyword = keyword.strip()
+    keyword = request.args.get("keyword", "").strip()
+
     if keyword:
         orders = search_orders(user_account, keyword)
     else:
@@ -146,6 +161,15 @@ def member_service(keyword=""):
         card_count=len(cards)
     )
 
+def manage_logout_service():
+    session.pop(SESSION_AUTHO,None)
+    flash("已登出")
+    return redirect(url_for("B.index"))
+
+def manage_log_service():
+    return render_template("manage_log.html")
+
+
 # ── 信用卡管理 services ────────────────────────────────────────────────────
 # ⚠️ 注意：本功能直接儲存完整卡號，僅適用於學校作業/示意用途。
 
@@ -158,13 +182,16 @@ def member_cards_service():
         auth=get_auth(user_account)
     )
 
-@requestParsor
-def add_card_service(is_default,card_number="",expiry="",holder_name=""):
+def add_card_service():
     """新增一張信用卡。"""
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
+        return redirect(url_for("D.member_cards"))
+
     user_account = session[SESSION_AUTHO]
-    card_number,expiry,holder_name = card_number.strip(),expiry.strip(),holder_name.strip()
-    
-    is_default   = 1 if is_default else 0
+    card_number  = request.form.get("card_number", "").strip()
+    expiry       = request.form.get("expiry", "").strip()
+    holder_name  = request.form.get("holder_name", "").strip()
+    is_default   = 1 if request.form.get("is_default") else 0
 
     # 簡易驗證（學校作業夠用）
     if not card_number or not expiry or not holder_name:
@@ -181,27 +208,29 @@ def add_card_service(is_default,card_number="",expiry="",holder_name=""):
     existing_cards = get_member_cards(user_account)
     if not existing_cards:
         is_default = 1
-    
-    if is_default:
-        clear_default_cards(user_account)
-    
+
     add_member_card(user_account, cleaned_number, expiry, holder_name, is_default)
     flash("信用卡已新增", "success")
     return redirect(url_for("D.member_cards"))
 
-@requestParsor
-def delete_card_service(card_id):
+def delete_card_service():
     """刪除一張信用卡。"""
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
+        return redirect(url_for("D.member_cards"))
+
     user_account = session[SESSION_AUTHO]
+    card_id = request.form.get("card_id")
     delete_member_card(user_account, card_id)
     flash("信用卡已刪除", "success")
     return redirect(url_for("D.member_cards"))
 
-@requestParsor
-def set_default_card_service(card_id):
+def set_default_card_service():
     """把指定卡設為預設。"""
+    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
+        return redirect(url_for("D.member_cards"))
+
     user_account = session[SESSION_AUTHO]
-    clear_default_cards(user_account)
+    card_id = request.form.get("card_id")
     set_default_card(user_account, card_id)
     flash("已設定為預設卡", "success")
     return redirect(url_for("D.member_cards"))

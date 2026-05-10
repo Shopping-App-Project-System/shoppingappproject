@@ -463,16 +463,15 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        {# 修改按鈕：點擊後開啟對應的編輯視窗 #}
-                                        <button type="button" class="btn btn-edit"
-                                            onclick="openEditModal(
-                                                '{{ p.id }}',
-                                                {{ p.name | tojson }},
-                                                '{{ p.original_price }}',
-                                                '{{ p.sale_price if p.sale_price else '' }}',
-                                                '{{ p.product_pic if p.product_pic else '' }}',
-                                                '{{ p.category if p.category else '' }}'
-                                            )">修改</button>
+                                        {# 修改按鈕：點擊後開啟對應的編輯視窗
+                                           改用 data-* 屬性傳資料，避免商品名稱含引號時 onclick 被截斷 #}
+                                        <button type="button" class="btn btn-edit btn-edit-trigger"
+                                            data-id="{{ p.id }}"
+                                            data-name="{{ p.name }}"
+                                            data-original-price="{{ p.original_price }}"
+                                            data-sale-price="{{ p.sale_price if p.sale_price else '' }}"
+                                            data-product-pic="{{ p.product_pic if p.product_pic else '' }}"
+                                            data-category="{{ p.category if p.category else '' }}">修改</button>
 
                                         {% if p.is_active %}
                                         <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')">
@@ -578,6 +577,20 @@
 
         // ───── 新增：編輯視窗的開關與資料填入 ─────
         const editModal = document.getElementById("editModal");
+
+        // 為所有「修改」按鈕綁定點擊事件，從 data-* 屬性讀取商品資料
+        document.querySelectorAll(".btn-edit-trigger").forEach(btn => {
+            btn.addEventListener("click", function () {
+                openEditModal(
+                    this.dataset.id,
+                    this.dataset.name,
+                    this.dataset.originalPrice,
+                    this.dataset.salePrice,
+                    this.dataset.productPic,
+                    this.dataset.category
+                );
+            });
+        });
 
         function openEditModal(id, name, originalPrice, salePrice, productPic, category) {
             document.getElementById("edit_product_id").value = id;

@@ -14,12 +14,12 @@ from .Management_services import (
 # _______________________________________初始化___________________________________________
 bp = Blueprint("D",__name__)
 
-# __ 管理者 _____________________________________________
-@bp.route("/manage/add", methods=["POST"])
+# ________________________________________API_____________________________________________
+@bp.route("/manage/add", methods=["GET", "POST"])
 @adminRequired
 def manage_add():return manage_add_service()
 
-@bp.route("/manage/clear", methods=["POST"])
+@bp.route("/manage/clear", methods=["GET", "POST"])
 @adminRequired
 def manage_clear():return manage_clear_service()
 
@@ -27,27 +27,26 @@ def manage_clear():return manage_clear_service()
 @adminRequired
 def manage():return manage_service()
 
-@bp.route("/manage/remove", methods=["POST"])
+@bp.route("/manage/remove", methods=["GET", "POST"])
 @adminRequired
 def manage_remove():return manage_remove_service()
 
-@bp.route("/manage/restock", methods=["POST"])
+@bp.route("/manage/restock", methods=["GET", "POST"])
 @adminRequired
 def manage_restock():return manage_restock_service()
 
-@bp.route("/manage/edit", methods=["POST"])
+@bp.route("/manage/edit", methods=["GET", "POST"])
 @adminRequired
 def manage_edit():return manage_edit_service()
-
-
-# ── 會員管理 ──────────────────────────────────────────────────────────
-@bp.route("/member")
-@userRequired
-def member():return member_service()
 
 @bp.route("/member/edit", methods=["GET", "POST"])
 @userRequired
 def member_edit():return member_edit_service()
+
+# 會員中心
+@bp.route("/member")
+@userRequired
+def member():return member_service()
 
 @bp.route("/manage/logout")
 @adminRequired
@@ -62,15 +61,14 @@ def manage_log():return manage_log_service()
 @userRequired
 def member_cards():return member_cards_service()
 
-@bp.route("/member/cards/add", methods=["POST"])
+@bp.route("/member/cards/add", methods=["GET", "POST"])
 @userRequired
 def add_card():return add_card_service()
 
-@bp.route("/member/cards/delete", methods=["POST"])
+@bp.route("/member/cards/delete", methods=["GET", "POST"])
 @userRequired
 def delete_card():return delete_card_service()
 
-@bp.route("/member/cards/set_default", methods=["POST"])
+@bp.route("/member/cards/set_default", methods=["GET", "POST"])
 @userRequired
 def set_default_card_route():return set_default_card_service()
-
