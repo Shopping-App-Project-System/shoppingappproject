@@ -9,6 +9,8 @@ from .Management_services import (
     member_edit_service,member_service,
     manage_logout_service,manage_log_service,manage_edit_service,
     member_cards_service,add_card_service,delete_card_service,set_default_card_service,
+    # 後台操作日誌(月份分組)的 partial
+    manage_log_month_service,
 )
 
 # _______________________________________初始化___________________________________________
@@ -52,9 +54,15 @@ def member():return member_service()
 @adminRequired
 def manage_logout():return manage_logout_service()
 
+# ── 後台操作日誌(按月份分組) ─────────────────────────────────────────────
 @bp.route("/manage/log")
 @adminRequired
 def manage_log():return manage_log_service()
+
+# AJAX partial:取得指定月份的所有日誌紀錄
+@bp.route("/manage/log/month/<month>", methods=["GET"])
+@adminRequired
+def manage_log_month(month):return manage_log_month_service(month)
 
 # ── 信用卡管理 ──────────────────────────────────────────────────────────
 @bp.route("/member/cards", methods=["GET"])

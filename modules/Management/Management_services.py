@@ -9,6 +9,7 @@ from models import (
     search_orders,get_orders,update_product,
     get_member_cards,add_member_card,delete_member_card,set_default_card,
     add_product_stock,
+    get_log_months,get_logs_by_month,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -165,7 +166,56 @@ def manage_logout_service():
     return redirect(url_for("B.index"))
 
 def manage_log_service():
-    return render_template("manage_log.html")
+    # 後台操作日誌:
+    # - URL 帶 ?month=YYYY-MM      → 預先載入該月份(展開)
+    # - URL 再加 ?product=關鍵字   → 該月只顯示商品名含關鍵字的紀錄
+    selected_month   = request.args.get("month", "").strip()
+    product_keyword  = request.args.get("product", "").strip()
+    months = get_log_months()
+
+    preloaded_logs = None
+    product_options = []
+
+    if selected_month and len(selected_month) == 7 and selected_month[4] == '-' \
+            and selected_month[:4].isdigit() and selected_month[5:].isdigit():
+        all_logs = get_logs_by_month(selected_month)
+
+        # 該月出現過的所有商品名稱(去重、排序),供下拉選單用
+        product_options = sorted({
+            log["product_name"] for log in all_logs
+            if log.get("product_name")
+        })
+
+        # 套用關鍵字篩選(大小寫不敏感、模糊比對)
+        if product_keyword:
+            kw = product_keyword.lower()
+            preloaded_logs = [
+                log for log in all_logs
+                if log.get("product_name") and kw in log["product_name"].lower()
+            ]
+        else:
+            preloaded_logs = all_logs
+    else:
+        selected_month = ""  # 格式不對就清掉,當作沒查詢
+
+    return render_template("manage_log.html",
+        months=months,
+        selected_month=selected_month,
+        product_keyword=product_keyword,
+        product_options=product_options,
+        preloaded_logs=preloaded_logs
+    )
+
+
+def manage_log_month_service(month):
+    """AJAX partial:取得指定月份的所有後台操作紀錄。"""
+    # 簡單格式檢查 YYYY-MM,避免亂塞參數
+    if not month or len(month) != 7 or month[4] != '-' \
+            or not month[:4].isdigit() or not month[5:].isdigit():
+        return render_template("_manage_log_month.html", month=month, logs=[])
+
+    logs = get_logs_by_month(month)
+    return render_template("_manage_log_month.html", month=month, logs=logs)
 
 
 # ── 信用卡管理 services ────────────────────────────────────────────────────

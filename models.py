@@ -561,3 +561,35 @@ def set_default_card(cursor, user_account, card_id):
 
 if __name__ == "__main__":
     ...
+
+
+# ── manage_log 報表(管理頁日誌,按月份分組) ─────────────────────────────────
+
+@db_transaction
+def get_log_months(cursor):
+    """
+    取得 manage_log 中有紀錄的月份清單,以及每個月的筆數。
+    回傳格式: [{"month": "2025-11", "log_count": 8}, ...]
+    """
+    cursor.execute("""
+        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month,
+               COUNT(*) AS log_count
+        FROM manage_log
+        GROUP BY month
+        ORDER BY month DESC
+    """)
+    return cursor.fetchall()
+
+
+@db_transaction
+def get_logs_by_month(cursor, month):
+    """
+    取得指定月份(格式 YYYY-MM)的所有日誌紀錄,依時間降冪排列。
+    """
+    cursor.execute("""
+        SELECT created_at, admin_account, action, product_id, product_name
+        FROM manage_log
+        WHERE DATE_FORMAT(created_at, '%Y-%m') = ?
+        ORDER BY created_at DESC
+    """, (month,))
+    return cursor.fetchall()
