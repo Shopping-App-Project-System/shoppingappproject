@@ -399,9 +399,10 @@ def add_product(cursor, name, original_price, sale_price, description, img_filen
     # 新增商品，預設為上架狀態，回傳新商品的 id
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
-        (`mc_item_id`,`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?,?, ?, ?, ?, ?, 1)
-    """, (name, original_price, sale_price, description, img_filename,mc_item_id))
+        (`mc_item_id`, `name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
+    """, (mc_item_id, name, original_price, sale_price, description, img_filename))
+    #     ↑ 順序改為與欄位一致
     return cursor.lastrowid
 
 @db_transaction
@@ -574,10 +575,6 @@ def set_default_card(cursor, user_account, card_id):
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (card_id, user_account)
     )
-
-if __name__ == "__main__":
-    ...
-
 
 # ── manage_log 報表(管理頁日誌,按月份分組) ─────────────────────────────────
 

@@ -22,6 +22,7 @@ def requestParsor(fun):
     @wraps(fun)
     def wrap(*args, **kwargs):
         result = {}
+        result.update(request.view_args)
         result.update(request.form)
         result.update(request.args)
         result.update(request.files)

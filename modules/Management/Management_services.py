@@ -22,18 +22,20 @@ from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 # 寶石類商品填入（例如 minecraft:diamond），序號類商品不填
 @requestParsor
 def manage_add_service(name,original_price,sale_price,description,image,product_quantity,mc_item_id=None):
-    img_filename   = save_image(image, UPLOAD_FOLDER)
+    print(f"name={name}, original_price={original_price}, sale_price={sale_price}, description={description}, mc_item_id={mc_item_id}")
+    sale_price = sale_price or None
+    img_filename   = save_image(image, UPLOAD_FOLDER, filename=name)
     product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id)
     add_product_stock(product_id,int(product_quantity))
     add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
 
-def manage_clear_service():
+@requestParsor
+def manage_clear_service(product_id):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     soft_delete_product(product_id)
     add_log(session.get(SESSION_AUTHO), "刪除", product_id, product["name"])
@@ -44,39 +46,35 @@ def manage_service():
     products = get_all_products()
     return render_template("manage.html", products=products)
 
-def manage_remove_service():
+@requestParsor
+def manage_remove_service(product_id):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     set_product_active(product_id, 0)
     add_log(session.get(SESSION_AUTHO), "下架", product_id, product["name"])
     flash("商品已下架", "success")
     return redirect(url_for("D.manage"))
 
-def manage_restock_service():
+@requestParsor
+def manage_restock_service(product_id):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     set_product_active(product_id, 1)
     add_log(session.get(SESSION_AUTHO), "重新上架", product_id, product["name"])
     flash("商品已重新上架", "success")
     return redirect(url_for("D.manage"))
 
-def manage_edit_service():
+@requestParsor
+def manage_edit_service(product_id, name, original_price, sale_price=None, category=None, product_quantity=None, image=None):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id       = request.form.get("product_id")
-    name             = request.form.get("name")
-    original_price   = request.form.get("original_price")
-    sale_price       = request.form.get("sale_price") or None
-    category         = request.form.get("category") or None
-    product_quantity = request.form.get("product_quantity")
-    file             = request.files.get("image")
+    sale_price = sale_price or None
+    category   = category or None
 
     product = get_product_by_id(product_id)
     if not product:
@@ -90,9 +88,9 @@ def manage_edit_service():
         "category": category,
     }
 
-    if file and file.filename != "":
+    if image and image.filename != "":
         old_pic_path = product.get("product_pic")
-        new_pic_path = save_image(file, UPLOAD_FOLDER)
+        new_pic_path = save_image(image, UPLOAD_FOLDER, filename=name)
         update_data["product_pic"] = new_pic_path
         del_imgae(old_pic_path)
 
@@ -112,7 +110,8 @@ def manage_edit_service():
     flash("商品資料已更新", "success")
     return redirect(url_for("D.manage"))
 
-def member_edit_service():
+@requestParsor
+def member_edit_service(name=None, mobile=None, profile_pic=None):
     user_account = session.get(SESSION_AUTHO)
 
     if request.method == "GET":
@@ -126,19 +125,15 @@ def member_edit_service():
             auth=get_auth(user_account)
         )
 
-    name   = request.form.get("name")
-    mobile = request.form.get("mobile")
-    file   = request.files.get("profile_pic")
-
     if mobile and not validateMobile(mobile):
         flash("手機格式錯誤", "error")
         return redirect(url_for("D.member_edit"))
 
     update_data = {"user_name": name, "user_mobile": mobile}
 
-    if file and file.filename != "":
+    if profile_pic and profile_pic.filename != "":
         old_pic_path = getUser({"user_account":user_account}, "pic_path")
-        new_pic_path = save_image(file, PROFILE_PIC_FOLDER, filename=user_account)
+        new_pic_path = save_image(profile_pic, PROFILE_PIC_FOLDER, filename=user_account)
         update_data["pic_path"] = new_pic_path
         del_imgae(old_pic_path)
 
@@ -146,9 +141,10 @@ def member_edit_service():
     flash("資料更新成功", "success")
     return redirect(url_for("D.member"))
 
-def member_service():
+@requestParsor
+def member_service(keyword=""):
     user_account = session[SESSION_AUTHO]
-    keyword = request.args.get("keyword", "").strip()
+    keyword = keyword.strip()
 
     if keyword:
         orders = search_orders(user_account, keyword)
@@ -178,12 +174,13 @@ def manage_logout_service():
     flash("已登出")
     return redirect(url_for("B.index"))
 
-def manage_log_service():
+@requestParsor
+def manage_log_service(month="", product=""):
     # 後台操作日誌:
     # - URL 帶 ?month=YYYY-MM      → 預先載入該月份(展開)
     # - URL 再加 ?product=關鍵字   → 該月只顯示商品名含關鍵字的紀錄
-    selected_month   = request.args.get("month", "").strip()
-    product_keyword  = request.args.get("product", "").strip()
+    selected_month   = month.strip()
+    product_keyword  = product.strip()
     months = get_log_months()
 
     preloaded_logs = None
@@ -243,16 +240,17 @@ def member_cards_service():
         auth=get_auth(user_account)
     )
 
-def add_card_service():
+@requestParsor
+def add_card_service(card_number=None, expiry=None, holder_name=None, is_default=None):
     """新增一張信用卡。"""
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
         return redirect(url_for("D.member_cards"))
 
     user_account = session[SESSION_AUTHO]
-    card_number  = request.form.get("card_number", "").strip()
-    expiry       = request.form.get("expiry", "").strip()
-    holder_name  = request.form.get("holder_name", "").strip()
-    is_default   = 1 if request.form.get("is_default") else 0
+    card_number  = (card_number or "").strip()
+    expiry       = (expiry or "").strip()
+    holder_name  = (holder_name or "").strip()
+    is_default   = 1 if is_default else 0
 
     # 簡易驗證（學校作業夠用）
     if not card_number or not expiry or not holder_name:
@@ -274,24 +272,24 @@ def add_card_service():
     flash("信用卡已新增", "success")
     return redirect(url_for("D.member_cards"))
 
-def delete_card_service():
+@requestParsor
+def delete_card_service(card_id=None):
     """刪除一張信用卡。"""
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
         return redirect(url_for("D.member_cards"))
 
     user_account = session[SESSION_AUTHO]
-    card_id = request.form.get("card_id")
     delete_member_card(user_account, card_id)
     flash("信用卡已刪除", "success")
     return redirect(url_for("D.member_cards"))
 
-def set_default_card_service():
+@requestParsor
+def set_default_card_service(card_id=None):
     """把指定卡設為預設。"""
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
         return redirect(url_for("D.member_cards"))
 
     user_account = session[SESSION_AUTHO]
-    card_id = request.form.get("card_id")
     set_default_card(user_account, card_id)
     flash("已設定為預設卡", "success")
     return redirect(url_for("D.member_cards"))
@@ -376,6 +374,7 @@ def member_completed_orders_service():
     )
 
 
+@requestParsor
 def manage_order_items_service(order_id):
     """管理員:取單張訂單明細(AJAX partial)。"""
     items = get_order_items_with_user_check(order_id, user_account=None)
@@ -384,6 +383,7 @@ def manage_order_items_service(order_id):
     return render_template("_order_items.html", items=items, not_found=False)
 
 
+@requestParsor
 def member_order_items_service(order_id):
     """使用者:取自己的訂單明細(AJAX partial)。"""
     user_account = session[SESSION_AUTHO]
