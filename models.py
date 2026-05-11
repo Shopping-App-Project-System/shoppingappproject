@@ -66,22 +66,13 @@ def rcon_give_item(player_name, item_id, quantity, nbt=None):
 # ── Branch A:使用者帳號相關方法 ────────────────────────────────────────────────────
 
 @db_transaction
-def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address, minecraft_name):
-    # 新增會員帳號,minecraft_name 為玩家綁定的 Minecraft 角色名,/give 時使用
+def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
+    # 新增會員帳號
     cursor.execute(f"""
-        INSERT INTO `{BRANCH_A_TABLE}`
-        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`,`minecraft_name`)
-        VALUES (?,?,?,?,?,?,?)
-    """, (user_name, user_account, user_password, user_mobile, user_email, user_address, minecraft_name))
-
-@db_transaction
-def is_minecraft_name_taken(cursor, minecraft_name):
-    # 檢查該 Minecraft 角色名是否已被其他帳號綁定
-    cursor.execute(
-        f"SELECT 1 FROM `{BRANCH_A_TABLE}` WHERE minecraft_name = ?",
-        (minecraft_name,)
-    )
-    return cursor.fetchone() is not None
+        INSERT INTO {BRANCH_A_TABLE}
+        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
+        VALUES (?,?,?,?,?,?)
+    """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
 
 @db_transaction
 def updateUser(cursor, set_: dict, where: dict):
@@ -93,7 +84,7 @@ def updateUser(cursor, set_: dict, where: dict):
     where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
 
     cursor.execute(f"""
-        UPDATE `{BRANCH_A_TABLE}`
+        UPDATE {BRANCH_A_TABLE}
         SET {set_sql}
         WHERE {where_sql}
     """, set_value + where_value)
@@ -113,7 +104,7 @@ def getUser(cursor, where: dict, *selections):
 
     cursor.execute(f"""
         SELECT {selections}
-        FROM `{BRANCH_A_TABLE}`
+        FROM {BRANCH_A_TABLE}
         WHERE {where_sql}
     """, where_value)
 
