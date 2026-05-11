@@ -181,6 +181,24 @@
         .footer-logo{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;display:block;margin-bottom:12px;}
         .footer p{font-family:var(--font-pixel);font-size:.55rem;color:rgba(255,255,255,.5);text-shadow:1px 1px 0 #000;line-height:2.4;}
 
+        /* ── order detail row ── */
+        .order-row{cursor:pointer;}
+        .order-row:hover td{filter:brightness(1.25);}
+        .order-detail-row{display:none;}
+        .order-detail-row.open{display:table-row;}
+        .order-detail-cell{
+            padding:0 !important;
+            background:repeating-linear-gradient(180deg,#1a1a2e 0,#1a1a2e 8px,#12121e 8px,#12121e 16px) !important;
+            border-bottom:4px solid #000;
+        }
+        .order-detail-inner{padding:14px 18px;}
+        .detail-table{width:100%;border-collapse:collapse;margin-top:4px;}
+        .detail-table th{font-family:var(--font-pixel);font-size:.52rem;color:#aaa;text-shadow:1px 1px 0 #000;padding:6px 10px;border-bottom:3px solid #333;text-align:left;background:none;}
+        .detail-table td{font-family:var(--font-pixel);font-size:.55rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;padding:8px 10px;border-bottom:2px solid #333;}
+        .detail-table tr:last-child td{border-bottom:none;}
+        .detail-loading{font-family:var(--font-pixel);font-size:.55rem;color:#888;text-shadow:1px 1px 0 #000;padding:10px 0;}
+        .detail-img{width:28px;height:28px;border:2px solid #555;object-fit:cover;image-rendering:pixelated;vertical-align:middle;margin-right:6px;}
+
         @media(max-width:900px){.layout{grid-template-columns:1fr;}.nav-links,.user-panel{display:none;}.nav-toggle{display:flex;}}
         @media(max-width:500px){.table th,.table td{font-size:.5rem;padding:8px 8px;}}
     </style>
@@ -314,7 +332,7 @@
                         </thead>
                         <tbody>
                             {% for o in orders %}
-                            <tr>
+                            <tr class="order-row" data-order-id="{{ o.id }}">
                                 <td>#{{ loop.index }}</td>
                                 <td>NT$ {{ o.total | int }}</td>
                                 <td>
@@ -335,6 +353,13 @@
                                         <button type="submit" class="btn-cancel">✗ 取消訂單</button>
                                     </form>
                                     {% endif %}
+                                </td>
+                            </tr>
+                            <tr class="order-detail-row" id="detail-{{ o.id }}">
+                                <td class="order-detail-cell" colspan="4">
+                                    <div class="order-detail-inner">
+                                        <div class="detail-loading">載入中…</div>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -361,6 +386,37 @@
 <script>
 const t=document.getElementById('navToggle'),d=document.getElementById('navDrawer');
 t.addEventListener('click',()=>{t.classList.toggle('open');d.classList.toggle('open');});
+
+document.querySelectorAll('.order-row').forEach(row => {
+    row.addEventListener('click', async e => {
+        if (e.target.closest('form')) return;
+        const orderId = row.dataset.orderId;
+        const detailRow = document.getElementById('detail-' + orderId);
+        const isOpen = detailRow.classList.contains('open');
+        if (isOpen) { detailRow.classList.remove('open'); return; }
+        detailRow.classList.add('open');
+        if (detailRow.dataset.loaded) return;
+        const inner = detailRow.querySelector('.order-detail-inner');
+        try {
+            const res = await fetch('/order/' + orderId + '/items');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const items = await res.json();
+            if (!items.length) { inner.innerHTML = '<div class="detail-loading">此訂單沒有商品明細</div>'; }
+            else {
+                inner.innerHTML = '<table class="detail-table"><thead><tr><th>商品</th><th>數量</th><th>金額</th></tr></thead><tbody>'
+                    + items.map(i => `<tr>
+                        <td>${i.image ? `<img class="detail-img" src="${i.image}" alt="">` : ''}${i.name}</td>
+                        <td>× ${i.qty}</td>
+                        <td>NT$ ${(i.price).toLocaleString()}</td>
+                    </tr>`).join('')
+                    + '</tbody></table>';
+            }
+            detailRow.dataset.loaded = '1';
+        } catch(err) {
+            inner.innerHTML = '<div class="detail-loading" style="color:#f88">載入失敗</div>';
+        }
+    });
+});
 </script>
 </body>
 </html>
