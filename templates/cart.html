@@ -113,7 +113,8 @@
         .qty-picker button:hover:not(:disabled){filter:brightness(1.3);}
         .qty-picker button:active:not(:disabled){transform:scale(.92);}
         .qty-picker button:disabled{opacity:.4;cursor:not-allowed;}
-        .qty-picker .qty-num{min-width:44px;text-align:center;font-family:var(--font-pixel);font-size:.85rem;font-weight:700;color:var(--white-mc);text-shadow:2px 2px 0 #000;background:repeating-linear-gradient(180deg,#2a2a2a 0,#2a2a2a 6px,#1a1a1a 6px,#1a1a1a 12px);padding:0 6px;line-height:40px;}
+        .qty-picker .qty-num{width:54px;height:40px;text-align:center;font-family:var(--font-pixel);font-size:.85rem;font-weight:700;color:var(--white-mc);background:repeating-linear-gradient(180deg,#2a2a2a 0,#2a2a2a 6px,#1a1a1a 6px,#1a1a1a 12px);padding:0 6px;border:none;outline:none;-moz-appearance:textfield;}
+        .qty-picker .qty-num::-webkit-outer-spin-button,.qty-picker .qty-num::-webkit-inner-spin-button{-webkit-appearance:none;}
 
         /* item side */
         .item-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:12px;}
@@ -249,7 +250,7 @@
                             <button type="button" class="qty-minus"
                                 {% if item.qty <= 1 or item.stock == 0 or not item.is_active %}disabled{% endif %}
                                 aria-label="減少數量">−</button>
-                            <span class="qty-num">{{ item.qty }}</span>
+                            <input type="number" class="qty-num" value="{{ item.qty }}" min="1" max="{{ item.stock }}" {% if item.stock == 0 or not item.is_active %}disabled{% endif %}>
                             <button type="button" class="qty-plus"
                                 {% if item.qty >= item.stock or item.stock == 0 or not item.is_active %}disabled{% endif %}
                                 aria-label="增加數量">＋</button>
@@ -288,10 +289,6 @@
                     <div class="summary-line">
                         <span>商品小計</span>
                         <span id="summary-subtotal">NT$ {{ summary.subtotal or 0 }}</span>
-                    </div>
-                    <div class="summary-line">
-                        <span>運費</span>
-                        <span>NT$ {{ summary.shipping or 0 }}</span>
                     </div>
                     <div class="summary-line">
                         <span>折扣</span>
@@ -354,28 +351,33 @@ document.querySelectorAll('.cart-item').forEach(articleEl => {
     const totalEl  = articleEl.querySelector('.item-total');
     if (!minusBtn || !plusBtn) return;
 
-    function getQty() { return parseInt(qtyNumEl.textContent, 10); }
+    function getQty() { return parseInt(qtyNumEl.value, 10); }
     function updateButtons(qty) { minusBtn.disabled = qty <= 1 || stock === 0; plusBtn.disabled = qty >= stock || stock === 0; }
-    function updateDisplay(qty) { qtyNumEl.textContent = qty; totalEl.textContent = 'NT$ ' + (price * qty).toLocaleString(); updateButtons(qty); updateSummary(); }
+    function updateDisplay(qty) { qtyNumEl.value = qty; totalEl.textContent = 'NT$ ' + (price * qty).toLocaleString(); updateButtons(qty); updateSummary(); }
     function sendUpdate(qty) {
         const fd = new FormData(); fd.append('item_id', itemId); fd.append('qty', qty);
         fetch(UPDATE_URL, { method:'POST', body:fd }).catch(err => console.error('更新數量失敗', err));
     }
     minusBtn.addEventListener('click', () => { const q = getQty(); if (q <= 1) return; updateDisplay(q-1); sendUpdate(q-1); });
     plusBtn.addEventListener('click',  () => { const q = getQty(); if (q >= stock) return; updateDisplay(q+1); sendUpdate(q+1); });
+    qtyNumEl.addEventListener('change', () => {
+        let q = getQty();
+        if (isNaN(q) || q < 1) q = 1;
+        if (q > stock) q = stock;
+        updateDisplay(q);
+        sendUpdate(q);
+    });
 });
 
 function updateSummary() {
     let subtotal = 0;
     document.querySelectorAll('.cart-item').forEach(el => {
-        subtotal += parseInt(el.dataset.price,10) * parseInt(el.querySelector('.qty-num').textContent,10);
+        subtotal += parseInt(el.dataset.price,10) * parseInt(el.querySelector('.qty-num').value,10);
     });
-    const shipping = subtotal > 0 ? 60 : 0;
-    const total = subtotal + shipping;
     const s = document.getElementById('summary-subtotal');
     const t = document.getElementById('summary-total');
     if (s) s.textContent = 'NT$ ' + subtotal.toLocaleString();
-    if (t) t.textContent = 'NT$ ' + total.toLocaleString();
+    if (t) t.textContent = 'NT$ ' + subtotal.toLocaleString();
 }
 </script>
 </body>

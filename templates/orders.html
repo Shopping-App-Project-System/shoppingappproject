@@ -290,8 +290,6 @@
             <div class="order-body">
                 {# 展開後上方先列幾個欄位,然後下方插入 AJAX 載入的明細 #}
                 <div class="extra-info">
-                    <div><span class="label">配送方式</span>{{ o.delivery_method or '-' }}</div>
-                    <div><span class="label">收件地址</span>{{ o.address or '-' }}</div>
                     {% if o.note %}<div><span class="label">備註</span>{{ o.note }}</div>{% endif %}
                 </div>
                 <div class="items-container">

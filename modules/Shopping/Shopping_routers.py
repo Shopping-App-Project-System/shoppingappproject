@@ -62,7 +62,6 @@ from .Shopping_services import (cart_add_service,
                                 order_cancel_service,
                                 cart_update_service,
                                 order_items_service,
-                                redeem_service,
                                 redeem_service)
 
 # _______________________________________初始化___________________________________________
@@ -83,7 +82,7 @@ def cart():return cart_service()
 @userRequired
 def cart_remove(item_id):return cart_remove_service(item_id)
 
-@bp.route("/cart/update", methods=["GET","POST"])
+@bp.route("/cart/update", methods=["POST"])
 @userRequired
 def cart_update():return cart_update_service()
 

@@ -221,24 +221,6 @@
                     <div class="form-grid">
 
                         <div class="form-group">
-                            <label class="form-label">姓名</label>
-                            <input type="text" name="name" placeholder="玩家姓名"
-                                   value="{{ form.name if form else '' }}">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">電話</label>
-                            <input type="text" name="phone" placeholder="聯絡電話"
-                                   value="{{ form.phone if form else '' }}">
-                        </div>
-
-                        <div class="form-group full">
-                            <label class="form-label">地址</label>
-                            <input type="text" name="address" placeholder="配送地址"
-                                   value="{{ form.address if form else '' }}">
-                        </div>
-
-                        <div class="form-group">
                             <label class="form-label">付款方式</label>
                             <select name="payment" id="payment-select" onchange="toggleCardInput()">
                                 {% if payment_methods %}
@@ -247,19 +229,6 @@
                                     {% endfor %}
                                 {% else %}
                                     <option>無付款方式</option>
-                                {% endif %}
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">配送方式</label>
-                            <select name="shipping">
-                                {% if shipping_methods %}
-                                    {% for s in shipping_methods %}
-                                    <option value="{{ s }}">{{ s }}</option>
-                                    {% endfor %}
-                                {% else %}
-                                    <option>無配送方式</option>
                                 {% endif %}
                             </select>
                         </div>
@@ -319,10 +288,6 @@
                     {% endif %}
 
                     <div style="margin-top:16px;">
-                        <div class="summary-line">
-                            <span>運費</span>
-                            <span>{{ summary.shipping or 0 }}</span>
-                        </div>
                         <div class="summary-line total">
                             <span>總計</span>
                             <span>{{ summary.total or 0 }}</span>

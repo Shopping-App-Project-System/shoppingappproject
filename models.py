@@ -240,13 +240,13 @@ def get_cart_item_stock(cursor, item_id, user_account):
 # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
 @db_transaction
-def insert_order(cursor, user_account, total, payment_method, delivery_method, address, note, credit_card_number=None):
+def insert_order(cursor, user_account, total, payment_method, note, credit_card_number=None):
     # 建立新訂單，狀態預設為「處理中」，回傳新訂單的 id
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
-            (user_id, total, payment_method, delivery_method, address, note, status, credit_card_number)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,?,?,'處理中',?)''',
-        (user_account, total, payment_method, delivery_method, address, note, credit_card_number)
+            (user_id, total, payment_method, note, status, credit_card_number)
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'處理中',?)''',
+        (user_account, total, payment_method, note, credit_card_number)
     )
     return cursor.lastrowid
 
@@ -285,8 +285,7 @@ def get_order_items_detail(cursor, order_id):
 def get_all_orders(cursor, user_account):
     # 取得該會員所有訂單（含已取消），依建立時間升冪排列
     cursor.execute(
-        f'''SELECT id, total, payment_method, delivery_method,
-                   address, note, status, created_at
+        f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             ORDER BY created_at ASC''',
@@ -298,8 +297,7 @@ def get_all_orders(cursor, user_account):
 def get_orders(cursor, user_account):
     # 取得該會員的有效訂單（排除已取消），依建立時間升冪排列
     cursor.execute(
-        f'''SELECT id, total, payment_method, delivery_method,
-                   address, note, status, created_at
+        f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             AND status != '已取消'
@@ -313,14 +311,13 @@ def search_orders(cursor, user_account, keyword):
     # 依關鍵字搜尋該會員的有效訂單（比對地址或狀態），依建立時間降冪排列
     like_keyword = "%" + keyword + "%"
     cursor.execute(
-        f'''SELECT id, total, payment_method, delivery_method,
-                   address, note, status, created_at
+        f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             AND status != '已取消'
-            AND (address LIKE ? OR status LIKE ?)
+            AND status LIKE ?
             ORDER BY created_at DESC''',
-        (user_account, like_keyword, like_keyword)
+        (user_account, like_keyword)
     )
     return cursor.fetchall()
 
@@ -637,8 +634,8 @@ def search_completed_orders(cursor, user_account=None, target_user=None,
     min_total/max_total:金額範圍
     """
     sql = f"""
-        SELECT o.id, o.total, o.payment_method, o.delivery_method,
-               o.address, o.note, o.status, o.created_at,
+        SELECT o.id, o.total, o.payment_method,
+               o.note, o.status, o.created_at,
                u.user_account
         FROM `{BRANCH_C_ORDER_TABLE}` o
         JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
