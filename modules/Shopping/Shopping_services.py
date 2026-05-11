@@ -26,8 +26,9 @@ from flask import request, redirect, render_template, session, url_for, flash
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
 from utils import get_auth, validateCreditCard, requestParsor, getVerifyToken
-from mc_bridge import notify_player, give_item
-from models import (get_product_by_id,
+from models import (notify_player,
+                    give_item,
+                    get_product_by_id,
                     get_product_stock,
                     find_cart_item,
                     upsert_cart,

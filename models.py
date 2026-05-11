@@ -12,16 +12,76 @@ from settings import (BRANCH_A_TABLE,
 from db import db_transaction
 
 
-# ── Branch A：使用者帳號相關方法 ────────────────────────────────────────────────────
+# ── RCON:與 Minecraft 伺服器通訊 ────────────────────────────────────────────────────
+# 需要 pip install mcrcon
+import logging
+from mcrcon import MCRcon, MCRconException
+
+from settings import MC_RCON_HOST, MC_RCON_PORT, MC_RCON_PASSWORD
+
+_rcon_logger = logging.getLogger(__name__)
+
+RCON_HOST = MC_RCON_HOST
+RCON_PORT = MC_RCON_PORT
+RCON_PASSWORD = MC_RCON_PASSWORD
+
+
+def _rcon_send(command):
+    # 每次建新連線,簡單可靠
+    with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+        return mcr.command(command)
+
+
+def rcon_is_player_online(player_name):
+    # 用 /list 確認玩家是否在線
+    try:
+        response = _rcon_send("list")
+    except (MCRconException, ConnectionError, OSError) as e:
+        _rcon_logger.warning("RCON list 失敗: %s", e)
+        return False
+    if ":" not in response:
+        return False
+    online_part = response.split(":", 1)[1]
+    names = [n.strip() for n in online_part.split(",") if n.strip()]
+    return player_name in names
+
+
+def rcon_give_item(player_name, item_id, quantity, nbt=None):
+    # 對玩家執行 /give,回傳 (ok: bool, response: str)
+    if nbt:
+        cmd = f"give {player_name} {item_id}{nbt} {quantity}"
+    else:
+        cmd = f"give {player_name} {item_id} {quantity}"
+    try:
+        response = _rcon_send(cmd)
+    except (MCRconException, ConnectionError, OSError) as e:
+        _rcon_logger.exception("RCON give 失敗")
+        return False, f"RCON error: {e}"
+    failed_markers = ("No player", "Unknown", "Incorrect", "Expected", "is not a valid")
+    if any(m in response for m in failed_markers):
+        return False, response
+    return True, response
+
+
+# ── Branch A:使用者帳號相關方法 ────────────────────────────────────────────────────
 
 @db_transaction
-def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
-    # 新增會員帳號
+def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address, minecraft_name):
+    # 新增會員帳號,minecraft_name 為玩家綁定的 Minecraft 角色名,/give 時使用
     cursor.execute(f"""
         INSERT INTO `{BRANCH_A_TABLE}`
-        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
-        VALUES (?,?,?,?,?,?)
-    """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
+        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`,`minecraft_name`)
+        VALUES (?,?,?,?,?,?,?)
+    """, (user_name, user_account, user_password, user_mobile, user_email, user_address, minecraft_name))
+
+@db_transaction
+def is_minecraft_name_taken(cursor, minecraft_name):
+    # 檢查該 Minecraft 角色名是否已被其他帳號綁定
+    cursor.execute(
+        f"SELECT 1 FROM `{BRANCH_A_TABLE}` WHERE minecraft_name = ?",
+        (minecraft_name,)
+    )
+    return cursor.fetchone() is not None
 
 @db_transaction
 def updateUser(cursor, set_: dict, where: dict):
@@ -386,6 +446,92 @@ def update_order_item_serial(cursor, order_item_id, serial_code):
         (serial_code, order_item_id)
     )
 
+
+# ── Minecraft 結帳即時發貨 ────────────────────────────────────────────────
+
+@db_transaction
+def get_user_minecraft_name(cursor, user_account):
+    # 取得會員綁定的 Minecraft 角色名
+    cursor.execute(
+        f"SELECT minecraft_name FROM `{BRANCH_A_TABLE}` WHERE user_account = ?",
+        (user_account,)
+    )
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return row['minecraft_name'] if isinstance(row, dict) else row[0]
+
+
+def give_item(user_account, mc_item_id, quantity, nbt=None):
+    """
+    供 Shopping_services 直接呼叫:依 user_account 查 minecraft_name,然後 /give。
+    回傳 (ok: bool, response: str)
+      - ok=False 的情況: 玩家未綁定 / 玩家不在線 / RCON 連線失敗 / /give 指令失敗
+    """
+    player_name = get_user_minecraft_name(user_account)
+    if not player_name:
+        return False, "玩家未綁定 minecraft_name"
+    if not rcon_is_player_online(player_name):
+        return False, f"玩家 {player_name} 不在線上"
+    return rcon_give_item(player_name, mc_item_id, quantity, nbt)
+
+
+def notify_player(user_account, message):
+    """
+    供 Shopping_services 直接呼叫:對玩家發送遊戲內訊息 (/tell)。
+    回傳 (ok: bool, response: str)
+    /tell 即使玩家不在線指令也會回 "No player was found",我們當失敗處理。
+    """
+    player_name = get_user_minecraft_name(user_account)
+    if not player_name:
+        return False, "玩家未綁定 minecraft_name"
+    # 用 /tell 私訊玩家。如果想全頻廣播就改成 /say
+    try:
+        response = _rcon_send(f"tell {player_name} {message}")
+    except (MCRconException, ConnectionError, OSError) as e:
+        _rcon_logger.warning("RCON tell 失敗: %s", e)
+        return False, f"RCON error: {e}"
+    failed_markers = ("No player", "Unknown", "Incorrect", "Expected")
+    if any(m in response for m in failed_markers):
+        return False, response
+    return True, response
+
+
+def deliver_cart_to_player(user_account, cart_items):
+    """
+    結帳時呼叫,直接把購物車裡每個品項 /give 給玩家。
+    cart_items 格式: [{'mc_item_id': 'minecraft:diamond', 'quantity': 64}, ...]
+    回傳: (ok: bool, message: str, details: list)
+      - ok=True 表示全部發送成功,可建立訂單
+      - ok=False 表示玩家不在線或部分失敗,結帳路由應拒絕並回覆使用者
+    """
+    player_name = get_user_minecraft_name(user_account)
+    if not player_name:
+        return False, "尚未綁定 Minecraft 角色名", []
+
+    # 先確認玩家在線,離線就直接擋下
+    if not rcon_is_player_online(player_name):
+        return False, f"玩家 {player_name} 不在線上,請先進入遊戲再購買", []
+
+    details = []
+    all_ok = True
+    for item in cart_items:
+        mc_item_id = item.get('mc_item_id')
+        if not mc_item_id:
+            details.append({'item': item, 'ok': False, 'msg': '商品未設定 mc_item_id'})
+            all_ok = False
+            continue
+        ok, response = rcon_give_item(
+            player_name=player_name,
+            item_id=mc_item_id,
+            quantity=item['quantity'],
+        )
+        details.append({'item': item, 'ok': ok, 'msg': response})
+        if not ok:
+            all_ok = False
+
+    return all_ok, "OK" if all_ok else "部分發送失敗", details
+
 # ── Branch D：商品管理（後台） ────────────────────────────────────────────────
 
 # 新增商品，預設為上架狀態，回傳新商品的 id
@@ -396,9 +542,10 @@ def add_product(cursor, name, original_price, sale_price, description, img_filen
     # 新增商品，預設為上架狀態，回傳新商品的 id
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
-        (`mc_item_id`,`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?,?, ?, ?, ?, ?, 1)
-    """, (name, original_price, sale_price, description, img_filename,mc_item_id))
+        (`mc_item_id`, `name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
+    """, (mc_item_id, name, original_price, sale_price, description, img_filename))
+    #     ↑ 順序改為與欄位一致
     return cursor.lastrowid
 
 @db_transaction
@@ -571,10 +718,6 @@ def set_default_card(cursor, user_account, card_id):
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (card_id, user_account)
     )
-
-if __name__ == "__main__":
-    ...
-
 
 # ── manage_log 報表(管理頁日誌,按月份分組) ─────────────────────────────────
 

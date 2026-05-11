@@ -155,11 +155,11 @@ def logout_service():
     return redirect(url_for("B.index"))
 
 @requestParsor
-def register_service(name,account,password,mobile,email,address,profile_pic):
+def register_service(name,account,password,mobile,email,address,minecraft_name,profile_pic):
     if request.method == "GET":
         return render_template("register.html")
     
-    msg = checkUserInput(("姓名",name),("帳號",account),("密碼",password),("手機",mobile),("信箱",email),("地址",address))
+    msg = checkUserInput(("姓名",name),("帳號",account),("密碼",password),("手機",mobile),("信箱",email),("地址",address),("MC 角色名",minecraft_name))
     
     if msg:
         flash("請輸入"+msg)
@@ -179,8 +179,13 @@ def register_service(name,account,password,mobile,email,address,profile_pic):
         flash("帳號格式錯誤")
         return render_template("register.html")
     
+    # MC 角色名套用同一套格式驗證（英數+底線、3-16字）
+    if not validateMCUserAccount(minecraft_name):
+        flash("MC 角色名格式錯誤")
+        return render_template("register.html")
+    
     try:
-        createUser(name,account,password,mobile,email,address)
+        createUser(name,account,password,mobile,email,address,minecraft_name)
     except IntegrityError:
         flash("帳號已存在")
         return render_template("register.html")
@@ -245,7 +250,7 @@ def verify_register_service(token,code):
     
     user = getUser({"token":token},"user_account","code","pic_path")
     user_account,user_code,user_pic_path = user["user_account"],user["code"],user["pic_path"]
-
+    # print(user)
     if code != user_code:
         flash("驗證失敗")
         return render_template("verify_code.html",token=token,form_action=f"/register/email/{token}/verify/code")

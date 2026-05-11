@@ -110,6 +110,8 @@
                 <div class="form-group"><label>姓名</label><input type="text" name="name" placeholder="玩家姓名"></div>
                 <!-- 帳號即 Minecraft 玩家名稱，僅限英文、數字、底線，最長 16 字 -->
                 <div class="form-group"><label>帳號（Minecraft 玩家名稱）</label><input type="text" name="account" placeholder="請輸入 MC 玩家名稱" maxlength="16"></div>
+                <!-- 綁定的 Minecraft 角色名稱，購買道具時將發送到此角色 -->
+                <div class="form-group"><label>Minecraft 角色名</label><input type="text" name="minecraft_name" placeholder="遊戲內角色名（用於發送道具）" maxlength="16" pattern="[A-Za-z0-9_]{3,16}" title="3-16 個英文、數字或底線"></div>
                 <div class="form-group"><label>密碼</label><input type="password" name="password" placeholder="設定密碼"></div>
                 <div class="form-group"><label>手機</label><input type="text" name="mobile" placeholder="聯絡電話"></div>
                 <div class="form-group"><label>信箱</label><input type="email" name="email" placeholder="電子信箱"></div>
