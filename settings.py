@@ -10,8 +10,8 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")  # 從環境變數取得資料庫登入�
 DB_DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
 
 # ________________________M.C.__________________________
-MC_RCON_HOST = os.getenv("MC_RCON_HOST")
-MC_RCON_PORT = os.getenv("DB_RCON_PORT")
+MC_RCON_HOST = os.getenv("DB_RCON_HOST")
+MC_RCON_PORT = int(os.getenv("DB_RCON_PORT", "25575"))  # PORT 要 int, mcrcon 才能用
 MC_RCON_PASSWORD = os.getenv("DB_RCON_PASSWORD")
 
 # # ________________________POOL__________________________

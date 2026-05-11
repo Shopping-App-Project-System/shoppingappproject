@@ -62,7 +62,6 @@ from .Shopping_services import (cart_add_service,
                                 order_cancel_service,
                                 cart_update_service,
                                 order_items_service,
-                                redeem_service,
                                 redeem_service)
 
 # _______________________________________初始化___________________________________________
