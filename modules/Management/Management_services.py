@@ -11,6 +11,9 @@ from models import (
     add_product_stock,set_product_stock,
     get_log_months,get_logs_by_month,
     get_user_accounts_with_orders,search_completed_orders,get_order_items_with_user_check,
+    # 後台儀表板 (圖表) 用的統計查詢
+    get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
+    get_top_products,get_member_spending_distribution,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -408,3 +411,47 @@ def member_order_items_service(order_id):
         # 不是這個人的訂單就直接拒,不洩漏訂單資訊
         return render_template("_order_items.html", items=[], not_found=True)
     return render_template("_order_items.html", items=items, not_found=False)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#   後台儀表板 (銷售統計圖表)
+# ══════════════════════════════════════════════════════════════════════════════
+def manage_dashboard_service():
+    """
+    回傳儀表板 partial HTML (不含 topbar/footer)。
+
+    呼叫情境:
+      manage.html 點擊「📈 數據圖表」分頁 → AJAX GET /manage/dashboard
+        → 此 service 回傳一段 HTML 片段 → 前端塞進 #panel-container
+
+    為什麼不再渲染完整頁:
+      原本此 service 渲染整個 manage_dashboard.html (含 topbar/footer)。
+      改成「嵌入式分頁」之後,整個外框 (header/nav/footer) 都由 manage.html
+      提供,儀表板只需要內容區。因此改為回傳 _dashboard_panel.html partial。
+
+    圖表資料仍由前端另外打 /manage/dashboard/data 取 JSON,此邏輯不變。
+    """
+    return render_template("_dashboard_panel.html")
+
+
+def manage_dashboard_data_service():
+    """
+    儀表板資料 API,回傳 JSON 給前端 Chart.js 使用。
+
+    回傳結構:
+      {
+        "summary": { total_revenue, total_orders, avg_order_value, total_members },
+        "revenue_trend":   [ {month, revenue}, ... ],
+        "orders_by_month": [ {month, order_count}, ... ],
+        "top_products":    [ {product_name, total_qty}, ... ],
+        "member_dist":     [ {user_account, total_spent}, ... ]
+      }
+    """
+    from flask import jsonify
+    return jsonify({
+        "summary":         get_dashboard_summary(),
+        "revenue_trend":   get_revenue_trend(months=12),
+        "orders_by_month": get_orders_count_by_month(months=12),
+        "top_products":    get_top_products(limit=10),
+        "member_dist":     get_member_spending_distribution(limit=8),
+    })

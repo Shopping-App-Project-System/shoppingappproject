@@ -160,6 +160,9 @@
     .table-responsive{font-size:.45rem;}
 }
     </style>
+
+    {# Chart.js (CDN) — 供「數據圖表」分頁的 partial 使用 #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -169,7 +172,9 @@
     <div class="container topbar-inner">
         <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         <nav class="nav-links">
-            <a href="/manage" class="active">⚙ 商品管理</a>
+            {# 「商品管理」與「數據圖表」是同一個頁面的兩個分頁,點擊用 JS 切換不換 URL #}
+            <a href="#" data-tab="products" class="active" onclick="switchTab(event,'products')">⚙ 商品管理</a>
+            <a href="#" data-tab="dashboard" onclick="switchTab(event,'dashboard')">📈 數據圖表</a>
             <a href="/manage/log" >📋 操作紀錄</a>
             <a href="/manage/orders" >📊 交易訂單</a>
         </nav>
@@ -191,6 +196,14 @@
         </div>
         {% endif %}
         {% endwith %}
+
+        {# ─────────────────────────────────────────────────────────────
+           分頁容器:
+             - #panel-products 是預設顯示的「商品管理」分頁
+             - #panel-dashboard 由 AJAX 載入儀表板 partial,預設隱藏
+           點擊 nav-links 的 data-tab="..." 會切換顯示哪一個。
+           ───────────────────────────────────────────────────────────── #}
+        <div id="panel-products">
 
         <!-- 新增商品 -->
         <div class="mc-block">
@@ -356,6 +369,13 @@
             </div>
         </div>
 
+        </div> {# /#panel-products #}
+
+        {# 數據圖表分頁容器 — 預設隱藏,點擊「📈 數據圖表」時用 AJAX 載入 partial 進來 #}
+        <div id="panel-dashboard" style="display:none;">
+            <div style="text-align:center;padding:60px 20px;font-family:var(--font-pixel);font-size:.7rem;color:#aaa;text-shadow:1px 1px 0 #000;">📡 載入儀表板中...</div>
+        </div>
+
     </div>
 </main>
 
@@ -497,6 +517,72 @@
         reader.readAsDataURL(file);
     });
 </script>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   分頁切換邏輯
+   - 「商品管理」與「數據圖表」是同一頁的兩個分頁
+   - 切換時不抽換 URL,純 JS 控制顯示哪個容器
+   - 「數據圖表」內容由 AJAX 載入 /manage/dashboard partial,只載入一次,
+     之後再切回來不會重打 API (避免重新繪圖造成的閃爍)
+   - 切換到「商品管理」時,儀表板分頁會直接隱藏 (DOM 保留,Chart.js 實例
+     不會被銷毀,切回來時不用重新繪)
+   ════════════════════════════════════════════════════════════════════════ */
+let dashboardLoaded = false;   // 標記儀表板 partial 是否已載入,避免重複請求
+
+async function switchTab(event, tabName) {
+    event.preventDefault();   // 阻止 <a href="#"> 預設跳頁行為
+
+    // 切換 nav-links 的 active 樣式
+    document.querySelectorAll(".nav-links a[data-tab]").forEach(a => {
+        a.classList.toggle("active", a.dataset.tab === tabName);
+    });
+
+    // 切換分頁容器顯示/隱藏
+    document.getElementById("panel-products").style.display  = (tabName === "products")  ? "" : "none";
+    document.getElementById("panel-dashboard").style.display = (tabName === "dashboard") ? "" : "none";
+
+    // 第一次切到數據圖表時,才透過 AJAX 載入 partial
+    if (tabName === "dashboard" && !dashboardLoaded) {
+        await loadDashboard();
+    }
+}
+
+async function loadDashboard() {
+    const container = document.getElementById("panel-dashboard");
+    try {
+        const res = await fetch("/manage/dashboard");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const html = await res.text();
+
+        // 把 HTML 塞進去
+        container.innerHTML = html;
+
+        // 重點:innerHTML 不會自動執行裡面的 <script>,要手動把它們抓出來
+        // 建立同等內容的 <script> 元素再 append 進 DOM,瀏覽器才會執行
+        container.querySelectorAll("script").forEach(oldScript => {
+            const newScript = document.createElement("script");
+            // 複製 attributes (例如外部 src)
+            for (const attr of oldScript.attributes) {
+                newScript.setAttribute(attr.name, attr.value);
+            }
+            // 複製內聯內容
+            newScript.textContent = oldScript.textContent;
+            // 替換掉舊的 script (用替換而非 append,避免重複出現)
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+
+        dashboardLoaded = true;
+    } catch (err) {
+        container.innerHTML =
+            '<div style="text-align:center;padding:40px;font-family:var(--font-pixel);' +
+            'font-size:.7rem;color:#ff8080;text-shadow:1px 1px 0 #000;">❌ 載入儀表板失敗:' +
+            err.message + '</div>';
+        console.error(err);
+    }
+}
+</script>
+
 </body>
 </html>
 
