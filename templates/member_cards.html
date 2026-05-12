@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>信用卡管理｜{{ store_name or 'My Store' }}</title>
+    <title>信用卡管理｜{{ store_name or 'MineMarket' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -79,20 +79,52 @@
 
         @media(max-width:600px){.form-row{grid-template-columns:1fr;}.card-list{grid-template-columns:1fr;}}
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 <body>
 <div class="ground-strip"></div>
 <header class="topbar">
     <div class="container topbar-inner">
-        <div class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</div>
-        <a href="/member" class="back-btn">← 返回會員中心</a>
+        <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
+        <nav class="nav-links">
+            <a href="/">⛏ 主頁</a>
+            <a href="/member" class="active">👤 會員中心</a>
+            <a href="/cart">🎒 購物車</a>
+        </nav>
+        <button class="nav-toggle" id="navToggle" aria-label="選單">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="user-panel">
+            {% if auth and auth.logged_in %}
+            <div class="user-card">
+                <div class="user-avatar"><img src="{{ auth.profile_pic }}" alt="avatar"></div>
+                <div class="user-meta">
+                    <span class="user-status-text">▶ 登入中</span>
+                    <span class="user-account">{{ auth.account }}</span>
+                </div>
+            </div>
+            <a href="/logout" class="topbar-btn">登出</a>
+            {% else %}
+            <a href="/login" class="topbar-btn">登入</a>
+            {% endif %}
+        </div>
     </div>
+    <nav class="nav-drawer" id="navDrawer">
+        <a href="/">▶ 主頁</a>
+        <a href="/member">▶ 會員中心</a>
+        <a href="/cart">▶ 購物車</a>
+        {% if auth and auth.logged_in %}
+        <a href="/logout">▶ 登出</a>
+        {% else %}
+        <a href="/login">▶ 登入</a>
+        {% endif %}
+    </nav>
 </header>
 
 <main class="panel">
     <div class="container">
         <h1 class="page-title">💳 信用卡管理</h1>
-        <p class="page-sub">您可以新增多張信用卡，並設定其中一張作為預設付款方式</p>
+        
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -169,7 +201,26 @@
 </main>
 
 <div class="dirt-divider"></div>
-<footer class="footer"><span class="footer-logo">{{ store_name or 'My Store' }}</span></footer>
+<footer class="mc-footer">
+    <div class="footer-inner">
+        <div class="footer-contact">
+            <div class="footer-contact-title">聯絡我們</div>
+            <ul class="footer-contact-list">
+                <li>電話：02-2345-6789</li>
+                <li>傳真：02-2345-6790</li>
+                <li>Line ID：@minemarket</li>
+                <li>Email：support@minemarket.tw</li>
+                <li>地址：台北市信義區信義路五段7號</li>
+                <li>服務時間：週一至週五 09:00–18:00</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。<br>本站所有商品圖文，未經授權不得轉載。</p>
+    </div>
+</footer>
+<script src="/static/js/mc-common.js"></script>
 
 <script>
 const cardNumberInput=document.getElementById("card_number");

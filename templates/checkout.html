@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>付款頁｜{{ store_name or 'My Store' }}</title>
+    <title>付款頁｜{{ store_name or 'MineMarket' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -151,8 +151,19 @@
         .footer-logo{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;display:block;margin-bottom:12px;}
         .footer p{font-family:var(--font-pixel);font-size:.55rem;color:rgba(255,255,255,.5);text-shadow:1px 1px 0 #000;line-height:2.4;}
 
-        @media(max-width:900px){.page-grid,.form-grid{grid-template-columns:1fr;}.nav-links,.user-panel{display:none;}.nav-toggle{display:flex;}}
+        @media(max-width:900px){
+    .page-grid,.form-grid{grid-template-columns:1fr;}
+    .nav-links,.user-panel{display:none;}
+    .nav-toggle{display:flex;}
+}
+@media(max-width:600px){
+    .order-item-row{flex-direction:column;align-items:flex-start!important;}
+    .order-item-row img{width:100%!important;max-width:120px;}
+    .summary-box{width:100%;}
+    .page-grid{gap:16px;}
+}
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 <body>
 
@@ -160,14 +171,11 @@
 
 <header class="topbar">
     <div class="container topbar-inner">
-        <div class="logo">
-            <div class="logo-gem"></div>
-            {{ store_name or 'My Store' }}
-        </div>
+        <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         <nav class="nav-links">
-            <a href="/">⛏ 主頁</a>
-            <a href="/member">👤 會員中心</a>
-            <a href="/cart">🎒 購物車</a>
+            <a href="/" >⛏ 主頁</a>
+            <a href="/member" >👤 會員中心</a>
+            <a href="/cart" >🎒 購物車</a>
         </nav>
         <button class="nav-toggle" id="navToggle" aria-label="選單">
             <span></span><span></span><span></span>
@@ -181,17 +189,21 @@
                     <span class="user-account">{{ auth.account }}</span>
                 </div>
             </div>
-            <a href="/logout" class="topbar-btn">🚪 登出</a>
+            <a href="/logout" class="topbar-btn">登出</a>
             {% else %}
-            <a href="/login" class="topbar-btn">⚔ 登入</a>
+            <a href="/login" class="topbar-btn">登入</a>
             {% endif %}
         </div>
     </div>
     <nav class="nav-drawer" id="navDrawer">
-        <a href="/">⛏ 主頁</a>
-        <a href="/member">👤 會員中心</a>
-        <a href="/cart">🎒 購物車</a>
-        {% if auth and auth.logged_in %}<a href="/logout">🚪 登出</a>{% else %}<a href="/login">⚔ 登入</a>{% endif %}
+        <a href="/">▶ 主頁</a>
+        <a href="/member">▶ 會員中心</a>
+        <a href="/cart">▶ 購物車</a>
+        {% if auth and auth.logged_in %}
+        <a href="/logout">▶ 登出</a>
+        {% else %}
+        <a href="/login">▶ 登入</a>
+        {% endif %}
     </nav>
 </header>
 
@@ -322,23 +334,22 @@
 </main>
 
 <div class="dirt-divider"></div>
-
-<footer class="footer">
-    <div class="footer-steve">
-        <div class="pixel-char">
-            <div class="pc-head"></div>
-            <div class="pc-body"></div>
-            <div class="pc-legs"><div class="pc-leg"></div><div class="pc-leg"></div></div>
+<footer class="mc-footer">
+    <div class="footer-inner">
+        <div class="footer-contact">
+            <div class="footer-contact-title">聯絡我們</div>
+            <ul class="footer-contact-list"><li>電話：02-2345-6789</li><li>傳真：02-2345-6790</li><li>Line ID：@minemarket</li><li>Email：support@minemarket.tw</li><li>地址：台北市信義區信義路五段7號</li><li>服務時間：週一至週五 09:00–18:00</li></ul>
+        </div>
         </div>
     </div>
-    <span class="footer-logo">{{ store_name or 'My Store' }}</span>
-    <p>{{ footer_text or '' }}</p>
+    <div class="footer-bottom">
+        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。</p>
+    </div>
 </footer>
 
 <script>
 const toggle = document.getElementById('navToggle');
 const drawer = document.getElementById('navDrawer');
-toggle.addEventListener('click', () => { toggle.classList.toggle('open'); drawer.classList.toggle('open'); });
 
 function toggleCardInput() {
     const select = document.getElementById('payment-select');
@@ -367,5 +378,7 @@ document.getElementById('card-number').addEventListener('input', function () {
     this.value = val.replace(/(.{4})/g, '$1 ').trim();
 });
 </script>
+<script src="/static/js/mc-common.js"></script>
 </body>
 </html>
+

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ product.name or product.product_id }}｜{{ store_name or 'My Store' }}</title>
+    <title>{{ product.name or product.product_id }}｜{{ store_name or 'MineMarket' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -79,14 +79,27 @@
 
         @media(max-width:800px){.detail-grid{grid-template-columns:1fr;}.sub-images{display:none;}}
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 <body>
 <div class="ground-strip"></div>
 <header class="topbar">
     <div class="container topbar-inner">
-        <a href="/" class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</a>
-        <a href="/" class="back-btn">← 回主頁</a>
+        <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
+        <nav class="nav-links">
+            <a href="/">⛏ 主頁</a>
+            <a href="/member">👤 會員中心</a>
+            <a href="/cart">🎒 購物車</a>
+        </nav>
+        <button class="nav-toggle" id="navToggle" aria-label="選單">
+            <span></span><span></span><span></span>
+        </button>
     </div>
+    <nav class="nav-drawer" id="navDrawer">
+        <a href="/">▶ 主頁</a>
+        <a href="/member">▶ 會員中心</a>
+        <a href="/cart">▶ 購物車</a>
+    </nav>
 </header>
 
 <main class="container">
@@ -162,10 +175,26 @@
 </main>
 
 <div class="dirt-divider"></div>
-<footer class="footer">
-    <span class="footer-logo">{{ store_name or 'My Store' }}</span>
-    <p>{{ footer_text or '' }}</p>
+<footer class="mc-footer">
+    <div class="footer-inner">
+        <div class="footer-contact">
+            <div class="footer-contact-title">聯絡我們</div>
+            <ul class="footer-contact-list">
+                <li>電話：02-2345-6789</li>
+                <li>傳真：02-2345-6790</li>
+                <li>Line ID：@minemarket</li>
+                <li>Email：support@minemarket.tw</li>
+                <li>地址：台北市信義區信義路五段7號</li>
+                <li>服務時間：週一至週五 09:00–18:00</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。<br>本站所有商品圖文，未經授權不得轉載。</p>
+    </div>
 </footer>
+<script src="/static/js/mc-common.js"></script>
 
 <script>
 function changeImage(src) {

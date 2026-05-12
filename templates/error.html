@@ -32,6 +32,7 @@
         /* pixel stars */
         .stars{position:fixed;top:0;left:0;right:0;height:80px;pointer-events:none;background:linear-gradient(#fff 0,#fff 100%) 10% 12px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 30% 28px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 55% 8px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 75% 36px/4px 4px no-repeat,linear-gradient(var(--gold-ore) 0,var(--gold-ore) 100%) 20% 44px/4px 4px no-repeat,linear-gradient(#5DECF5 0,#5DECF5 100%) 65% 20px/4px 4px no-repeat,linear-gradient(#fff 0,#fff 100%) 88% 14px/4px 4px no-repeat;}
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 <body>
     <div class="stars"></div>
@@ -46,5 +47,6 @@
         let sec=3;const el=document.getElementById('sec');
         const timer=setInterval(()=>{sec--;el.textContent=sec;if(sec<=0){clearInterval(timer);window.location.href='/';}},1000);
     </script>
+<script src="/static/js/mc-common.js"></script>
 </body>
 </html>

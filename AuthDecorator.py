@@ -17,7 +17,7 @@ def guestOnly(fun):
     def wrap(*args, **kwargs):
         if SESSION_AUTHO not in session:
             return fun(*args, **kwargs)
-        return render_template("B.index")
+        return redirect(url_for("B.index"))
     return wrap
 
 # ── 角色控制：一般使用者才能進（購物車、訂單...）──────────────────────────
