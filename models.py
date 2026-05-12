@@ -66,22 +66,13 @@ def rcon_give_item(player_name, item_id, quantity, nbt=None):
 # ── Branch A:使用者帳號相關方法 ────────────────────────────────────────────────────
 
 @db_transaction
-def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address, minecraft_name):
-    # 新增會員帳號,minecraft_name 為玩家綁定的 Minecraft 角色名,/give 時使用
+def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
+    # 新增會員帳號
     cursor.execute(f"""
-        INSERT INTO `{BRANCH_A_TABLE}`
-        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`,`minecraft_name`)
-        VALUES (?,?,?,?,?,?,?)
-    """, (user_name, user_account, user_password, user_mobile, user_email, user_address, minecraft_name))
-
-@db_transaction
-def is_minecraft_name_taken(cursor, minecraft_name):
-    # 檢查該 Minecraft 角色名是否已被其他帳號綁定
-    cursor.execute(
-        f"SELECT 1 FROM `{BRANCH_A_TABLE}` WHERE minecraft_name = ?",
-        (minecraft_name,)
-    )
-    return cursor.fetchone() is not None
+        INSERT INTO {BRANCH_A_TABLE}
+        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
+        VALUES (?,?,?,?,?,?)
+    """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
 
 @db_transaction
 def updateUser(cursor, set_: dict, where: dict):
@@ -93,7 +84,7 @@ def updateUser(cursor, set_: dict, where: dict):
     where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
 
     cursor.execute(f"""
-        UPDATE `{BRANCH_A_TABLE}`
+        UPDATE {BRANCH_A_TABLE}
         SET {set_sql}
         WHERE {where_sql}
     """, set_value + where_value)
@@ -113,7 +104,7 @@ def getUser(cursor, where: dict, *selections):
 
     cursor.execute(f"""
         SELECT {selections}
-        FROM `{BRANCH_A_TABLE}`
+        FROM {BRANCH_A_TABLE}
         WHERE {where_sql}
     """, where_value)
 
@@ -301,11 +292,31 @@ def get_cart_item_stock(cursor, item_id, user_account):
 
 @db_transaction
 def insert_order(cursor, user_account, total, payment_method, note, credit_card_number=None):
-    # 建立新訂單，狀態預設為「處理中」，回傳新訂單的 id
+    """
+    建立新訂單。
+
+    【狀態流程說明】
+    原本訂單建立後預設為「處理中」，需等付款 / 出貨等流程完成才會轉為「已完成」。
+    現已調整為下單後直接寫入「已完成」，跳過「處理中」這個中間狀態，
+    讓使用者一下單即視為訂單成立完成。
+
+    【相依功能注意事項】
+    由於狀態直接為「已完成」，新訂單會立即出現在管理員端的已完成訂單列表
+    （search_completed_orders、get_user_accounts_with_orders 等查詢皆以
+    status = '已完成' 為條件）。為了不影響使用者取消訂單的權益，
+    get_order 已同步放寬限制，允許「已完成」狀態的訂單也能被取消。
+
+    :param user_account: 下單會員的帳號
+    :param total: 訂單總金額
+    :param payment_method: 付款方式
+    :param note: 訂單備註
+    :param credit_card_number: 信用卡卡號（可選）
+    :return: 新建立訂單的 id
+    """
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
             (user_id, total, payment_method, note, status, credit_card_number)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'處理中',?)''',
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'已完成',?)''',
         (user_account, total, payment_method, note, credit_card_number)
     )
     return cursor.lastrowid
@@ -383,12 +394,29 @@ def search_orders(cursor, user_account, keyword):
 
 @db_transaction
 def get_order(cursor, order_id, user_account):
-    # 取得指定訂單，驗證必須屬於本人且狀態為「處理中」，取消訂單前呼叫
+    """
+    取得指定訂單，供「取消訂單」流程做權限與狀態驗證。
+
+    【驗證條件】
+    1. 訂單 id 存在
+    2. 訂單必須屬於本人（user_account 對應的 user_id）
+    3. 訂單狀態不能是「已取消」（已取消的不能再取消一次）
+
+    【為何放寬狀態限制】
+    原本此處限制狀態必須為「處理中」才允許取消，但因 insert_order 已調整為
+    下單後直接寫入「已完成」，若沿用舊限制將導致使用者永遠無法取消任何訂單。
+    因此改為：只要訂單不是「已取消」狀態，皆允許取消，
+    以保留使用者在「已完成」狀態下仍可取消訂單的權益。
+
+    :param order_id: 訂單 id
+    :param user_account: 操作者帳號（必須為訂單擁有者）
+    :return: 符合條件的訂單列，否則為 None
+    """
     cursor.execute(
         f'''SELECT id FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE id = ?
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            AND status = '處理中' ''',
+            AND status != '已取消' ''',
         (order_id, user_account)
     )
     return cursor.fetchone()

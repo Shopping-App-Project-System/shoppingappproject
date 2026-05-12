@@ -11,7 +11,6 @@ from models import (
     add_product_stock,set_product_stock,
     get_log_months,get_logs_by_month,
     get_user_accounts_with_orders,search_completed_orders,get_order_items_with_user_check,
-    is_minecraft_name_taken,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -112,13 +111,13 @@ def manage_edit_service(product_id, name, original_price, sale_price=None, categ
     return redirect(url_for("D.manage"))
 
 @requestParsor
-def member_edit_service(name=None, mobile=None, minecraft_name=None, profile_pic=None):
+def member_edit_service(name=None, mobile=None, profile_pic=None):
     user_account = session.get(SESSION_AUTHO)
 
     if request.method == "GET":
         user = getUser(
             {"user_account": user_account},
-            "user_name", "user_email", "user_mobile", "user_account", "minecraft_name"
+            "user_name", "user_email", "user_mobile", "user_account"
         )
         user["level"] = "一般會員"
         return render_template("member_edit.html",
@@ -130,19 +129,7 @@ def member_edit_service(name=None, mobile=None, minecraft_name=None, profile_pic
         flash("手機格式錯誤", "error")
         return redirect(url_for("D.member_edit"))
 
-    # 檢查 MC 角色名是否已被其他會員綁定 (允許跟自己原本的相同)
-    minecraft_name = (minecraft_name or "").strip()
-    if minecraft_name:
-        current = getUser({"user_account": user_account}, "minecraft_name")
-        if minecraft_name != current and is_minecraft_name_taken(minecraft_name):
-            flash("此 MC 角色名已被其他會員綁定", "error")
-            return redirect(url_for("D.member_edit"))
-
-    update_data = {
-        "user_name": name,
-        "user_mobile": mobile,
-        "minecraft_name": minecraft_name,
-    }
+    update_data = {"user_name": name, "user_mobile": mobile}
 
     if profile_pic and profile_pic.filename != "":
         old_pic_path = getUser({"user_account":user_account}, "pic_path")
@@ -166,7 +153,7 @@ def member_service(keyword=""):
 
     user = getUser(
         {"user_account": user_account},
-        "user_name", "user_account", "user_email", "user_mobile", "minecraft_name"
+        "user_name", "user_account", "user_email", "user_mobile"
     )
     user.update({"level": "一般會員"})
 

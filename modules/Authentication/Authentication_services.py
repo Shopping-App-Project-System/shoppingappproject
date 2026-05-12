@@ -155,11 +155,11 @@ def logout_service():
     return redirect(url_for("B.index"))
 
 @requestParsor
-def register_service(name,account,password,mobile,email,address,minecraft_name,profile_pic):
+def register_service(name,account,password,mobile,email,address,profile_pic):
     if request.method == "GET":
         return render_template("register.html")
     
-    msg = checkUserInput(("姓名",name),("帳號",account),("密碼",password),("手機",mobile),("信箱",email),("地址",address),("MC 角色名",minecraft_name))
+    msg = checkUserInput(("姓名",name),("帳號",account),("密碼",password),("手機",mobile),("信箱",email),("地址",address))
     
     if msg:
         flash("請輸入"+msg)
@@ -179,13 +179,8 @@ def register_service(name,account,password,mobile,email,address,minecraft_name,p
         flash("帳號格式錯誤")
         return render_template("register.html")
     
-    # MC 角色名套用同一套格式驗證（英數+底線、3-16字）
-    if not validateMCUserAccount(minecraft_name):
-        flash("MC 角色名格式錯誤")
-        return render_template("register.html")
-    
     try:
-        createUser(name,account,password,mobile,email,address,minecraft_name)
+        createUser(name,account,password,mobile,email,address)
     except IntegrityError:
         flash("帳號已存在")
         return render_template("register.html")
