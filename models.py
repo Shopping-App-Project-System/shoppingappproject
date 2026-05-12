@@ -222,7 +222,7 @@ def get_cart_item_stock(cursor, item_id, user_account):
 
 @db_transaction
 def insert_order(cursor, user_account, total, payment_method, note, credit_card_number=None):
-<<<<<<< HEAD
+
     """
     建立新訂單。
 
@@ -244,8 +244,7 @@ def insert_order(cursor, user_account, total, payment_method, note, credit_card_
     :param credit_card_number: 信用卡卡號（可選）
     :return: 新建立訂單的 id
     """
-=======
->>>>>>> 8d6864fa17eb6c4b6e9d98f32dddb40994597278
+
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
             (user_id, total, payment_method, note, status, credit_card_number)
@@ -321,7 +320,7 @@ def search_orders(cursor, user_account, keyword):
 
 @db_transaction
 def get_order(cursor, order_id, user_account):
-<<<<<<< HEAD
+
     """
     取得指定訂單，供「取消訂單」流程做權限與狀態驗證。
 
@@ -340,8 +339,7 @@ def get_order(cursor, order_id, user_account):
     :param user_account: 操作者帳號（必須為訂單擁有者）
     :return: 符合條件的訂單列，否則為 None
     """
-=======
->>>>>>> 8d6864fa17eb6c4b6e9d98f32dddb40994597278
+
     cursor.execute(
         f'''SELECT id FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE id = ?
