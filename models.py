@@ -12,13 +12,64 @@ from settings import (BRANCH_A_TABLE,
 from db import db_transaction
 
 
-# ── Branch A：使用者帳號相關方法 ────────────────────────────────────────────────────
+# ── RCON:與 Minecraft 伺服器通訊 ────────────────────────────────────────────────────
+# 需要 pip install mcrcon
+import logging
+from mcrcon import MCRcon, MCRconException
+
+from settings import MC_RCON_HOST, MC_RCON_PORT, MC_RCON_PASSWORD
+
+_rcon_logger = logging.getLogger(__name__)
+
+RCON_HOST = MC_RCON_HOST
+RCON_PORT = MC_RCON_PORT
+RCON_PASSWORD = MC_RCON_PASSWORD
+
+
+def _rcon_send(command):
+    # 每次建新連線,簡單可靠
+    with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+        return mcr.command(command)
+
+
+def rcon_is_player_online(player_name):
+    # 用 /list 確認玩家是否在線
+    try:
+        response = _rcon_send("list")
+    except (MCRconException, ConnectionError, OSError) as e:
+        _rcon_logger.warning("RCON list 失敗: %s", e)
+        return False
+    if ":" not in response:
+        return False
+    online_part = response.split(":", 1)[1]
+    names = [n.strip() for n in online_part.split(",") if n.strip()]
+    return player_name in names
+
+
+def rcon_give_item(player_name, item_id, quantity, nbt=None):
+    # 對玩家執行 /give,回傳 (ok: bool, response: str)
+    if nbt:
+        cmd = f"give {player_name} {item_id}{nbt} {quantity}"
+    else:
+        cmd = f"give {player_name} {item_id} {quantity}"
+    try:
+        response = _rcon_send(cmd)
+    except (MCRconException, ConnectionError, OSError) as e:
+        _rcon_logger.exception("RCON give 失敗")
+        return False, f"RCON error: {e}"
+    failed_markers = ("No player", "Unknown", "Incorrect", "Expected", "is not a valid")
+    if any(m in response for m in failed_markers):
+        return False, response
+    return True, response
+
+
+# ── Branch A:使用者帳號相關方法 ────────────────────────────────────────────────────
 
 @db_transaction
 def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
     # 新增會員帳號
     cursor.execute(f"""
-        INSERT INTO `{BRANCH_A_TABLE}`
+        INSERT INTO {BRANCH_A_TABLE}
         (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
         VALUES (?,?,?,?,?,?)
     """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
@@ -33,7 +84,7 @@ def updateUser(cursor, set_: dict, where: dict):
     where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
 
     cursor.execute(f"""
-        UPDATE `{BRANCH_A_TABLE}`
+        UPDATE {BRANCH_A_TABLE}
         SET {set_sql}
         WHERE {where_sql}
     """, set_value + where_value)
@@ -53,7 +104,7 @@ def getUser(cursor, where: dict, *selections):
 
     cursor.execute(f"""
         SELECT {selections}
-        FROM `{BRANCH_A_TABLE}`
+        FROM {BRANCH_A_TABLE}
         WHERE {where_sql}
     """, where_value)
 
@@ -127,7 +178,11 @@ def index(cursor):
 @db_transaction
 def get_product_by_id(cursor, product_id):
     # 依 id 取得單一商品的完整資料
-    cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
+    cursor.execute("""
+        SELECT p.*, pc.category as category
+        FROM products p    
+        LEFT JOIN product_category pc ON p.category = pc.id
+        WHERE p.id = %s""", (product_id,))
     return cursor.fetchone()
 
 @db_transaction
@@ -240,13 +295,33 @@ def get_cart_item_stock(cursor, item_id, user_account):
 # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
 @db_transaction
-def insert_order(cursor, user_account, total, payment_method, delivery_method, address, note, credit_card_number=None):
-    # 建立新訂單，狀態預設為「處理中」，回傳新訂單的 id
+def insert_order(cursor, user_account, total, payment_method, note, credit_card_number=None):
+    """
+    建立新訂單。
+
+    【狀態流程說明】
+    原本訂單建立後預設為「處理中」，需等付款 / 出貨等流程完成才會轉為「已完成」。
+    現已調整為下單後直接寫入「已完成」，跳過「處理中」這個中間狀態，
+    讓使用者一下單即視為訂單成立完成。
+
+    【相依功能注意事項】
+    由於狀態直接為「已完成」，新訂單會立即出現在管理員端的已完成訂單列表
+    （search_completed_orders、get_user_accounts_with_orders 等查詢皆以
+    status = '已完成' 為條件）。為了不影響使用者取消訂單的權益，
+    get_order 已同步放寬限制，允許「已完成」狀態的訂單也能被取消。
+
+    :param user_account: 下單會員的帳號
+    :param total: 訂單總金額
+    :param payment_method: 付款方式
+    :param note: 訂單備註
+    :param credit_card_number: 信用卡卡號（可選）
+    :return: 新建立訂單的 id
+    """
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
-            (user_id, total, payment_method, delivery_method, address, note, status, credit_card_number)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,?,?,'處理中',?)''',
-        (user_account, total, payment_method, delivery_method, address, note, credit_card_number)
+            (user_id, total, payment_method, note, status, credit_card_number)
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'已完成',?)''',
+        (user_account, total, payment_method, note, credit_card_number)
     )
     return cursor.lastrowid
 
@@ -285,8 +360,7 @@ def get_order_items_detail(cursor, order_id):
 def get_all_orders(cursor, user_account):
     # 取得該會員所有訂單（含已取消），依建立時間升冪排列
     cursor.execute(
-        f'''SELECT id, total, payment_method, delivery_method,
-                   address, note, status, created_at
+        f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             ORDER BY created_at ASC''',
@@ -298,8 +372,7 @@ def get_all_orders(cursor, user_account):
 def get_orders(cursor, user_account):
     # 取得該會員的有效訂單（排除已取消），依建立時間升冪排列
     cursor.execute(
-        f'''SELECT id, total, payment_method, delivery_method,
-                   address, note, status, created_at
+        f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             AND status != '已取消'
@@ -313,25 +386,41 @@ def search_orders(cursor, user_account, keyword):
     # 依關鍵字搜尋該會員的有效訂單（比對地址或狀態），依建立時間降冪排列
     like_keyword = "%" + keyword + "%"
     cursor.execute(
-        f'''SELECT id, total, payment_method, delivery_method,
-                   address, note, status, created_at
+        f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             AND status != '已取消'
-            AND (address LIKE ? OR status LIKE ?)
+            AND status LIKE ?
             ORDER BY created_at DESC''',
-        (user_account, like_keyword, like_keyword)
+        (user_account, like_keyword)
     )
     return cursor.fetchall()
 
 @db_transaction
 def get_order(cursor, order_id, user_account):
-    # 取得指定訂單，驗證必須屬於本人且狀態為「處理中」，取消訂單前呼叫
+    """
+    取得指定訂單，供「取消訂單」流程做權限與狀態驗證。
+
+    【驗證條件】
+    1. 訂單 id 存在
+    2. 訂單必須屬於本人（user_account 對應的 user_id）
+    3. 訂單狀態不能是「已取消」（已取消的不能再取消一次）
+
+    【為何放寬狀態限制】
+    原本此處限制狀態必須為「處理中」才允許取消，但因 insert_order 已調整為
+    下單後直接寫入「已完成」，若沿用舊限制將導致使用者永遠無法取消任何訂單。
+    因此改為：只要訂單不是「已取消」狀態，皆允許取消，
+    以保留使用者在「已完成」狀態下仍可取消訂單的權益。
+
+    :param order_id: 訂單 id
+    :param user_account: 操作者帳號（必須為訂單擁有者）
+    :return: 符合條件的訂單列，否則為 None
+    """
     cursor.execute(
         f'''SELECT id FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE id = ?
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            AND status = '處理中' ''',
+            AND status != '已取消' ''',
         (order_id, user_account)
     )
     return cursor.fetchone()
@@ -389,6 +478,92 @@ def update_order_item_serial(cursor, order_item_id, serial_code):
         (serial_code, order_item_id)
     )
 
+
+# ── Minecraft 結帳即時發貨 ────────────────────────────────────────────────
+
+@db_transaction
+def get_user_minecraft_name(cursor, user_account):
+    # 取得會員綁定的 Minecraft 角色名
+    cursor.execute(
+        f"SELECT minecraft_name FROM `{BRANCH_A_TABLE}` WHERE user_account = ?",
+        (user_account,)
+    )
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return row['minecraft_name'] if isinstance(row, dict) else row[0]
+
+
+def give_item(user_account, mc_item_id, quantity, nbt=None):
+    """
+    供 Shopping_services 直接呼叫:依 user_account 查 minecraft_name,然後 /give。
+    回傳 (ok: bool, response: str)
+      - ok=False 的情況: 玩家未綁定 / 玩家不在線 / RCON 連線失敗 / /give 指令失敗
+    """
+    player_name = get_user_minecraft_name(user_account)
+    if not player_name:
+        return False, "玩家未綁定 minecraft_name"
+    if not rcon_is_player_online(player_name):
+        return False, f"玩家 {player_name} 不在線上"
+    return rcon_give_item(player_name, mc_item_id, quantity, nbt)
+
+
+def notify_player(user_account, message):
+    """
+    供 Shopping_services 直接呼叫:對玩家發送遊戲內訊息 (/tell)。
+    回傳 (ok: bool, response: str)
+    /tell 即使玩家不在線指令也會回 "No player was found",我們當失敗處理。
+    """
+    player_name = get_user_minecraft_name(user_account)
+    if not player_name:
+        return False, "玩家未綁定 minecraft_name"
+    # 用 /tell 私訊玩家。如果想全頻廣播就改成 /say
+    try:
+        response = _rcon_send(f"tell {player_name} {message}")
+    except (MCRconException, ConnectionError, OSError) as e:
+        _rcon_logger.warning("RCON tell 失敗: %s", e)
+        return False, f"RCON error: {e}"
+    failed_markers = ("No player", "Unknown", "Incorrect", "Expected")
+    if any(m in response for m in failed_markers):
+        return False, response
+    return True, response
+
+
+def deliver_cart_to_player(user_account, cart_items):
+    """
+    結帳時呼叫,直接把購物車裡每個品項 /give 給玩家。
+    cart_items 格式: [{'mc_item_id': 'minecraft:diamond', 'quantity': 64}, ...]
+    回傳: (ok: bool, message: str, details: list)
+      - ok=True 表示全部發送成功,可建立訂單
+      - ok=False 表示玩家不在線或部分失敗,結帳路由應拒絕並回覆使用者
+    """
+    player_name = get_user_minecraft_name(user_account)
+    if not player_name:
+        return False, "尚未綁定 Minecraft 角色名", []
+
+    # 先確認玩家在線,離線就直接擋下
+    if not rcon_is_player_online(player_name):
+        return False, f"玩家 {player_name} 不在線上,請先進入遊戲再購買", []
+
+    details = []
+    all_ok = True
+    for item in cart_items:
+        mc_item_id = item.get('mc_item_id')
+        if not mc_item_id:
+            details.append({'item': item, 'ok': False, 'msg': '商品未設定 mc_item_id'})
+            all_ok = False
+            continue
+        ok, response = rcon_give_item(
+            player_name=player_name,
+            item_id=mc_item_id,
+            quantity=item['quantity'],
+        )
+        details.append({'item': item, 'ok': ok, 'msg': response})
+        if not ok:
+            all_ok = False
+
+    return all_ok, "OK" if all_ok else "部分發送失敗", details
+
 # ── Branch D：商品管理（後台） ────────────────────────────────────────────────
 
 # 新增商品，預設為上架狀態，回傳新商品的 id
@@ -399,9 +574,10 @@ def add_product(cursor, name, original_price, sale_price, description, img_filen
     # 新增商品，預設為上架狀態，回傳新商品的 id
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
-        (`mc_item_id`,`name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?,?, ?, ?, ?, ?, 1)
-    """, (name, original_price, sale_price, description, img_filename,mc_item_id))
+        (`mc_item_id`, `name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
+    """, (mc_item_id, name, original_price, sale_price, description, img_filename))
+    #     ↑ 順序改為與欄位一致
     return cursor.lastrowid
 
 @db_transaction
@@ -411,6 +587,22 @@ def add_product_stock(cursor, product_id, quantity):
         INSERT INTO `product_stock` (product_id, product_quantity)
         VALUES (?, ?)
     """, (product_id, quantity))
+
+@db_transaction
+def set_product_stock(cursor, product_id, quantity):
+    # 直接把商品庫存設為指定數量(修改商品時使用)。
+    # 若該商品還沒有庫存紀錄,自動建立一筆;否則更新。
+    cursor.execute("""
+        SELECT 1 FROM `product_stock` WHERE product_id = ?
+    """, (product_id,))
+    if cursor.fetchone():
+        cursor.execute("""
+            UPDATE `product_stock` SET product_quantity = ? WHERE product_id = ?
+        """, (quantity, product_id))
+    else:
+        cursor.execute("""
+            INSERT INTO `product_stock` (product_id, product_quantity) VALUES (?, ?)
+        """, (product_id, quantity))
 
 @db_transaction
 def set_product_active(cursor, product_id, is_active):
@@ -559,5 +751,286 @@ def set_default_card(cursor, user_account, card_id):
         (card_id, user_account)
     )
 
-if __name__ == "__main__":
-    ...
+# ── manage_log 報表(管理頁日誌,按月份分組) ─────────────────────────────────
+
+@db_transaction
+def get_log_months(cursor):
+    """
+    取得 manage_log 中有紀錄的月份清單,以及每個月的筆數。
+    回傳格式: [{"month": "2025-11", "log_count": 8}, ...]
+    """
+    cursor.execute("""
+        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month,
+               COUNT(*) AS log_count
+        FROM manage_log
+        GROUP BY month
+        ORDER BY month DESC
+    """)
+    return cursor.fetchall()
+
+
+@db_transaction
+def get_logs_by_month(cursor, month):
+    """
+    取得指定月份(格式 YYYY-MM)的所有日誌紀錄,依時間降冪排列。
+    """
+    cursor.execute("""
+        SELECT created_at, admin_account, action, product_id, product_name
+        FROM manage_log
+        WHERE DATE_FORMAT(created_at, '%Y-%m') = ?
+        ORDER BY created_at DESC
+    """, (month,))
+    return cursor.fetchall()
+
+
+# ── 已完成訂單查詢(報表/篩選用) ─────────────────────────────────────────────
+
+@db_transaction
+def get_user_accounts_with_orders(cursor):
+    """取得有過訂單(含已完成的)的所有使用者帳號清單,給管理員下拉用。"""
+    cursor.execute(f"""
+        SELECT DISTINCT u.user_account
+        FROM `{BRANCH_A_TABLE}` u
+        JOIN `{BRANCH_C_ORDER_TABLE}` o ON o.user_id = u.id
+        WHERE o.status = '已完成'
+        ORDER BY u.user_account
+    """)
+    return [row['user_account'] for row in cursor.fetchall()]
+
+
+@db_transaction
+def search_completed_orders(cursor, user_account=None, target_user=None,
+                            month=None, min_total=None, max_total=None):
+    """
+    篩選「已完成」訂單。
+    user_account:None=管理員模式撈全部;傳帳號=只撈該人(使用者模式)
+    target_user :管理員可指定要看哪個使用者(None=全部使用者)
+    month       :YYYY-MM 格式
+    min_total/max_total:金額範圍
+    """
+    sql = f"""
+        SELECT o.id, o.total, o.payment_method,
+               o.note, o.status, o.created_at,
+               u.user_account
+        FROM `{BRANCH_C_ORDER_TABLE}` o
+        JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+        WHERE o.status = '已完成'
+    """
+    params = []
+
+    if user_account is not None:
+        # 使用者模式:強制只看自己
+        sql += " AND u.user_account = ?"
+        params.append(user_account)
+    elif target_user:
+        # 管理員指定看某人
+        sql += " AND u.user_account = ?"
+        params.append(target_user)
+
+    if month:
+        sql += " AND DATE_FORMAT(o.created_at, '%Y-%m') = ?"
+        params.append(month)
+
+    if min_total is not None:
+        sql += " AND o.total >= ?"
+        params.append(min_total)
+
+    if max_total is not None:
+        sql += " AND o.total <= ?"
+        params.append(max_total)
+
+    sql += " ORDER BY o.created_at DESC"
+    cursor.execute(sql, tuple(params))
+    return cursor.fetchall()
+
+
+@db_transaction
+def get_order_items_with_user_check(cursor, order_id, user_account=None):
+    """
+    取得訂單明細(含商品名稱/圖片)。
+    user_account=None : 管理員模式,不檢查擁有者
+    user_account=帳號 : 使用者模式,訂單必須屬於該人,否則回 None
+    """
+    if user_account is not None:
+        # 先驗證訂單屬於這個人
+        cursor.execute(f"""
+            SELECT 1 FROM `{BRANCH_C_ORDER_TABLE}` o
+            JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+            WHERE o.id = ? AND u.user_account = ? AND o.status = '已完成'
+        """, (order_id, user_account))
+        if not cursor.fetchone():
+            return None  # 不是你的訂單 / 訂單不存在 / 不是已完成
+    else:
+        # 管理員只要驗證訂單存在且已完成
+        cursor.execute(f"""
+            SELECT 1 FROM `{BRANCH_C_ORDER_TABLE}`
+            WHERE id = ? AND status = '已完成'
+        """, (order_id,))
+        if not cursor.fetchone():
+            return None
+
+    cursor.execute(f"""
+        SELECT oi.quantity, oi.price, oi.serial_code,
+               p.name AS product_name, p.product_pic
+        FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
+        JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON p.id = oi.product_id
+        WHERE oi.order_id = ?
+    """, (order_id,))
+    return cursor.fetchall()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#   後台儀表板 — 銷售統計查詢
+# ══════════════════════════════════════════════════════════════════════════════
+# 以下五個 function 提供後台儀表板 (manage_dashboard) 所需的統計資料。
+# 全部僅統計 status = '已完成' 的訂單,'已取消' 訂單不列入營收。
+# ══════════════════════════════════════════════════════════════════════════════
+
+@db_transaction
+def get_dashboard_summary(cursor):
+    """
+    儀表板上方四張摘要卡片所需的彙總數字。
+
+    回傳一個 dict,包含:
+      - total_revenue   : 總營收 (已完成訂單 total 加總)
+      - total_orders    : 總訂單數 (已完成)
+      - avg_order_value : 平均客單價 (total_revenue / total_orders,無單則為 0)
+      - total_members   : 至少下過一筆已完成訂單的不同會員數
+    """
+    cursor.execute(f"""
+        SELECT
+            COALESCE(SUM(total), 0) AS total_revenue,
+            COUNT(*)                AS total_orders,
+            COUNT(DISTINCT user_id) AS total_members
+        FROM `{BRANCH_C_ORDER_TABLE}`
+        WHERE status = '已完成'
+    """)
+    row = cursor.fetchone()
+    total_revenue   = float(row["total_revenue"]) if row else 0.0
+    total_orders    = int(row["total_orders"]) if row else 0
+    total_members   = int(row["total_members"]) if row else 0
+    avg_order_value = (total_revenue / total_orders) if total_orders else 0.0
+    return {
+        "total_revenue":   total_revenue,
+        "total_orders":    total_orders,
+        "avg_order_value": avg_order_value,
+        "total_members":   total_members,
+    }
+
+
+@db_transaction
+def get_revenue_trend(cursor, months=12):
+    """
+    取近 N 個月的營收趨勢 (預設 12 個月)。
+
+    回傳 list of dict,每筆: { 'month': 'YYYY-MM', 'revenue': 金額 }
+    依月份升冪排序,供折線圖時間軸使用。
+    """
+    cursor.execute(f"""
+        SELECT
+            DATE_FORMAT(created_at, '%%Y-%%m') AS month,
+            COALESCE(SUM(total), 0)           AS revenue
+        FROM `{BRANCH_C_ORDER_TABLE}`
+        WHERE status = '已完成'
+          AND created_at >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+    """ % int(months))
+    return [
+        {"month": r["month"], "revenue": float(r["revenue"])}
+        for r in cursor.fetchall()
+    ]
+
+
+@db_transaction
+def get_orders_count_by_month(cursor, months=12):
+    """
+    取近 N 個月的訂單數量統計 (預設 12 個月)。
+
+    回傳 list of dict,每筆: { 'month': 'YYYY-MM', 'order_count': 訂單數 }
+    供直條圖使用。
+    """
+    cursor.execute(f"""
+        SELECT
+            DATE_FORMAT(created_at, '%%Y-%%m') AS month,
+            COUNT(*)                          AS order_count
+        FROM `{BRANCH_C_ORDER_TABLE}`
+        WHERE status = '已完成'
+          AND created_at >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+    """ % int(months))
+    return [
+        {"month": r["month"], "order_count": int(r["order_count"])}
+        for r in cursor.fetchall()
+    ]
+
+
+@db_transaction
+def get_top_products(cursor, limit=10):
+    """
+    熱門商品排行 (依累計銷售數量排序)。
+
+    回傳 list of dict,每筆: { 'product_name': 商品名, 'total_qty': 累計賣出數量 }
+    供橫條圖使用。
+    """
+    cursor.execute(f"""
+        SELECT
+            p.name              AS product_name,
+            SUM(oi.quantity)    AS total_qty
+        FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
+        JOIN `{BRANCH_C_ORDER_TABLE}`   o ON o.id = oi.order_id
+        JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON p.id = oi.product_id
+        WHERE o.status = '已完成'
+        GROUP BY p.id, p.name
+        ORDER BY total_qty DESC
+        LIMIT %s
+    """ % int(limit))
+    return [
+        {"product_name": r["product_name"], "total_qty": int(r["total_qty"])}
+        for r in cursor.fetchall()
+    ]
+
+
+@db_transaction
+def get_member_spending_distribution(cursor, limit=10):
+    """
+    會員消費分布 (依累計消費金額排序,前 N 名 + 其他)。
+
+    回傳 list of dict,每筆: { 'user_account': 帳號, 'total_spent': 累計消費 }
+    最後一筆 user_account = '其他' 代表名次外所有會員的消費加總。
+    供圓餅圖使用。
+    """
+    # 先取前 N 名
+    cursor.execute(f"""
+        SELECT
+            u.user_account            AS user_account,
+            COALESCE(SUM(o.total), 0) AS total_spent
+        FROM `{BRANCH_C_ORDER_TABLE}` o
+        JOIN `{BRANCH_A_TABLE}`       u ON u.id = o.user_id
+        WHERE o.status = '已完成'
+        GROUP BY u.id, u.user_account
+        ORDER BY total_spent DESC
+        LIMIT %s
+    """ % int(limit))
+    top_rows = cursor.fetchall()
+    result = [
+        {"user_account": r["user_account"], "total_spent": float(r["total_spent"])}
+        for r in top_rows
+    ]
+    # 再取「其他會員」的消費總和 (排除前 N 名)
+    top_accounts = [r["user_account"] for r in result]
+    if top_accounts:
+        placeholders = ",".join(["?"] * len(top_accounts))
+        cursor.execute(f"""
+            SELECT COALESCE(SUM(o.total), 0) AS other_total
+            FROM `{BRANCH_C_ORDER_TABLE}` o
+            JOIN `{BRANCH_A_TABLE}`       u ON u.id = o.user_id
+            WHERE o.status = '已完成'
+              AND u.user_account NOT IN ({placeholders})
+        """, tuple(top_accounts))
+        other_row = cursor.fetchone()
+        other_total = float(other_row["other_total"]) if other_row else 0.0
+        if other_total > 0:
+            result.append({"user_account": "其他", "total_spent": other_total})
+    return result

@@ -8,7 +8,12 @@ from models import (
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
     get_member_cards,add_member_card,delete_member_card,set_default_card,
-    add_product_stock,
+    add_product_stock,set_product_stock,
+    get_log_months,get_logs_by_month,
+    get_user_accounts_with_orders,search_completed_orders,get_order_items_with_user_check,
+    # 後台儀表板 (圖表) 用的統計查詢
+    get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
+    get_top_products,get_member_spending_distribution,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -20,18 +25,20 @@ from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 # 寶石類商品填入（例如 minecraft:diamond），序號類商品不填
 @requestParsor
 def manage_add_service(name,original_price,sale_price,description,image,product_quantity,mc_item_id=None):
-    img_filename   = save_image(image, UPLOAD_FOLDER)
+    print(f"name={name}, original_price={original_price}, sale_price={sale_price}, description={description}, mc_item_id={mc_item_id}")
+    sale_price = sale_price or None
+    img_filename   = save_image(image, UPLOAD_FOLDER, filename=name)
     product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id)
     add_product_stock(product_id,int(product_quantity))
     add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
 
-def manage_clear_service():
+@requestParsor
+def manage_clear_service(product_id):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     soft_delete_product(product_id)
     add_log(session.get(SESSION_AUTHO), "刪除", product_id, product["name"])
@@ -42,38 +49,35 @@ def manage_service():
     products = get_all_products()
     return render_template("manage.html", products=products)
 
-def manage_remove_service():
+@requestParsor
+def manage_remove_service(product_id):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     set_product_active(product_id, 0)
     add_log(session.get(SESSION_AUTHO), "下架", product_id, product["name"])
     flash("商品已下架", "success")
     return redirect(url_for("D.manage"))
 
-def manage_restock_service():
+@requestParsor
+def manage_restock_service(product_id):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id = request.form.get("product_id")
     product    = get_product_by_id(product_id)
     set_product_active(product_id, 1)
     add_log(session.get(SESSION_AUTHO), "重新上架", product_id, product["name"])
     flash("商品已重新上架", "success")
     return redirect(url_for("D.manage"))
 
-def manage_edit_service():
+@requestParsor
+def manage_edit_service(product_id, name, original_price, sale_price=None, category=None, product_quantity=None, image=None):
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
         return redirect(url_for("D.manage"))
 
-    product_id     = request.form.get("product_id")
-    name           = request.form.get("name")
-    original_price = request.form.get("original_price")
-    sale_price     = request.form.get("sale_price") or None
-    category       = request.form.get("category") or None
-    file           = request.files.get("image")
+    sale_price = sale_price or None
+    category   = category or None
 
     product = get_product_by_id(product_id)
     if not product:
@@ -87,18 +91,30 @@ def manage_edit_service():
         "category": category,
     }
 
-    if file and file.filename != "":
+    if image and image.filename != "":
         old_pic_path = product.get("product_pic")
-        new_pic_path = save_image(file, UPLOAD_FOLDER)
+        new_pic_path = save_image(image, UPLOAD_FOLDER, filename=name)
         update_data["product_pic"] = new_pic_path
         del_imgae(old_pic_path)
 
     update_product(update_data, product_id)
+
+    # 更新庫存(只有有送 product_quantity 才動,空值則保留原庫存)
+    if product_quantity is not None and product_quantity.strip() != "":
+        try:
+            qty = int(product_quantity)
+            if qty < 0:
+                qty = 0
+            set_product_stock(product_id, qty)
+        except ValueError:
+            flash("商品數量格式錯誤,庫存未更新", "error")
+
     add_log(session.get(SESSION_AUTHO), "修改", product_id, name)
     flash("商品資料已更新", "success")
     return redirect(url_for("D.manage"))
 
-def member_edit_service():
+@requestParsor
+def member_edit_service(name=None, mobile=None, profile_pic=None):
     user_account = session.get(SESSION_AUTHO)
 
     if request.method == "GET":
@@ -112,19 +128,15 @@ def member_edit_service():
             auth=get_auth(user_account)
         )
 
-    name   = request.form.get("name")
-    mobile = request.form.get("mobile")
-    file   = request.files.get("profile_pic")
-
     if mobile and not validateMobile(mobile):
         flash("手機格式錯誤", "error")
         return redirect(url_for("D.member_edit"))
 
     update_data = {"user_name": name, "user_mobile": mobile}
 
-    if file and file.filename != "":
+    if profile_pic and profile_pic.filename != "":
         old_pic_path = getUser({"user_account":user_account}, "pic_path")
-        new_pic_path = save_image(file, PROFILE_PIC_FOLDER, filename=user_account)
+        new_pic_path = save_image(profile_pic, PROFILE_PIC_FOLDER, filename=user_account)
         update_data["pic_path"] = new_pic_path
         del_imgae(old_pic_path)
 
@@ -132,9 +144,10 @@ def member_edit_service():
     flash("資料更新成功", "success")
     return redirect(url_for("D.member"))
 
-def member_service():
+@requestParsor
+def member_service(keyword=""):
     user_account = session[SESSION_AUTHO]
-    keyword = request.args.get("keyword", "").strip()
+    keyword = keyword.strip()
 
     if keyword:
         orders = search_orders(user_account, keyword)
@@ -164,8 +177,58 @@ def manage_logout_service():
     flash("已登出")
     return redirect(url_for("B.index"))
 
-def manage_log_service():
-    return render_template("manage_log.html")
+@requestParsor
+def manage_log_service(month="", product=""):
+    # 後台操作日誌:
+    # - URL 帶 ?month=YYYY-MM      → 預先載入該月份(展開)
+    # - URL 再加 ?product=關鍵字   → 該月只顯示商品名含關鍵字的紀錄
+    selected_month   = month.strip()
+    product_keyword  = product.strip()
+    months = get_log_months()
+
+    preloaded_logs = None
+    product_options = []
+
+    if selected_month and len(selected_month) == 7 and selected_month[4] == '-' \
+            and selected_month[:4].isdigit() and selected_month[5:].isdigit():
+        all_logs = get_logs_by_month(selected_month)
+
+        # 該月出現過的所有商品名稱(去重、排序),供下拉選單用
+        product_options = sorted({
+            log["product_name"] for log in all_logs
+            if log.get("product_name")
+        })
+
+        # 套用關鍵字篩選(大小寫不敏感、模糊比對)
+        if product_keyword:
+            kw = product_keyword.lower()
+            preloaded_logs = [
+                log for log in all_logs
+                if log.get("product_name") and kw in log["product_name"].lower()
+            ]
+        else:
+            preloaded_logs = all_logs
+    else:
+        selected_month = ""  # 格式不對就清掉,當作沒查詢
+
+    return render_template("manage_log.html",
+        months=months,
+        selected_month=selected_month,
+        product_keyword=product_keyword,
+        product_options=product_options,
+        preloaded_logs=preloaded_logs
+    )
+
+
+def manage_log_month_service(month):
+    """AJAX partial:取得指定月份的所有後台操作紀錄。"""
+    # 簡單格式檢查 YYYY-MM,避免亂塞參數
+    if not month or len(month) != 7 or month[4] != '-' \
+            or not month[:4].isdigit() or not month[5:].isdigit():
+        return render_template("_manage_log_month.html", month=month, logs=[])
+
+    logs = get_logs_by_month(month)
+    return render_template("_manage_log_month.html", month=month, logs=logs)
 
 
 # ── 信用卡管理 services ────────────────────────────────────────────────────
@@ -180,16 +243,17 @@ def member_cards_service():
         auth=get_auth(user_account)
     )
 
-def add_card_service():
+@requestParsor
+def add_card_service(card_number=None, expiry=None, holder_name=None, is_default=None):
     """新增一張信用卡。"""
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
         return redirect(url_for("D.member_cards"))
 
     user_account = session[SESSION_AUTHO]
-    card_number  = request.form.get("card_number", "").strip()
-    expiry       = request.form.get("expiry", "").strip()
-    holder_name  = request.form.get("holder_name", "").strip()
-    is_default   = 1 if request.form.get("is_default") else 0
+    card_number  = (card_number or "").strip()
+    expiry       = (expiry or "").strip()
+    holder_name  = (holder_name or "").strip()
+    is_default   = 1 if is_default else 0
 
     # 簡易驗證（學校作業夠用）
     if not card_number or not expiry or not holder_name:
@@ -211,24 +275,183 @@ def add_card_service():
     flash("信用卡已新增", "success")
     return redirect(url_for("D.member_cards"))
 
-def delete_card_service():
+@requestParsor
+def delete_card_service(card_id=None):
     """刪除一張信用卡。"""
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
         return redirect(url_for("D.member_cards"))
 
     user_account = session[SESSION_AUTHO]
-    card_id = request.form.get("card_id")
     delete_member_card(user_account, card_id)
     flash("信用卡已刪除", "success")
     return redirect(url_for("D.member_cards"))
 
-def set_default_card_service():
+@requestParsor
+def set_default_card_service(card_id=None):
     """把指定卡設為預設。"""
     if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
         return redirect(url_for("D.member_cards"))
 
     user_account = session[SESSION_AUTHO]
-    card_id = request.form.get("card_id")
     set_default_card(user_account, card_id)
     flash("已設定為預設卡", "success")
     return redirect(url_for("D.member_cards"))
+
+
+# ── 已完成訂單查詢 services(管理員/使用者共用模板) ────────────────────────────
+
+def _parse_filters_from_request():
+    """從 request.args 解析篩選條件,回傳一個 dict。"""
+    month       = request.args.get("month", "").strip()
+    target_user = request.args.get("target_user", "").strip()
+    min_total   = request.args.get("min_total", "").strip()
+    max_total   = request.args.get("max_total", "").strip()
+
+    # 月份格式驗證
+    if not (len(month) == 7 and month[4] == '-'
+            and month[:4].isdigit() and month[5:].isdigit()):
+        month = ""
+
+    # 金額轉數字
+    try:
+        min_total_val = int(min_total) if min_total else None
+    except ValueError:
+        min_total_val = None
+    try:
+        max_total_val = int(max_total) if max_total else None
+    except ValueError:
+        max_total_val = None
+
+    return {
+        "month": month,
+        "target_user": target_user,
+        "min_total": min_total_val,
+        "max_total": max_total_val,
+        # 給模板顯示原始字串(避免顯示 None)
+        "min_total_raw": min_total,
+        "max_total_raw": max_total,
+    }
+
+
+def manage_completed_orders_service():
+    """管理員:看所有人的已完成訂單。"""
+    filters = _parse_filters_from_request()
+    orders = search_completed_orders(
+        user_account=None,
+        target_user=filters["target_user"] or None,
+        month=filters["month"] or None,
+        min_total=filters["min_total"],
+        max_total=filters["max_total"],
+    )
+    user_options = get_user_accounts_with_orders()
+
+    return render_template("orders.html",
+        orders=orders,
+        filters=filters,
+        user_options=user_options,
+        is_admin=True,
+        items_url_base="/manage/orders",  # 配合下面的 partial route
+        page_title="交易成功訂單(全部使用者)"
+    )
+
+
+def member_completed_orders_service():
+    """使用者:看自己的已完成訂單。"""
+    user_account = session[SESSION_AUTHO]
+    filters = _parse_filters_from_request()
+    orders = search_completed_orders(
+        user_account=user_account,
+        target_user=None,
+        month=filters["month"] or None,
+        min_total=filters["min_total"],
+        max_total=filters["max_total"],
+    )
+
+    return render_template("orders.html",
+        orders=orders,
+        filters=filters,
+        user_options=[],  # 使用者頁不需要使用者下拉
+        is_admin=False,
+        items_url_base="/member/orders",
+        page_title="我的交易成功訂單"
+    )
+
+
+def manage_order_items_service(order_id):
+    """
+    管理員:取單張訂單明細(AJAX partial)。
+
+    【為什麼這裡不用 @requestParsor】
+    order_id 是從 URL 路徑 /manage/orders/<int:order_id>/items 取得的位置參數,
+    Flask 會直接以位置參數傳進來。若再套用 @requestParsor,它會嘗試從
+    request.args / request.form 再解析一次同名參數,造成
+    「got multiple values for argument 'order_id'」TypeError。
+    本 service 不需要從 request 額外取參數,因此不套裝飾器。
+    """
+    items = get_order_items_with_user_check(order_id, user_account=None)
+    if items is None:
+        return render_template("_order_items.html", items=[], not_found=True)
+    return render_template("_order_items.html", items=items, not_found=False)
+
+
+def member_order_items_service(order_id):
+    """
+    使用者:取自己的訂單明細(AJAX partial)。
+
+    【為什麼這裡不用 @requestParsor】
+    order_id 是從 URL 路徑 /member/orders/<int:order_id>/items 取得的位置參數,
+    Flask 會直接以位置參數傳進來。若再套用 @requestParsor,它會嘗試從
+    request.args / request.form 再解析一次同名參數,造成
+    「got multiple values for argument 'order_id'」TypeError。
+    本 service 不需要從 request 額外取參數,因此不套裝飾器。
+    """
+    user_account = session[SESSION_AUTHO]
+    items = get_order_items_with_user_check(order_id, user_account=user_account)
+    if items is None:
+        # 不是這個人的訂單就直接拒,不洩漏訂單資訊
+        return render_template("_order_items.html", items=[], not_found=True)
+    return render_template("_order_items.html", items=items, not_found=False)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#   後台儀表板 (銷售統計圖表)
+# ══════════════════════════════════════════════════════════════════════════════
+def manage_dashboard_service():
+    """
+    回傳儀表板 partial HTML (不含 topbar/footer)。
+
+    呼叫情境:
+      manage.html 點擊「📈 數據圖表」分頁 → AJAX GET /manage/dashboard
+        → 此 service 回傳一段 HTML 片段 → 前端塞進 #panel-container
+
+    為什麼不再渲染完整頁:
+      原本此 service 渲染整個 manage_dashboard.html (含 topbar/footer)。
+      改成「嵌入式分頁」之後,整個外框 (header/nav/footer) 都由 manage.html
+      提供,儀表板只需要內容區。因此改為回傳 _dashboard_panel.html partial。
+
+    圖表資料仍由前端另外打 /manage/dashboard/data 取 JSON,此邏輯不變。
+    """
+    return render_template("_dashboard_panel.html")
+
+
+def manage_dashboard_data_service():
+    """
+    儀表板資料 API,回傳 JSON 給前端 Chart.js 使用。
+
+    回傳結構:
+      {
+        "summary": { total_revenue, total_orders, avg_order_value, total_members },
+        "revenue_trend":   [ {month, revenue}, ... ],
+        "orders_by_month": [ {month, order_count}, ... ],
+        "top_products":    [ {product_name, total_qty}, ... ],
+        "member_dist":     [ {user_account, total_spent}, ... ]
+      }
+    """
+    from flask import jsonify
+    return jsonify({
+        "summary":         get_dashboard_summary(),
+        "revenue_trend":   get_revenue_trend(months=12),
+        "orders_by_month": get_orders_count_by_month(months=12),
+        "top_products":    get_top_products(limit=10),
+        "member_dist":     get_member_spending_distribution(limit=8),
+    })

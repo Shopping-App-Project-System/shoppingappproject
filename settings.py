@@ -11,9 +11,8 @@ DB_DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
 
 # ________________________M.C.__________________________
 MC_RCON_HOST = os.getenv("MC_RCON_HOST")
-MC_RCON_PORT = os.getenv("DB_RCON_PORT")
-MC_RCON_PASSWORD = os.getenv("DB_RCON_PASSWORD")
-
+MC_RCON_PORT = int(os.getenv("MC_RCON_PORT"))
+MC_RCON_PASSWORD = os.getenv("MC_RCON_PASSWORD")
 # # ________________________POOL__________________________
 # POOL_NAME = "pool"
 # POOL_SIZE = 5

@@ -1,0 +1,335 @@
+{# ════════════════════════════════════════════════════════════════════════
+   儀表板 partial — 由 AJAX 載入,塞進 manage.html 的 #panel-container
+
+   ⚠️ 注意:此 partial 不包含 <html>/<head>/<body>/topbar/footer,
+       因為它是嵌入到既有頁面裡的局部內容。樣式靠 mc-common.css 與
+       下面的 <style> 區塊提供。Chart.js 在 manage.html 全域載入一次即可,
+       這裡不要重複載入,避免重新繫結時出錯。
+   ════════════════════════════════════════════════════════════════════════ #}
+
+<style>
+/* ── 儀表板專屬樣式 ─────────────────────────────────────────────── */
+/* 所有色彩、字型、邊框皆使用 mc-common.css 提供的 CSS 變數 */
+#dashboard-panel .summary-grid{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:16px; margin-bottom:24px;
+}
+#dashboard-panel .stat-card{
+    border:var(--border-block);
+    box-shadow:var(--shadow-inset),5px 5px 0 #000;
+    padding:18px 20px;
+}
+#dashboard-panel .stat-card.lapis  {background:repeating-linear-gradient(180deg,var(--lapis) 0,var(--lapis) 6px,var(--lapis-dk) 6px,var(--lapis-dk) 12px);}
+#dashboard-panel .stat-card.emerald{background:repeating-linear-gradient(180deg,var(--emerald) 0,var(--emerald) 6px,var(--emerald-dk) 6px,var(--emerald-dk) 12px);}
+#dashboard-panel .stat-card.gold   {background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);}
+#dashboard-panel .stat-card.diamond{background:repeating-linear-gradient(180deg,var(--diamond) 0,var(--diamond) 6px,var(--diamond-dk) 6px,var(--diamond-dk) 12px);}
+#dashboard-panel .stat-card .label{
+    font-family:var(--font-pixel); font-size:.62rem;
+    color:var(--white-mc); text-shadow:2px 2px 0 #000;
+    margin-bottom:12px; line-height:1.4;
+}
+#dashboard-panel .stat-card.gold .label,
+#dashboard-panel .stat-card.diamond .label{
+    color:var(--black-mc); text-shadow:1px 1px 0 rgba(255,255,255,.3);
+}
+#dashboard-panel .stat-card .value{
+    font-family:var(--font-pixel); font-size:1.05rem;
+    color:var(--white-mc); text-shadow:3px 3px 0 #000;
+    line-height:1.3; word-break:break-all;
+}
+#dashboard-panel .stat-card.gold .value,
+#dashboard-panel .stat-card.diamond .value{
+    color:var(--black-mc); text-shadow:2px 2px 0 rgba(255,255,255,.4);
+}
+
+#dashboard-panel .chart-grid{
+    display:grid; grid-template-columns:2fr 1fr;
+    gap:18px; margin-bottom:18px;
+}
+#dashboard-panel .chart-panel{
+    border:var(--border-block);
+    box-shadow:var(--shadow-inset),5px 5px 0 #000;
+    background:#fff; overflow:hidden;
+}
+#dashboard-panel .chart-panel-header{
+    background:repeating-linear-gradient(180deg,var(--lapis) 0,var(--lapis) 6px,var(--lapis-dk) 6px,var(--lapis-dk) 12px);
+    border-bottom:var(--border-block);
+    padding:12px 16px;
+}
+#dashboard-panel .chart-panel-header h3{
+    font-family:var(--font-pixel); font-size:.7rem;
+    color:var(--white-mc); text-shadow:2px 2px 0 #000;
+    margin:0;
+}
+#dashboard-panel .chart-panel-body{
+    padding:18px; background:#fafafa;
+    min-height:340px;
+    display:flex; align-items:center; justify-content:center;
+}
+#dashboard-panel .chart-panel-body canvas{
+    max-height:320px; width:100%!important;
+}
+
+#dashboard-panel .loading-box{
+    font-family:var(--font-pixel); font-size:.7rem;
+    color:var(--white-mc); text-shadow:2px 2px 0 #000;
+    text-align:center; padding:30px;
+    background:repeating-linear-gradient(180deg,var(--stone) 0,var(--stone) 6px,var(--stone-dark) 6px,var(--stone-dark) 12px);
+    border:var(--border-block);
+    box-shadow:var(--shadow-inset),5px 5px 0 #000;
+    margin-bottom:20px;
+}
+#dashboard-panel .loading-box.error{
+    background:repeating-linear-gradient(180deg,#6a1010 0,#6a1010 6px,#420a0a 6px,#420a0a 12px);
+    color:#ff8080;
+}
+
+@media (max-width: 900px) {
+    #dashboard-panel .summary-grid{grid-template-columns:repeat(2,1fr);}
+    #dashboard-panel .chart-grid  {grid-template-columns:1fr;}
+}
+@media (max-width: 500px) {
+    #dashboard-panel .summary-grid{grid-template-columns:1fr;}
+    #dashboard-panel .stat-card .value{font-size:.95rem;}
+}
+</style>
+
+<div id="dashboard-panel">
+
+    {# ── 摘要卡片區 ───────────────────────────────────────── #}
+    <div class="summary-grid">
+        <div class="stat-card lapis">
+            <div class="label">總營收</div>
+            <div class="value" id="sum-revenue">—</div>
+        </div>
+        <div class="stat-card emerald">
+            <div class="label">總訂單數</div>
+            <div class="value" id="sum-orders">—</div>
+        </div>
+        <div class="stat-card gold">
+            <div class="label">平均客單價</div>
+            <div class="value" id="sum-aov">—</div>
+        </div>
+        <div class="stat-card diamond">
+            <div class="label">活躍會員</div>
+            <div class="value" id="sum-members">—</div>
+        </div>
+    </div>
+
+    {# 載入提示 (資料就緒後會被隱藏) #}
+    <div id="dashboard-loading" class="loading-box">📡 載入統計資料中...</div>
+
+    {# ── 第一列:營收趨勢 (大) + 熱門商品 (小) ───────────── #}
+    <div class="chart-grid">
+        <div class="chart-panel">
+            <div class="chart-panel-header"><h3>📈 近 12 個月營收趨勢</h3></div>
+            <div class="chart-panel-body"><canvas id="chartRevenue"></canvas></div>
+        </div>
+        <div class="chart-panel">
+            <div class="chart-panel-header"><h3>🏆 熱門商品 Top 10</h3></div>
+            <div class="chart-panel-body"><canvas id="chartTopProducts"></canvas></div>
+        </div>
+    </div>
+
+    {# ── 第二列:訂單數量 (大) + 會員消費分布 (小) ──────── #}
+    <div class="chart-grid">
+        <div class="chart-panel">
+            <div class="chart-panel-header"><h3>📦 近 12 個月訂單數量</h3></div>
+            <div class="chart-panel-body"><canvas id="chartOrders"></canvas></div>
+        </div>
+        <div class="chart-panel">
+            <div class="chart-panel-header"><h3>👥 會員消費分布</h3></div>
+            <div class="chart-panel-body"><canvas id="chartMembers"></canvas></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   儀表板邏輯 — 注意,此 script 是透過 AJAX 載入的,瀏覽器不會自動執行
+   塞進 innerHTML 的 <script> 標籤。manage.html 的 loadDashboard()
+   會手動掃過 partial 內的 script 並 eval,所以這段邏輯能跑起來。
+   ════════════════════════════════════════════════════════════════════ */
+(function() {
+    // 包成 IIFE,避免變數污染主頁面全域命名空間,也避免重複切換分頁時的衝突
+
+    // 格式化金額
+    function fmtMoney(n) {
+        return "NT$ " + Math.round(n).toLocaleString();
+    }
+
+    // Chart.js 全域字型設定 — 用像素字呼應主題
+    Chart.defaults.font.family = '"Press Start 2P", monospace';
+    Chart.defaults.font.size = 9;
+    Chart.defaults.color = "#1A1A1A";
+
+    // Minecraft 風調色盤 (對應 mc-common.css 的 CSS 變數)
+    const MC_COLORS = {
+        diamond:  "#5DECF5", diamondDk: "#1ABAC8",
+        emerald:  "#17B85A", emeraldDk: "#0d7a3a",
+        gold:     "#F0C93A",
+        redstone: "#E03030",
+        lapis:    "#1A44A8",
+        dirt:     "#8B5E3C",
+        grass:    "#5D9E3F",
+        stone:    "#7F7F7F",
+    };
+    const PALETTE = [
+        MC_COLORS.diamond, MC_COLORS.emerald,  MC_COLORS.gold,
+        MC_COLORS.redstone, MC_COLORS.lapis,   MC_COLORS.dirt,
+        MC_COLORS.grass,   MC_COLORS.diamondDk, MC_COLORS.emeraldDk,
+        MC_COLORS.stone   // 最後一格保留給「其他」
+    ];
+
+    // 共用樣式
+    const gridStyle = { color: "rgba(0,0,0,0.08)", drawTicks: false };
+    const pixelTooltip = {
+        titleFont: { family: '"Press Start 2P"', size: 9 },
+        bodyFont:  { family: '"Press Start 2P"', size: 9 },
+    };
+
+    // ── 主流程 ──────────────────────────────────────────────────
+    fetch("/manage/dashboard/data")
+        .then(r => {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.json();
+        })
+        .then(data => {
+            document.getElementById("dashboard-loading").style.display = "none";
+            renderSummary(data.summary);
+            renderRevenueTrend(data.revenue_trend);
+            renderOrdersByMonth(data.orders_by_month);
+            renderTopProducts(data.top_products);
+            renderMemberDist(data.member_dist);
+        })
+        .catch(err => {
+            const lb = document.getElementById("dashboard-loading");
+            if (lb) {
+                lb.classList.add("error");
+                lb.textContent = "❌ 載入失敗:" + err.message;
+            }
+            console.error(err);
+        });
+
+    function renderSummary(s) {
+        document.getElementById("sum-revenue").textContent = fmtMoney(s.total_revenue);
+        document.getElementById("sum-orders").textContent  = s.total_orders.toLocaleString();
+        document.getElementById("sum-aov").textContent     = fmtMoney(s.avg_order_value);
+        document.getElementById("sum-members").textContent = s.total_members.toLocaleString();
+    }
+
+    function renderRevenueTrend(rows) {
+        new Chart(document.getElementById("chartRevenue"), {
+            type: "line",
+            data: {
+                labels: rows.map(r => r.month),
+                datasets: [{
+                    label: "營收",
+                    data: rows.map(r => r.revenue),
+                    borderColor: MC_COLORS.diamondDk,
+                    backgroundColor: "rgba(93, 236, 245, 0.25)",
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0,
+                    pointRadius: 5,
+                    pointBackgroundColor: MC_COLORS.diamond,
+                    pointBorderColor: "#000",
+                    pointBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        ...pixelTooltip,
+                        callbacks: { label: ctx => "營收: " + fmtMoney(ctx.parsed.y) }
+                    }
+                },
+                scales: {
+                    x: { grid: gridStyle, ticks: { font: { size: 8 } } },
+                    y: {
+                        beginAtZero: true, grid: gridStyle,
+                        ticks: { font: { size: 8 }, callback: v => "$" + v.toLocaleString() }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderOrdersByMonth(rows) {
+        new Chart(document.getElementById("chartOrders"), {
+            type: "bar",
+            data: {
+                labels: rows.map(r => r.month),
+                datasets: [{
+                    label: "訂單數",
+                    data: rows.map(r => r.order_count),
+                    backgroundColor: MC_COLORS.emerald,
+                    borderColor: "#000", borderWidth: 2, borderRadius: 0,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: pixelTooltip },
+                scales: {
+                    x: { grid: gridStyle, ticks: { font: { size: 8 } } },
+                    y: { beginAtZero: true, grid: gridStyle, ticks: { stepSize: 1, font: { size: 8 } } }
+                }
+            }
+        });
+    }
+
+    function renderTopProducts(rows) {
+        new Chart(document.getElementById("chartTopProducts"), {
+            type: "bar",
+            data: {
+                labels: rows.map(r => r.product_name),
+                datasets: [{
+                    label: "銷售數量",
+                    data: rows.map(r => r.total_qty),
+                    backgroundColor: rows.map((_, i) => PALETTE[i % PALETTE.length]),
+                    borderColor: "#000", borderWidth: 2, borderRadius: 0,
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: pixelTooltip },
+                scales: {
+                    x: { beginAtZero: true, grid: gridStyle, ticks: { stepSize: 1, font: { size: 8 } } },
+                    y: { grid: gridStyle, ticks: { font: { size: 8 } } }
+                }
+            }
+        });
+    }
+
+    function renderMemberDist(rows) {
+        new Chart(document.getElementById("chartMembers"), {
+            type: "doughnut",
+            data: {
+                labels: rows.map(r => r.user_account),
+                datasets: [{
+                    data: rows.map(r => r.total_spent),
+                    backgroundColor: rows.map((_, i) => PALETTE[i % PALETTE.length]),
+                    borderColor: "#000", borderWidth: 3,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "right",
+                        labels: { font: { family: '"Press Start 2P"', size: 7 }, boxWidth: 14, padding: 8 }
+                    },
+                    tooltip: {
+                        ...pixelTooltip,
+                        callbacks: { label: ctx => ctx.label + ": " + fmtMoney(ctx.parsed) }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>

@@ -40,8 +40,10 @@
       供前端動態顯示訂單購買內容使用。
 
   POST /order/<order_id>/cancel
-      取消指定訂單（僅限「處理中」狀態且屬於本人）。
+      取消指定訂單（屬於本人且狀態非「已取消」皆可取消）。
       取消後自動將該訂單的所有商品庫存補回。
+      註：原規則僅允許「處理中」訂單取消，但因下單後狀態直接為「已完成」，
+      已放寬為「非已取消即可取消」，保留使用者取消訂單的權益。
 
 【安全機制】
   - 所有路由皆套用 @userRequired，未登入自動導向登入頁，
@@ -62,7 +64,6 @@ from .Shopping_services import (cart_add_service,
                                 order_cancel_service,
                                 cart_update_service,
                                 order_items_service,
-                                redeem_service,
                                 redeem_service)
 
 # _______________________________________初始化___________________________________________
@@ -83,7 +84,7 @@ def cart():return cart_service()
 @userRequired
 def cart_remove(item_id):return cart_remove_service(item_id)
 
-@bp.route("/cart/update", methods=["GET","POST"])
+@bp.route("/cart/update", methods=["POST"])
 @userRequired
 def cart_update():return cart_update_service()
 

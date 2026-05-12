@@ -245,7 +245,7 @@ def verify_register_service(token,code):
     
     user = getUser({"token":token},"user_account","code","pic_path")
     user_account,user_code,user_pic_path = user["user_account"],user["code"],user["pic_path"]
-
+    # print(user)
     if code != user_code:
         flash("驗證失敗")
         return render_template("verify_code.html",token=token,form_action=f"/register/email/{token}/verify/code")

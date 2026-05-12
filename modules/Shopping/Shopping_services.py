@@ -25,10 +25,15 @@ from flask import request, redirect, render_template, session, url_for, flash
 
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
-from utils import get_auth, validateMobile, validateCreditCard, requestParsor, getVerifyToken
+from utils import get_auth, validateCreditCard, requestParsor, getVerifyToken
+
+# 【修改說明】
+# notify_player 和 give_item 原本從 models import，
+# 但 models 是放資料庫操作的，RCON 功能不應該放那裡。
+# 改成從 mc_bridge 直接 import，邏輯更清晰。
 from mc_bridge import notify_player, give_item
-from models import (getUser,
-                    get_product_by_id,
+
+from models import (get_product_by_id,
                     get_product_stock,
                     find_cart_item,
                     upsert_cart,
@@ -104,13 +109,11 @@ def cart_service():
             'is_active' : row['is_active'],
         })
 
-    shipping = 60 if subtotal > 0 else 0
     discount = 0
-    total    = subtotal + shipping - discount
+    total    = subtotal - discount
 
     summary = {
         'subtotal': subtotal,
-        'shipping': shipping,
         'discount': discount,
         'total'   : total,
     }
@@ -133,10 +136,6 @@ def cart_remove_service(item_id):
 # 對應路由：POST /cart/update
 @requestParsor
 def cart_update_service(item_id, qty):
-    # 更新購物車中指定商品的數量，驗證不超過庫存上限
-    if request.method == "GET":
-        return redirect(url_for("C.cart"))
-
     user_account = session.get(SESSION_AUTHO)
     stock = get_cart_item_stock(item_id, user_account)
     if not stock or int(qty) > stock:
@@ -148,7 +147,7 @@ def cart_update_service(item_id, qty):
 # ── 結帳 ──────────────────────────────────────────────────────────────────────────────────────
 # 對應路由：GET + POST /checkout
 @requestParsor
-def checkout_service(name="", phone="", address="", payment="", shipping="", note="", card_id="", card_number=""):
+def checkout_service(payment="", note="", card_id="", card_number=""):
     user_account = session.get(SESSION_AUTHO)
     rows = get_cart_items(user_account)
 
@@ -157,11 +156,6 @@ def checkout_service(name="", phone="", address="", payment="", shipping="", not
         return redirect(url_for("C.cart"))
 
     if request.method == "GET":
-        user = getUser(
-            {"user_account": user_account},
-            "user_name", "user_mobile", "user_address"
-        )
-
         order_items = []
         subtotal    = 0
         for row in rows:
@@ -173,40 +167,20 @@ def checkout_service(name="", phone="", address="", payment="", shipping="", not
                 "price": item_total,
             })
 
-        shipping = 60
-        total    = subtotal + shipping
         saved_cards = get_member_cards(user_account)
 
         return render_template("checkout.html",
             submit_url=url_for("C.checkout"),
             order_items=order_items,
-            summary={"shipping": shipping, "total": total},
-            payment_methods=["ATM 轉帳", "信用卡", "貨到付款"],
-            shipping_methods=["宅配到府", "超商取貨"],
-            form={
-                "name"   : user.get("user_name"),
-                "phone"  : user.get("user_mobile"),
-                "address": user.get("user_address")
-            },
+            summary={"total": subtotal},
+            payment_methods=["ATM 轉帳", "信用卡"],
             saved_cards=saved_cards,
             auth=get_auth(user_account)
         )
 
     # ── POST：驗證表單並建立訂單 ──
-    if not name:
-        flash("請填寫收件人姓名", "error")
-        return redirect(url_for("C.checkout"))
-    if not address:
-        flash("請填寫收件地址", "error")
-        return redirect(url_for("C.checkout"))
     if not payment:
         flash("請選擇付款方式", "error")
-        return redirect(url_for("C.checkout"))
-    if not shipping:
-        flash("請選擇配送方式", "error")
-        return redirect(url_for("C.checkout"))
-    if phone and not validateMobile(phone):
-        flash("手機格式錯誤，請輸入09開頭的10位數字", "error")
         return redirect(url_for("C.checkout"))
 
     credit_card_number = None
@@ -238,8 +212,8 @@ def checkout_service(name="", phone="", address="", payment="", shipping="", not
             flash(f"「{row['name']}」庫存不足（剩餘 {available} 件），請回購物車調整數量", "error")
             return redirect(url_for("C.cart"))
 
-    total    = sum(row['price'] * row['quantity'] for row in rows) + 60
-    order_id = insert_order(user_account, total, payment, shipping, address, note, credit_card_number)
+    total    = sum(row['price'] * row['quantity'] for row in rows)
+    order_id = insert_order(user_account, total, payment, note, credit_card_number)
 
     # 逐筆將購物車商品寫入訂單明細、扣庫存、產生序號、發放道具或傳送序號
     for row in rows:

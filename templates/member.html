@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>會員中心｜{{ store_name or 'My Store' }}</title>
+    <title>會員中心｜{{ store_name or 'MineMarket' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -181,9 +181,28 @@
         .footer-logo{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;display:block;margin-bottom:12px;}
         .footer p{font-family:var(--font-pixel);font-size:.55rem;color:rgba(255,255,255,.5);text-shadow:1px 1px 0 #000;line-height:2.4;}
 
+        /* ── order detail row ── */
+        .order-row{cursor:pointer;}
+        .order-row:hover td{filter:brightness(1.25);}
+        .order-detail-row{display:none;}
+        .order-detail-row.open{display:table-row;}
+        .order-detail-cell{
+            padding:0 !important;
+            background:repeating-linear-gradient(180deg,#1a1a2e 0,#1a1a2e 8px,#12121e 8px,#12121e 16px) !important;
+            border-bottom:4px solid #000;
+        }
+        .order-detail-inner{padding:14px 18px;}
+        .detail-table{width:100%;border-collapse:collapse;margin-top:4px;}
+        .detail-table th{font-family:var(--font-pixel);font-size:.52rem;color:#aaa;text-shadow:1px 1px 0 #000;padding:6px 10px;border-bottom:3px solid #333;text-align:left;background:none;}
+        .detail-table td{font-family:var(--font-pixel);font-size:.55rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;padding:8px 10px;border-bottom:2px solid #333;}
+        .detail-table tr:last-child td{border-bottom:none;}
+        .detail-loading{font-family:var(--font-pixel);font-size:.55rem;color:#888;text-shadow:1px 1px 0 #000;padding:10px 0;}
+        .detail-img{width:28px;height:28px;border:2px solid #555;object-fit:cover;image-rendering:pixelated;vertical-align:middle;margin-right:6px;}
+
         @media(max-width:900px){.layout{grid-template-columns:1fr;}.nav-links,.user-panel{display:none;}.nav-toggle{display:flex;}}
         @media(max-width:500px){.table th,.table td{font-size:.5rem;padding:8px 8px;}}
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 <body>
 
@@ -191,33 +210,39 @@
 
 <header class="topbar">
     <div class="container topbar-inner">
-        <div class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</div>
+        <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         <nav class="nav-links">
-            <a href="/">⛏ 主頁</a>
+            <a href="/" >⛏ 主頁</a>
             <a href="/member" class="active">👤 會員中心</a>
-            <a href="/cart">🎒 購物車</a>
+            <a href="/cart" >🎒 購物車</a>
         </nav>
-        <button class="nav-toggle" id="navToggle" aria-label="選單"><span></span><span></span><span></span></button>
+        <button class="nav-toggle" id="navToggle" aria-label="選單">
+            <span></span><span></span><span></span>
+        </button>
         <div class="user-panel">
             {% if auth and auth.logged_in %}
             <div class="user-card">
-                <div class="user-avatar-sm"><img src="{{ auth.profile_pic }}" alt="avatar"></div>
+                <div class="user-avatar"><img src="{{ auth.profile_pic }}" alt="avatar"></div>
                 <div class="user-meta">
                     <span class="user-status-text">▶ 登入中</span>
                     <span class="user-account">{{ auth.account }}</span>
                 </div>
             </div>
-            <a href="/logout" class="topbar-btn">🚪 登出</a>
+            <a href="/logout" class="topbar-btn">登出</a>
             {% else %}
-            <a href="/login" class="topbar-btn">⚔ 登入</a>
+            <a href="/login" class="topbar-btn">登入</a>
             {% endif %}
         </div>
     </div>
     <nav class="nav-drawer" id="navDrawer">
-        <a href="/">⛏ 主頁</a>
-        <a href="/member">👤 會員中心</a>
-        <a href="/cart">🎒 購物車</a>
-        {% if auth and auth.logged_in %}<a href="/logout">🚪 登出</a>{% else %}<a href="/login">⚔ 登入</a>{% endif %}
+        <a href="/">▶ 主頁</a>
+        <a href="/member">▶ 會員中心</a>
+        <a href="/cart">▶ 購物車</a>
+        {% if auth and auth.logged_in %}
+        <a href="/logout">▶ 登出</a>
+        {% else %}
+        <a href="/login">▶ 登入</a>
+        {% endif %}
     </nav>
 </header>
 
@@ -263,6 +288,7 @@
                         <span>電話</span>
                         <span>{{ user.user_mobile or '' }}</span>
                     </div>
+                    
 
                     <a href="/member/edit" class="btn btn-edit">✏ 編輯資料</a>
 
@@ -292,7 +318,10 @@
 
             <!-- ── 右側：訂單紀錄 ── -->
             <div class="mc-block">
-                <div class="mc-block-header"><h2>📜 訂單紀錄</h2></div>
+                <div class="mc-block-header" style="display:flex;justify-content:space-between;align-items:center;">
+                    <h2 style="margin:0;">📜 訂單紀錄</h2>
+                    <a href="/member/orders" class="btn btn-orders" style="font-size:0.78rem;padding:6px 12px;">📊 已完成訂單查詢</a>
+                </div>
                 <div class="mc-block-body" style="padding:0;">
 
                     {% if orders %}
@@ -307,7 +336,7 @@
                         </thead>
                         <tbody>
                             {% for o in orders %}
-                            <tr>
+                            <tr class="order-row" data-order-id="{{ o.id }}">
                                 <td>#{{ loop.index }}</td>
                                 <td>NT$ {{ o.total | int }}</td>
                                 <td>
@@ -322,12 +351,32 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if o.status == '處理中' %}
+                                    {#
+                                        ─────────────────────────────────────────────────────────
+                                        【取消訂單按鈕的顯示邏輯】
+
+                                        原本此處限制 status == '處理中' 才顯示「取消訂單」按鈕，
+                                        但因 insert_order 已調整為下單後直接寫入「已完成」，
+                                        沿用舊條件會導致按鈕永遠不會出現，使用者無法取消任何訂單。
+
+                                        為了與後端 get_order 的放寬規則保持一致，此處改為：
+                                        只要訂單狀態「不是已取消」，就顯示取消按鈕，
+                                        以保留使用者在「已完成」狀態下仍可取消訂單的權益。
+                                        ─────────────────────────────────────────────────────────
+                                    #}
+                                    {% if o.status != '已取消' %}
                                     <form method="POST" action="/order/{{ o.id }}/cancel" style="display:inline"
                                         onsubmit="return confirm('確定要取消此訂單嗎？')">
                                         <button type="submit" class="btn-cancel">✗ 取消訂單</button>
                                     </form>
                                     {% endif %}
+                                </td>
+                            </tr>
+                            <tr class="order-detail-row" id="detail-{{ o.id }}">
+                                <td class="order-detail-cell" colspan="4">
+                                    <div class="order-detail-inner">
+                                        <div class="detail-loading">載入中…</div>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -345,15 +394,27 @@
 </main>
 
 <div class="dirt-divider"></div>
-
-<footer class="footer">
-    <span class="footer-logo">{{ store_name or 'My Store' }}</span>
-    <p>{{ footer_text or '' }}</p>
+<footer class="mc-footer">
+    <div class="footer-inner">
+        <div class="footer-contact">
+            <div class="footer-contact-title">聯絡我們</div>
+            <ul class="footer-contact-list">
+                <li>電話：02-2345-6789</li>
+                <li>傳真：02-2345-6790</li>
+                <li>Line ID：@minemarket</li>
+                <li>Email：support@minemarket.tw</li>
+                <li>地址：台北市信義區信義路五段7號</li>
+                <li>服務時間：週一至週五 09:00–18:00</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。<br>本站所有商品圖文，未經授權不得轉載。</p>
+    </div>
 </footer>
+<script src="/static/js/mc-common.js"></script>
 
-<script>
-const t=document.getElementById('navToggle'),d=document.getElementById('navDrawer');
-t.addEventListener('click',()=>{t.classList.toggle('open');d.classList.toggle('open');});
-</script>
+
 </body>
 </html>

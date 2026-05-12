@@ -1,5 +1,5 @@
 # __________________________________________內部模組_____________________________________
-from flask import request,render_template,session
+from flask import render_template,session
 
 # _______________________________________自定義模組_______________________________________
 from models import search_categories,get_all_categories,get_product_by_id,get_product_stock,get_product_pics
@@ -14,8 +14,7 @@ from utils import get_auth,requestParsor
 def index_service(category="",keyword=""):
     products = search_categories(category, keyword) or []
     categories = get_all_categories() or []
-    # print(products)
-    # print(categories)
+    
     user_account = session.get(SESSION_AUTHO)
     if user_account:
         

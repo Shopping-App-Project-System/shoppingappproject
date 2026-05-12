@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title or (store_name ~ '｜主頁') if store_name else 'My Store｜主頁' }}</title>
+    <title>{{ page_title or (store_name ~ '｜主頁') if store_name else 'MineMarket｜主頁' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 
@@ -350,8 +350,8 @@
         .product-title { font-family:var(--font-pixel); font-size:.72rem; color:var(--white-mc); text-shadow:2px 2px 0 #000; margin-bottom:8px; line-height:1.8; } /* 1.5x */
         .product-desc { font-size:1.17rem; color:#ccc; text-shadow:1px 1px 0 #000; margin-bottom:10px; line-height:1.6; min-height:36px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; } /* 1.5x */
         
-        .product-qty { font-family:var(--font-pixel); font-size:.54rem; color:#aaa; text-shadow:1px 1px 0 #000; margin-bottom:12px; display:flex; align-items:center; gap:6px; } /* 1.5x */
-        .qty-dot { width:8px; height:8px; border:1px solid #000; display:inline-block; flex-shrink:0; }
+        .product-qty { font-family:var(--font-pixel); font-size:.68rem; color:#aaa; text-shadow:1px 1px 0 #000; margin-bottom:12px; display:flex; align-items:center; gap:6px; } /* 1.5x */
+        .qty-dot { width:10px; height:10px; border:1px solid #000; display:inline-block; flex-shrink:0; }
         .qty-dot.in  { background:var(--grass-top); box-shadow:0 0 4px var(--grass-top); }
         .qty-dot.out { background:var(--redstone);  box-shadow:0 0 4px var(--redstone); }
         .qty-in  { color:var(--grass-top); }
@@ -360,7 +360,7 @@
         .product-bottom { display:flex; justify-content:space-between; align-items:center; gap:8px; padding-top:10px; border-top:2px solid #000; }
         
         .sale-price { font-family:var(--font-pixel); font-size:.975rem; color:var(--gold-ore); text-shadow:2px 2px 0 #000; } /* 1.5x */
-        .original-price-muted { font-family:var(--font-pixel); font-size:.54rem; color:#777; text-decoration:line-through; display:block; margin-top:2px; } /* 1.5x */
+        .original-price-muted { font-family:var(--font-pixel); font-size:.54rem; color:#bbb; text-decoration:line-through; display:block; margin-top:2px; } /* 1.5x */
         .normal-price { font-family:var(--font-pixel); font-size:.9rem; color:var(--white-mc); text-shadow:2px 2px 0 #000; } /* 1.5x */
         
         /* ── btn：移除條紋 ── */
@@ -424,6 +424,7 @@
         @media(max-width:800px)  { .product-grid { grid-template-columns:repeat(2,1fr); } .hero-banner{padding:38px 24px;} .nav-links,.user-panel{display:none;} .nav-toggle{display:flex;} }
         @media(max-width:500px)  { .product-grid { grid-template-columns:1fr; } .hero h1{font-size:1.17rem;} .hero-stats{display:none;} .search-select{display:none;} } 
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 
 <body>
@@ -434,12 +435,12 @@
     <!-- Topbar -->
     <header class="topbar">
         <div class="container topbar-inner">
-            <div class="logo">{{ store_name or 'My Store' }}</div>
+            <a href="/" class="logo"><div class="logo-gem"></div>{{ store_name or 'MineMarket' }}</a>
 
             <nav class="nav-links">
-                <a href="/" class="active">主頁</a>
-                <a href="/member">會員中心</a>
-                <a href="/cart">購物車</a>
+                <a href="/" class="active">⛏ 主頁</a>
+                <a href="/member">👤 會員中心</a>
+                <a href="/cart">🎒 購物車</a>
             </nav>
 
             <button class="nav-toggle" id="navToggle" aria-label="選單">
@@ -536,7 +537,7 @@
             <div class="search-container">
                 <span class="search-label">🔍 搜尋物品欄</span>
                 <form action="/" method="GET" class="search-form">
-                    <select name="category_id" class="search-select">
+                    <select name="category" class="search-select">
                         <option value="">所有分類</option>
                         {% for cat in categories %}
                         <option value="{{ cat.category }}" {% if current_cat==cat.category %}selected{% endif %}>{{ cat.category }}</option>
@@ -623,23 +624,30 @@
     </main>
 
     <div class="dirt-divider"></div>
-
-    <footer class="footer">
-        <span class="footer-logo">{{ store_name or 'My Store' }}</span>
-        <p>{{ footer_text or '' }}</p>
-    </footer>
+<footer class="mc-footer">
+    <div class="footer-inner">
+        <div class="footer-contact">
+            <div class="footer-contact-title">聯絡我們</div>
+            <ul class="footer-contact-list">
+                <li>電話：02-2345-6789</li>
+                <li>傳真：02-2345-6790</li>
+                <li>Line ID：@minemarket</li>
+                <li>Email：support@minemarket.tw</li>
+                <li>地址：台北市信義區信義路五段7號</li>
+                <li>服務時間：週一至週五 09:00–18:00</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。<br>本站所有商品圖文，未經授權不得轉載。</p>
+    </div>
+</footer>
+<script src="/static/js/mc-common.js"></script>
 
     <button class="scroll-top" id="scrollTop" aria-label="回到頂端">▲</button>
 
     <script>
-        // Hamburger
-        const toggle = document.getElementById('navToggle');
-        const drawer = document.getElementById('navDrawer');
-        toggle.addEventListener('click', () => {
-            toggle.classList.toggle('open');
-            drawer.classList.toggle('open');
-        });
-
         // Scroll-to-top
         const scrollBtn = document.getElementById('scrollTop');
         window.addEventListener('scroll', () => scrollBtn.classList.toggle('visible', window.scrollY > 280));
