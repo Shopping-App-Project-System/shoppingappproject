@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品管理｜{{ store_name or 'My Store' }}</title>
+    <title>商品管理｜{{ store_name or 'MineMarket' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="/static/css/mc-common.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -49,16 +50,24 @@
         .img-preview-box-sm img{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;max-width:none!important;max-height:none!important;}
 
         /* ground strip */
-        .ground-strip{height:24px;background:repeating-linear-gradient(90deg,var(--grass-top) 0,var(--grass-top) 24px,#4e8a33 24px,#4e8a33 48px);border-bottom:var(--border-block);box-shadow:0 4px 0 #000;}
+        
 
         /* topbar */
-        .topbar{position:sticky;top:0;z-index:100;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);box-shadow:0 6px 0 #000;}
-        .topbar-inner{display:flex;justify-content:center;align-items:center;min-height:80px;position:relative;padding:0 8px;}
-        .logo{position:absolute;left:0;font-family:var(--font-pixel);font-size:clamp(.7rem,1.4vw,.95rem);color:var(--gold-ore);text-shadow:3px 3px 0 #000,-2px -2px 0 #000;display:flex;align-items:center;gap:10px;}
-        .logo-gem{width:22px;height:22px;flex-shrink:0;border:2px solid #000;box-shadow:var(--shadow-inset);background:linear-gradient(#5DECF5 0,#5DECF5 100%) 0 0/22px 22px no-repeat,linear-gradient(#1ABAC8 0,#1ABAC8 100%) 3px 3px/9px 9px no-repeat,linear-gradient(#fff 0,#fff 100%) 3px 3px/5px 5px no-repeat;}
-        .topbar-title{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;}
-        .logout-btn{position:absolute;right:0;font-family:var(--font-pixel);font-size:.7rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,#a02020 6px,#a02020 12px);padding:10px 16px;border:var(--border-block);cursor:pointer;box-shadow:var(--shadow-block);transition:transform .08s steps(2);text-decoration:none;display:inline-block;}
-        .logout-btn:hover{filter:brightness(1.2);transform:translateY(-2px);}
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        .topbar-title{font-family:var(--font-pixel);font-size:1.1rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;}
+        
+        
 
         /* tab nav */
         .tab-nav{display:flex;gap:8px;align-items:center;margin-bottom:28px;margin-top:32px;}
@@ -136,9 +145,20 @@
 
         .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);}
 
-        .panel-page{padding:0 0 80px;}
+        .panel-page{padding:28px 0 80px;}
 
-        @media(max-width:800px){.table th,.table td{font-size:.5rem;padding:8px;}.btn{font-size:.55rem;padding:7px 10px;}}
+        @media(max-width:800px){
+    .table th,.table td{font-size:.5rem;padding:8px;}
+    .btn{font-size:.55rem;padding:7px 10px;}
+    .tab-nav{flex-wrap:wrap;gap:6px;}
+    .tab-nav a{font-size:.65rem;padding:8px 12px;}
+}
+@media(max-width:600px){
+    .mc-block-body form>div[style*="grid-template-columns:1fr 1fr"]{display:block!important;}
+    .mc-block-body form>div[style*="grid"]{display:block!important;}
+    .action-btns{flex-wrap:wrap;}
+    .table-responsive{font-size:.45rem;}
+}
     </style>
 </head>
 <body>
@@ -147,26 +167,22 @@
 
 <header class="topbar">
     <div class="container topbar-inner">
-        <div class="logo"><div class="logo-gem"></div>{{ store_name or 'My Store' }}</div>
-        <span class="topbar-title">⚙ 管理後台</span>
-        <form method="GET" action="/manage/logout" style="display:inline;">
-            <button type="submit" class="logout-btn">🚪 登出</button>
-        </form>
+        <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
+        <nav class="nav-links">
+            <a href="/manage" class="active">⚙ 商品管理</a>
+            <a href="/manage/log" >📋 操作紀錄</a>
+            <a href="/manage/orders" >📊 交易訂單</a>
+        </nav>
+        <button class="nav-toggle" id="navToggle" aria-label="選單">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="user-panel"><a href="/manage/logout" class="topbar-btn">登出</a></div>
     </div>
 </header>
 
 <main class="panel-page">
     <div class="container">
-
-        <div class="tab-nav">
-            <a href="/manage" class="active">⛏ 商品管理</a>
-            <span class="tab-sep">|</span>
-            <a href="/manage/log">📋 操作紀錄</a>
-            <span class="tab-sep">|</span>
-            <a href="/manage/orders">📊 交易成功訂單</a>
-        </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
+{% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flash-wrapper">
             {% for category, message in messages %}
@@ -276,7 +292,7 @@
                                 </td>
                                 <td class="name-cell">{{ p.name }}</td>
                                 <td>{{ p.original_price }}</td>
-                                <td>{{ p.sale_price if p.sale_price else '-' }}</td>
+                                <td>{% if p.sale_price %}<span style="color:var(--gold-ore);font-weight:700;text-shadow:1px 1px 0 #000;">{{ p.sale_price }}</span>{% else %}-{% endif %}</td>
                                 <td>{{ p.category if p.category else '-' }}</td>
                                 <td>
                                     {% if p.product_quantity is not none %}
@@ -320,6 +336,10 @@
                                         <form method="POST" action="/manage/restock" onsubmit="return confirm('確定要重新上架嗎？')" style="display:inline;">
                                             <input type="hidden" name="product_id" value="{{ p.id }}">
                                             <button type="submit" class="btn btn-success">▲ 上架</button>
+                                        </form>
+                                        <form method="POST" action="/manage/clear" onsubmit="return confirm('確定要永久刪除此商品紀錄嗎？此操作無法復原！')" style="display:inline;">
+                                            <input type="hidden" name="product_id" value="{{ p.id }}">
+                                            <button type="submit" class="btn btn-danger" title="刪除商品紀錄">✕ 刪除</button>
                                         </form>
                                         {% endif %}
                                     </div>
@@ -479,3 +499,4 @@
 </script>
 </body>
 </html>
+

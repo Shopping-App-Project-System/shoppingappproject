@@ -374,18 +374,34 @@ def member_completed_orders_service():
     )
 
 
-@requestParsor
 def manage_order_items_service(order_id):
-    """管理員:取單張訂單明細(AJAX partial)。"""
+    """
+    管理員:取單張訂單明細(AJAX partial)。
+
+    【為什麼這裡不用 @requestParsor】
+    order_id 是從 URL 路徑 /manage/orders/<int:order_id>/items 取得的位置參數,
+    Flask 會直接以位置參數傳進來。若再套用 @requestParsor,它會嘗試從
+    request.args / request.form 再解析一次同名參數,造成
+    「got multiple values for argument 'order_id'」TypeError。
+    本 service 不需要從 request 額外取參數,因此不套裝飾器。
+    """
     items = get_order_items_with_user_check(order_id, user_account=None)
     if items is None:
         return render_template("_order_items.html", items=[], not_found=True)
     return render_template("_order_items.html", items=items, not_found=False)
 
 
-@requestParsor
 def member_order_items_service(order_id):
-    """使用者:取自己的訂單明細(AJAX partial)。"""
+    """
+    使用者:取自己的訂單明細(AJAX partial)。
+
+    【為什麼這裡不用 @requestParsor】
+    order_id 是從 URL 路徑 /member/orders/<int:order_id>/items 取得的位置參數,
+    Flask 會直接以位置參數傳進來。若再套用 @requestParsor,它會嘗試從
+    request.args / request.form 再解析一次同名參數,造成
+    「got multiple values for argument 'order_id'」TypeError。
+    本 service 不需要從 request 額外取參數,因此不套裝飾器。
+    """
     user_account = session[SESSION_AUTHO]
     items = get_order_items_with_user_check(order_id, user_account=user_account)
     if items is None:

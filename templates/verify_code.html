@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>驗證碼確認｜{{ store_name or 'My Store' }}</title>
+    <title>驗證碼確認｜{{ store_name or 'MineMarket' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
@@ -42,6 +42,7 @@
 
         .back-link{display:block;text-align:center;margin-top:16px;font-size:.6rem;color:var(--diamond);text-shadow:1px 1px 0 #000;text-decoration:underline;}
     </style>
+    <link rel="stylesheet" href="/static/css/mc-common.css">
 </head>
 <body>
     <div class="verify-card">
@@ -79,5 +80,6 @@
         });
         form.addEventListener("submit",function(){hidden.value=Array.from(inputs).map(i=>i.value).join("");});
     </script>
+<script src="/static/js/mc-common.js"></script>
 </body>
 </html>
