@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#1c1c1c;padding:24px;font-family:'Press Start 2P',monospace;}
+    .outer{background:#3b3b3b;border-top:4px solid #6b6b6b;border-left:4px solid #6b6b6b;border-right:4px solid #1a1a1a;border-bottom:4px solid #1a1a1a;padding:4px;max-width:560px;margin:0 auto;}
+    .inner{background:#2a2a2a;border-top:4px solid #4a4a4a;border-left:4px solid #4a4a4a;border-right:4px solid #111;border-bottom:4px solid #111;padding:20px;}
+    .sky{background:#5b9bd5;height:48px;display:flex;align-items:flex-end;overflow:hidden;}
+    .sun{width:16px;height:16px;background:#ffffa0;margin-left:24px;margin-bottom:8px;}
+    .cloud-row{display:flex;align-items:flex-end;margin-left:auto;margin-right:32px;margin-bottom:6px;}
+    .cp{width:8px;height:8px;background:#fff;display:inline-block;}
+    .gp{width:16px;height:16px;display:inline-block;}
+    .g1{background:#5d8a29;} .g2{background:#4e7522;} .g3{background:#6a9e30;}
+    .d1{background:#8b5e3c;} .d2{background:#7a4f30;} .d3{background:#9a6b45;}
+    .grass-row{display:flex;}
+    .dirt-row{display:flex;}
+    .title-bar{background:#1d2d6b;border-top:3px solid #3a4f9e;border-left:3px solid #3a4f9e;border-right:3px solid #0d1540;border-bottom:3px solid #0d1540;padding:12px 16px;margin:16px 0;text-align:center;}
+    .title-text{color:#ffff55;font-size:11px;text-shadow:2px 2px #777700;letter-spacing:2px;}
+    .sub-text{color:#aaffaa;font-size:7px;margin-top:8px;letter-spacing:1px;}
+    .msg-box{background:#1a1a2a;border-top:3px solid #333355;border-left:3px solid #333355;border-right:3px solid #0a0a18;border-bottom:3px solid #0a0a18;padding:16px;margin:12px 0;}
+    .msg-text{color:#cccccc;font-size:7px;line-height:2.4;letter-spacing:0.5px;}
+    .player-name{color:#55ff55;}
+    .code-label{color:#aaaaaa;font-size:6px;margin-bottom:6px;letter-spacing:1px;}
+    .code-box{background:#050510;border-top:3px solid #222244;border-left:3px solid #222244;border-right:3px solid #3355aa;border-bottom:3px solid #3355aa;padding:14px;text-align:center;}
+    .code-digits{display:flex;justify-content:center;gap:8px;}
+    .digit{background:#0d1a3a;border-top:2px solid #1a3060;border-left:2px solid #1a3060;border-right:2px solid #080e20;border-bottom:2px solid #080e20;width:32px;height:36px;display:inline-flex;align-items:center;justify-content:center;color:#55ffff;font-size:14px;}
+    .xp-label{color:#80e020;font-size:6px;margin-bottom:4px;letter-spacing:1px;margin-top:16px;}
+    .xp-track{background:#0a0a0a;border:2px solid #333;height:10px;display:flex;}
+    .xp-fill{background:#80e020;width:72%;height:100%;}
+    .mc-btn{display:block;background:#5a5a5a;border-top:4px solid #8a8a8a;border-left:4px solid #8a8a8a;border-right:4px solid #2a2a2a;border-bottom:4px solid #2a2a2a;color:#fff;font-family:'Press Start 2P',monospace;font-size:8px;padding:14px 20px;text-align:center;text-decoration:none;letter-spacing:1px;margin:16px 0 8px;}
+    .dp{width:8px;height:4px;display:inline-block;}
+    .da{background:#8b5e3c;} .db{background:#7a4f30;}
+    .warn-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px;}
+    .warn-icon{color:#ffaa00;font-size:8px;flex-shrink:0;}
+    .warn-text{color:#ffaa00;font-size:6px;line-height:2.2;}
+    .heart{width:10px;height:10px;display:inline-block;}
+    .hearts{display:flex;gap:4px;justify-content:center;margin:12px 0;}
+    .footer{text-align:center;margin-top:16px;padding-top:12px;border-top:2px solid #333;}
+    .footer-text{color:#555;font-size:6px;line-height:2.5;letter-spacing:0.5px;}
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <div class="inner">
+
+      <div class="sky">
+        <div class="sun"></div>
+        <div class="cloud-row">
+          <div style="display:inline-flex;flex-direction:column;">
+            <div><span class="cp"></span><span class="cp"></span><span class="cp"></span></div>
+            <div><span class="cp"></span><span class="cp"></span><span class="cp"></span><span class="cp"></span><span class="cp"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grass-row">
+        <span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span><span class="gp g2"></span><span class="gp g1"></span><span class="gp g3"></span>
+      </div>
+      <div class="dirt-row">
+        <span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span><span class="gp d3"></span><span class="gp d1"></span><span class="gp d2"></span>
+      </div>
+
+      <div class="title-bar">
+        <div class="title-text">[ {{ title }} ]</div>
+        <div class="sub-text">-- {{ subtitle }} --</div>
+      </div>
+
+      <div class="msg-box">
+        <div class="msg-text">玩家 <span class="player-name">{{ account }}</span> 你好，</div>
+        <div style="height:8px;"></div>
+        <div class="msg-text">感謝你加入我們的伺服器！請輸入以下驗證碼完成流程。</div>
+      </div>
+
+      <div class="code-label">&gt; 驗證碼 :</div>
+      <div class="code-box">
+        <div class="code-digits">
+          {% for c in code %}
+          <div class="digit">{{ c }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="xp-label">&gt; 驗證期限 : {{ expire_minutes }} 分鐘</div>
+      <div class="xp-track"><div class="xp-fill"></div></div>
+
+      <a class="mc-btn" href="http://127.0.0.1:{{ port }}{{ route }}">[ 點擊此處進行驗證 ]</a>
+
+      <div>
+        <span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span><span class="dp da"></span><span class="dp db"></span>
+      </div>
+
+      <div class="warn-row">
+        <div class="warn-icon">[!]</div>
+        <div class="warn-text">此驗證碼將於 {{ expire_minutes }} 分鐘後失效，請盡快完成驗證</div>
+      </div>
+      <div class="warn-row">
+        <div class="warn-icon">[!]</div>
+        <div class="warn-text">如非本人操作請忽略此信，你的帳號將不會被啟用</div>
+      </div>
+
+      <div class="hearts">
+        <span class="heart" style="background:#ff3333;"></span>
+        <span class="heart" style="background:#ff3333;"></span>
+        <span class="heart" style="background:#ff3333;"></span>
+        <span class="heart" style="background:#ff3333;"></span>
+        <span class="heart" style="background:#ff3333;"></span>
+        <span class="heart" style="background:#555;"></span>
+        <span class="heart" style="background:#555;"></span>
+        <span class="heart" style="background:#555;"></span>
+        <span class="heart" style="background:#555;"></span>
+        <span class="heart" style="background:#555;"></span>
+      </div>
+
+      <div class="footer">
+        <div class="footer-text">此為系統自動發送，請勿直接回覆</div>
+        <div class="footer-text" style="color:#333;">Minecraft Shopping System</div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

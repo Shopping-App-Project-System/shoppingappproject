@@ -2,13 +2,35 @@
 from flask import request,redirect,render_template,session,url_for,flash
 from flask_mail import Message
 from datetime import datetime, timedelta
+from mariadb import IntegrityError
 
 # _______________________________________自定義模組_______________________________________
 from models import updateUser,createUser,getUser,getUserList
-from settings import SESSION_AUTHO,MAIL_USERNAME,PROFILE_PIC_PATH,APP_PORT,PROFILE_TEMP_PATH,PROFILE_TEMP_FOLDER,CODE_EXPIRE_MINUTES
-from utils import checkUserInput,getResponseForm,getVerifyToken,getRandomVerifyCode,move_image,validateMobile,validateEmail,getResponseFile,copy_image,save_image,requestParsor,validateMCUserAccount,_is_expired,_mc_mail_html
+from settings import SESSION_AUTHO,MAIL_USERNAME,PROFILE_PIC_PATH,APP_PORT,PROFILE_TEMP_PATH,PROFILE_TEMP_FOLDER
+from utils import checkUserInput,getResponseForm,getVerifyToken,getRandomVerifyCode,move_image,validateMobile,validateEmail,getResponseFile,copy_image,save_image,requestParsor,validateMCUserAccount
 from extension import mail
 # _______________________________________初始化___________________________________________
+
+CODE_EXPIRE_MINUTES = 30
+
+# ________________________________________helpers_____________________________________________
+
+def _is_expired(expires_at):
+    if expires_at is None:
+        return True
+    return datetime.now() > expires_at
+
+def _mc_mail_html(account, code, token, route, title="帳號驗證", subtitle="請完成驗證以加入伺服器"):
+    return render_template(
+        "mail_verify.html",
+        account=account,
+        code=str(code),
+        route=route,
+        title=title,
+        subtitle=subtitle,
+        port=APP_PORT,
+        expire_minutes=CODE_EXPIRE_MINUTES
+    )
 
 # ________________________________________services_____________________________________________
 
@@ -87,8 +109,8 @@ def forgot_password_service(account,email):
 @requestParsor
 def forgot_verify_account_service(token,code):
     if request.method == "GET":
-        expires_at = getUser({"token":token},"code_expires_at")
-        if expires_at is None or _is_expired(expires_at):
+        user = getUser({"token":token},"code_expires_at")
+        if user is None or _is_expired(user["code_expires_at"]):
             flash("驗證碼已過期，請重新操作")
             return render_template("login.html")
         return render_template("verify_code.html",token=token,form_action=f"/login/find/account/email/{token}/verify/code")
@@ -114,8 +136,8 @@ def forgot_verify_account_service(token,code):
 @requestParsor
 def reset_verify_password_service(token,code):
     if request.method == "GET":
-        expires_at = getUser({"token":token},"code_expires_at")
-        if expires_at is None or _is_expired(expires_at):
+        user = getUser({"token":token},"code_expires_at")
+        if user is None or _is_expired(user["code_expires_at"]):
             flash("驗證碼已過期，請重新操作")
             return render_template("login.html")
         return render_template("verify_code.html",token=token,form_action=f"/login/find/password/email/{token}/verify/code")
@@ -205,7 +227,7 @@ def register_service(name,account,password,mobile,email,address,profile_pic):
         flash("信箱已被使用")
         return render_template("register.html")
 
-    # 寫入資料庫（保留 Exception 作為最後防線）
+    # 寫入資料庫（仍保留 Exception 作為最後防線）
     try:
         createUser(name,account,password,mobile,email,address)
     except Exception:
@@ -271,8 +293,8 @@ def reset_password_service(token,password,confirm_password):
 @requestParsor
 def verify_register_service(token,code):
     if request.method == "GET":
-        expires_at = getUser({"token":token},"code_expires_at")
-        if expires_at is None or _is_expired(expires_at):
+        user = getUser({"token":token},"code_expires_at")
+        if user is None or _is_expired(user["code_expires_at"]):
             flash("驗證碼已過期，請重新註冊")
             return render_template("login.html")
         return render_template("verify_code.html",token=token,form_action=f"/register/email/{token}/verify/code")

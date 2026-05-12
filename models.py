@@ -116,6 +116,20 @@ def getUser(cursor, where: dict, *selections):
         return users
     return None
 
+@db_transaction
+def getUserList(cursor, *selections, where: dict = None):
+    cols = ",".join(f"`{s}`" for s in selections)
+    
+    if where:
+        where_key = tuple(where.keys())
+        where_value = tuple(where.values())
+        where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
+        cursor.execute(f"SELECT {cols} FROM {BRANCH_A_TABLE} WHERE {where_sql}", where_value)
+    else:
+        cursor.execute(f"SELECT {cols} FROM {BRANCH_A_TABLE}")
+    
+    return cursor.fetchall()
+
 
 # ── Branch B：商品卡陳列 ──────────────────────────────────────────────────────────
 
