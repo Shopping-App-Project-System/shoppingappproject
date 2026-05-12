@@ -192,7 +192,11 @@ def index(cursor):
 @db_transaction
 def get_product_by_id(cursor, product_id):
     # 依 id 取得單一商品的完整資料
-    cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
+    cursor.execute("""
+        SELECT p.*, pc.category as category
+        FROM products p    
+        LEFT JOIN product_category pc ON p.category = pc.id
+        WHERE p.id = %s""", (product_id,))
     return cursor.fetchone()
 
 @db_transaction
