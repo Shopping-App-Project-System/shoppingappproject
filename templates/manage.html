@@ -172,9 +172,10 @@
     <div class="container topbar-inner">
         <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         <nav class="nav-links">
-            {# 「商品管理」與「數據圖表」是同一個頁面的兩個分頁,點擊用 JS 切換不換 URL #}
-            <a href="#" data-tab="products" class="active" onclick="switchTab(event,'products')">⚙ 商品管理</a>
-            <a href="#" data-tab="dashboard" onclick="switchTab(event,'dashboard')">📈 數據圖表</a>
+            {# 「數據圖表」與「商品管理」是同一個頁面的兩個分頁,點擊用 JS 切換不換 URL #}
+            {# 預設分頁:數據圖表 (進到 /manage 第一眼看到的就是圖表) #}
+            <a href="#" data-tab="dashboard" class="active" onclick="switchTab(event,'dashboard')">📈 數據圖表</a>
+            <a href="#" data-tab="products" onclick="switchTab(event,'products')">⚙ 商品管理</a>
             <a href="/manage/log" >📋 操作紀錄</a>
             <a href="/manage/orders" >📊 交易訂單</a>
         </nav>
@@ -199,11 +200,12 @@
 
         {# ─────────────────────────────────────────────────────────────
            分頁容器:
-             - #panel-products 是預設顯示的「商品管理」分頁
-             - #panel-dashboard 由 AJAX 載入儀表板 partial,預設隱藏
+             - #panel-dashboard 是預設顯示的「數據圖表」分頁
+               (進到 /manage 第一眼看到的就是儀表板)
+             - #panel-products 切過去才會顯示
            點擊 nav-links 的 data-tab="..." 會切換顯示哪一個。
            ───────────────────────────────────────────────────────────── #}
-        <div id="panel-products">
+        <div id="panel-products" style="display:none;">
 
         <!-- 新增商品 -->
         <div class="mc-block">
@@ -371,8 +373,8 @@
 
         </div> {# /#panel-products #}
 
-        {# 數據圖表分頁容器 — 預設隱藏,點擊「📈 數據圖表」時用 AJAX 載入 partial 進來 #}
-        <div id="panel-dashboard" style="display:none;">
+        {# 數據圖表分頁容器 — 預設顯示,頁面載入後自動觸發 AJAX 載入 partial #}
+        <div id="panel-dashboard">
             <div style="text-align:center;padding:60px 20px;font-family:var(--font-pixel);font-size:.7rem;color:#aaa;text-shadow:1px 1px 0 #000;">📡 載入儀表板中...</div>
         </div>
 
@@ -581,6 +583,15 @@ async function loadDashboard() {
         console.error(err);
     }
 }
+
+/* ────────────────────────────────────────────────────────────────────────
+   頁面初始載入:由於預設分頁已改為「數據圖表」,進到 /manage 時要立刻
+   主動載入儀表板 partial,使用者才看得到圖表;若預設仍是商品管理分頁
+   則不必這段 (使用者要等點到圖表按鈕才載入)。
+   ──────────────────────────────────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+    loadDashboard();
+});
 </script>
 
 </body>
