@@ -26,14 +26,9 @@ from flask import request, redirect, render_template, session, url_for, flash
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
 from utils import get_auth, validateCreditCard, requestParsor, getVerifyToken
-
-# 【修改說明】
-# notify_player 和 give_item 原本從 models import，
-# 但 models 是放資料庫操作的，RCON 功能不應該放那裡。
-# 改成從 mc_bridge 直接 import，邏輯更清晰。
-from mc_bridge import notify_player, give_item
-
-from models import (get_product_by_id,
+from models import (notify_player,
+                    give_item,
+                    get_product_by_id,
                     get_product_stock,
                     find_cart_item,
                     upsert_cart,
