@@ -36,6 +36,9 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_USE_TLS = False
 MAIL_USE_SSL = True
 
+
+CODE_EXPIRE_MINUTES = 5
+
 # ________________________FLASK_________________________
 APP_PORT = 7775 # FLASK啟用時所用的埠號 預設為8000 可以自行調整
 SESSION_KEY = "MyShoppingAppProject" # 建立SESSION時使用的SESSION KEY

@@ -33,8 +33,10 @@
         .login-row{margin-top:16px;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
         .login-row span{font-family:var(--font-pixel);font-size:.65rem;color:#ccc;text-shadow:1px 1px 0 #000;}
         .login-row a{font-family:var(--font-pixel);font-size:.7rem;color:var(--diamond);text-shadow:1px 1px 0 #000;text-decoration:underline;}
-        /* 表單捲軸（欄位多） */
-        .auth-form{overflow-y:auto;max-height:calc(100vh - 160px);}
+        /* 表單不限制高度，讓頁面自然延伸 */
+        .auth-form{overflow-y:visible;max-height:none;}
+        .auth-card{height:auto;align-items:stretch;}
+        .auth-layout{align-items:flex-start;padding:40px 16px 60px;}
     </style>
 </head>
 <body>

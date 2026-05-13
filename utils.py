@@ -1,5 +1,5 @@
 # __________________________________________內部模組_____________________________________
-from flask import request,redirect,url_for,session
+from flask import request,redirect,url_for,render_template
 from werkzeug.utils import secure_filename
 from secrets import token_urlsafe
 from random import randint
@@ -8,11 +8,10 @@ from shutil import move,copy
 import os
 import re
 import inspect
-from datetime import datetime
-
+from datetime import datetime, timedelta
 # _______________________________________自定義模組_______________________________________
 from models import getUser
-from settings import ALLOWED_EXTENSIONS,SESSION_AUTHO
+from settings import ALLOWED_EXTENSIONS,SESSION_AUTHO,APP_PORT,CODE_EXPIRE_MINUTES
 import warnings
 # _______________________________________初始化___________________________________________
 
@@ -38,32 +37,10 @@ def requestParsor(fun):
         result = {k: v for k, v in result.items() if k in sig.parameters.keys()}
         return fun(*args, **kwargs, **result)
     return wrap
-# _______________________________________全局例外處理______________________________________
-# def exceptionCatcher(msg):
-#     def decorator(fun):
-#         @wraps(fun)
-#         def wrap(*args,**kwargs):
-            
-#             try:
-#                 return fun(*args,**kwargs)
-#             except Exception as e:
-#                 session['error'] = {
-#                     'msg': str(msg),
-#                     'exception': str(e),
-#                     'route': request.path,
-#                     'method': request.method,
-#                     'dt': str(datetime.now()),
-#                     'account': session.get(SESSION_AUTHO)
-#                 }
-#                 return redirect(url_for('error'))
-#         return wrap
-#     return decorator
 
-    
 # ________________________________________API_____________________________________________
-        
+
 def getResponseForm(datas, *selections, default=None):
-    # 不傳 selections：回傳所有欄位值；傳單一欄位：直接回傳值；傳多個：回傳 tuple
     if not len(selections):
         return tuple(datas.get(key, default) for key in datas.keys())
     else:
@@ -85,51 +62,64 @@ def getResponseArgs(datas, *selections, default=None):
         return result
 
 def getResponseFile(files, *selections):
-    # 從 request.files 取出指定的 FileStorage 物件，邏輯同 getResponseForm
     if not selections:
         return tuple(files.get(key) for key in files.keys())
-    
     datas = tuple(files.get(selection) for selection in selections)
-    
     if len(selections) == 1:
         return datas[0]
-    
     return datas
 
 def checkUserInput(*args):
     missing = [msg for msg, value in args if not value]
     return "、".join(missing)
 
+# ── 過期判斷 ──────────────────────────────────────────────────────────────────
+
+def _is_expired(expires_at):
+    if expires_at is None:
+        return True
+    return datetime.now() > expires_at
+
+# ── Minecraft 風格驗證信 ───────────────────────────────────────────────────────
+
+def _mc_mail_html(account, code, token, route, title="帳號驗證", subtitle="請完成驗證以加入伺服器"):
+    return render_template(
+        "mail_verify.html",
+        account=account,
+        code=str(code),
+        route=route,
+        title=title,
+        subtitle=subtitle,
+        port=APP_PORT,
+        expire_minutes=CODE_EXPIRE_MINUTES
+    )
+
 # ── 驗證碼與 Token ────────────────────────────────────────────────────────────
 
-def getRandomVerifyCode(digits):return "".join(list(str(randint(0,9)) for _ in range(digits)))
-# 產生指定位數的純數字驗證碼，例如 getRandomVerifyCode(6) → '473829'
+def getRandomVerifyCode(digits):
+    return "".join(list(str(randint(0,9)) for _ in range(digits)))
 
-def getVerifyToken(digits):return token_urlsafe(digits)    
-# 產生指定長度的 URL-safe 隨機 token，用於驗證信連結
+def getVerifyToken(digits):
+    return token_urlsafe(digits)
 
 def validateEmail(email):
-    # 信箱格式：第一個英文(不分大小寫)，英文或數字，@，英文或數字，.，com
     pattern = re.compile(r'^[a-zA-Z][a-zA-Z0-9]*@[a-zA-Z0-9]+\.com$')
     return pattern.search(email)
 
-
 def validateMobile(mobile):
-    # 台灣手機格式：09 開頭，後接 8 位數字，共 10 碼
     pattern = re.compile(r'^09\d{8}$')
     return pattern.search(mobile)
 
-
 def validateCreditCard(card):
-    # 信用卡格式：16 位數字，每 4 碼可用 - 或空格分隔（可省略）
-    # \d{4} 對應每組 4 碼，[-\s]? 對應可有可無的分隔符號
     pattern = re.compile(r'^\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}$')
     return pattern.search(card)
 
 def validateMCUserAccount(user_account):
     pattern = re.compile(r"^[a-zA-Z0-9_]{1,16}$")
     return pattern.search(user_account)
-# __________________________________________________________________________________
+
+# ── 路徑處理 ──────────────────────────────────────────────────────────────────
+
 def normalize_path(path):
     if path:
         path = path.replace("\\", "/")
@@ -156,7 +146,7 @@ def del_imgae(src):
     src = src.lstrip("/")
     if os.path.exists(src):
         os.remove(src)
-        
+
 def save_image(file, folder, filename=None):
     if file and '.' in file.filename:
         ext = file.filename.rsplit('.', 1)[1].lower()
@@ -170,11 +160,12 @@ def save_image(file, folder, filename=None):
             path = os.path.join(folder, filename)
             return "/" + path.replace("\\", "/")
     return None
-# _______________________Auth________________
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
 def get_auth(user_account):
-    return{
+    return {
         "logged_in"  : True,
         "account"    : user_account,
         "profile_pic": normalize_path(getUser({"user_account": user_account}, "pic_path"))
     }
-    

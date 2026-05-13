@@ -537,7 +537,7 @@
             <div class="search-container">
                 <span class="search-label">🔍 搜尋物品欄</span>
                 <form action="/" method="GET" class="search-form">
-                    <select name="category_id" class="search-select">
+                    <select name="category" class="search-select">
                         <option value="">所有分類</option>
                         {% for cat in categories %}
                         <option value="{{ cat.category }}" {% if current_cat==cat.category %}selected{% endif %}>{{ cat.category }}</option>
