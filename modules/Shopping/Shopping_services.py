@@ -208,20 +208,19 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
     order_id = insert_order(user_account, total, payment, note, credit_card_number)
     order_seq = get_user_order_seq(user_account, order_id)
     # 逐筆將購物車商品寫入訂單明細、扣庫存、發放道具
+    items_list = []
     for row in rows:
         insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
-        # 扣減庫存
         deduct_product_stock(row["product_id"], row['quantity'])
-        # 查出商品的 MC 道具 ID，直接發道具進背包
         product = get_product_by_id(row["product_id"])
         mc_item_id = product.get("mc_item_id")
         if mc_item_id:
             give_item(user_account, mc_item_id, row["quantity"])
-            notify_player(user_account, f"✅ 訂單 #{order_seq} 已發放:{product['name']} x{row['quantity']}")
+        items_list.append(f"{row['name']} x{row['quantity']}")
 
     # 清空購物車
     clear_cart(user_account)
-    notify_player(user_account, f"訂單 #{order_seq} 建立成功!感謝購買!")
+    notify_player(user_account, f"✅ 訂單 #{order_seq} 已發放:{', '.join(items_list)}")
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 

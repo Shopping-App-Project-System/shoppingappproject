@@ -30,8 +30,7 @@ def send_mc_command(command: str):
     """送出一個 RCON 指令"""
     try:
         with MCRcon(HOST, PASSWORD, port=PORT) as mcr:
-            response = mcr.command(command)
-            print(f"[MC] ✓ {command!r} → {response!r}")
+            mcr.command(command)
             return True
     except Exception as e:
         print(f"[MC] ✗ 指令失敗: {e}")
