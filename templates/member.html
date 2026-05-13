@@ -331,11 +331,10 @@
                                 <th>訂單編號</th>
                                 <th>金額</th>
                                 <th>狀態</th>
-                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for o in orders %}
+                            {% for o in orders if o.status == '已完成' %}
                             <tr class="order-row" data-order-id="{{ o.id }}">
                                 <td>#{{ loop.index }}</td>
                                 <td>NT$ {{ o.total | int }}</td>
@@ -350,30 +349,9 @@
                                     <span class="status">{{ o.status }}</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {#
-                                        ─────────────────────────────────────────────────────────
-                                        【取消訂單按鈕的顯示邏輯】
-
-                                        原本此處限制 status == '處理中' 才顯示「取消訂單」按鈕，
-                                        但因 insert_order 已調整為下單後直接寫入「已完成」，
-                                        沿用舊條件會導致按鈕永遠不會出現，使用者無法取消任何訂單。
-
-                                        為了與後端 get_order 的放寬規則保持一致，此處改為：
-                                        只要訂單狀態「不是已取消」，就顯示取消按鈕，
-                                        以保留使用者在「已完成」狀態下仍可取消訂單的權益。
-                                        ─────────────────────────────────────────────────────────
-                                    #}
-                                    {% if o.status != '已取消' %}
-                                    <form method="POST" action="/order/{{ o.id }}/cancel" style="display:inline"
-                                        onsubmit="return confirm('確定要取消此訂單嗎？')">
-                                        <button type="submit" class="btn-cancel">✗ 取消訂單</button>
-                                    </form>
-                                    {% endif %}
-                                </td>
                             </tr>
                             <tr class="order-detail-row" id="detail-{{ o.id }}">
-                                <td class="order-detail-cell" colspan="4">
+                                <td class="order-detail-cell" colspan="3">
                                     <div class="order-detail-inner">
                                         <div class="detail-loading">載入中…</div>
                                     </div>
