@@ -186,7 +186,8 @@ def get_cart_items(cursor, user_account):
     # 取得該會員的所有購物車商品，JOIN 商品表取得名稱、價格、圖片，JOIN 庫存表取得剩餘庫存
     cursor.execute(
         f'''SELECT c.id, c.user_id, c.product_id, c.quantity,
-                    p.name, COALESCE(p.sale_price, p.original_price) AS price, p.product_pic AS image_path,
+                    p.name, COALESCE(p.sale_price, p.original_price) AS price,
+                    p.original_price, p.product_pic AS image_path,
                     p.is_active,
                     stock.product_quantity AS stock
             FROM `{BRANCH_C_CART_TABLE}` c

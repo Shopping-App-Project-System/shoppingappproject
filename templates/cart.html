@@ -282,6 +282,9 @@
                     </div>
 
                     <div class="item-side">
+                        {% if item.discount > 0 %}
+                        <span style="font-size:0.75rem;color:#e74c3c;text-decoration:line-through;">NT$ {{ (item.original_price * item.qty) | int }}</span>
+                        {% endif %}
                         <strong class="item-total">NT$ {{ (item.price * item.qty) | int }}</strong>
                         {% if item.remove_url %}
                         <a href="{{ item.remove_url }}" class="btn btn-danger">✗ 移除</a>

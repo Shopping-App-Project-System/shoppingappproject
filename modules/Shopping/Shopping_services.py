@@ -87,22 +87,25 @@ def cart_service():
 
     items    = []
     subtotal = 0
+    discount = 0
     for row in rows:
         item_total = row['price'] * row['quantity']
         subtotal  += item_total
+        discount  += (row['original_price'] - row['price']) * row['quantity']
         items.append({
             'id'        : row['id'],
             'image'     : row['image_path'],
             'name'      : row['name'],
             'qty'       : row['quantity'],
             'price'     : row['price'],
+            'original_price': row['original_price'],
+            'discount'  : (row['original_price'] - row['price']) * row['quantity'],
             'remove_url': url_for('C.cart_remove', item_id=row['id']),
             'stock'     : row['stock'],
             'is_active' : row['is_active'],
         })
 
-    discount = 0
-    total    = subtotal - discount
+    total = subtotal
 
     summary = {
         'subtotal': subtotal,
