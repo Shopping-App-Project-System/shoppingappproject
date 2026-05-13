@@ -168,7 +168,7 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
             submit_url=url_for("C.checkout"),
             order_items=order_items,
             summary={"total": subtotal},
-            payment_methods=["ATM 轉帳", "信用卡"],
+            payment_methods=["信用卡"],
             saved_cards=saved_cards,
             auth=get_auth(user_account)
         )
