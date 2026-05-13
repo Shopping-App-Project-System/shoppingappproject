@@ -45,8 +45,7 @@ from models import (get_product_by_id,
                     get_member_cards,
                     deduct_product_stock,
                     get_cart_item_stock,
-                    update_cart_qty,
-                    )
+                    update_cart_qty)
 
 
 # ── 加入購物車 ────────────────────────────────────────────────────────────────────────────────
@@ -222,8 +221,8 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
 
     # 清空購物車
     clear_cart(user_account)
-    # 訂單建立成功通知
-    notify_player(user_account, f"訂單 #{order_id} 建立成功！感謝購買！")
+    items_summary = ", ".join(f"{row['name']} x{row['quantity']}" for row in rows)
+    notify_player(user_account, f"感謝購買！{items_summary}")
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
