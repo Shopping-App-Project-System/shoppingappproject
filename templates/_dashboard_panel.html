@@ -46,6 +46,10 @@
     display:grid; grid-template-columns:2fr 1fr;
     gap:18px; margin-bottom:18px;
 }
+/* 單一圖表佔滿整列時用,例如刪除會員消費分布後的訂單數量圖 */
+#dashboard-panel .chart-grid--full{
+    grid-template-columns:1fr;
+}
 #dashboard-panel .chart-panel{
     border:var(--border-block);
     box-shadow:var(--shadow-inset),5px 5px 0 #000;
@@ -55,12 +59,63 @@
     background:repeating-linear-gradient(180deg,var(--lapis) 0,var(--lapis) 6px,var(--lapis-dk) 6px,var(--lapis-dk) 12px);
     border-bottom:var(--border-block);
     padding:12px 16px;
+    /* flex 讓標題在左、下拉選單在右 */
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
 }
 #dashboard-panel .chart-panel-header h3{
     font-family:var(--font-pixel); font-size:.7rem;
     color:var(--white-mc); text-shadow:2px 2px 0 #000;
     margin:0;
 }
+/* ── 圖表 header 內的年份查詢區 ──
+   外觀沿用 MC 主題:深色背景、像素字、黑邊框 */
+#dashboard-panel .year-filter{
+    display:flex; align-items:center; gap:6px;
+}
+#dashboard-panel .year-input{
+    font-family:var(--font-pixel); font-size:.6rem;
+    color:var(--white-mc); text-shadow:1px 1px 0 #000;
+    background:repeating-linear-gradient(180deg,#1a1a1a 0,#1a1a1a 6px,#222 6px,#222 12px);
+    border:3px solid #000;
+    padding:6px 8px;
+    outline:none;
+    width:80px;
+    text-align:center;
+    transition:border-color .15s;
+    -moz-appearance:textfield;        /* 隱藏 Firefox 的 number input 上下小箭頭 */
+}
+#dashboard-panel .year-input::-webkit-outer-spin-button,
+#dashboard-panel .year-input::-webkit-inner-spin-button{
+    /* 隱藏 Chrome/Safari 的 number input 上下小箭頭,讓欄位更乾淨 */
+    -webkit-appearance:none; margin:0;
+}
+#dashboard-panel .year-input:focus{ border-color:var(--diamond); }
+#dashboard-panel .year-input::placeholder{ color:#888; }
+
+#dashboard-panel .year-search-btn{
+    font-family:var(--font-pixel); font-size:.6rem;
+    color:var(--white-mc); text-shadow:1px 1px 0 #000;
+    background:repeating-linear-gradient(180deg,var(--emerald) 0,var(--emerald) 6px,var(--emerald-dk) 6px,var(--emerald-dk) 12px);
+    border:3px solid #000;
+    padding:6px 10px;
+    cursor:pointer;
+    transition:filter .15s, transform .08s steps(2);
+}
+#dashboard-panel .year-search-btn:hover{
+    filter:brightness(1.2);
+    transform:translateY(-1px);
+}
+#dashboard-panel .year-search-btn:active{ transform:translateY(0); }
+#dashboard-panel .year-reset-btn{
+    font-family:var(--font-pixel); font-size:.55rem;
+    color:#aaa; text-shadow:1px 1px 0 #000;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    padding:2px 4px;
+}
+#dashboard-panel .year-reset-btn:hover{ color:var(--white-mc); }
 #dashboard-panel .chart-panel-body{
     padding:18px; background:#fafafa;
     min-height:340px;
@@ -131,15 +186,24 @@
         </div>
     </div>
 
-    {# ── 第二列:訂單數量 (大) + 會員消費分布 (小) ──────── #}
-    <div class="chart-grid">
+    {# ── 第二列:訂單數量(獨佔整列,移除會員消費分布圖後擴大) ── #}
+    <div class="chart-grid chart-grid--full">
         <div class="chart-panel">
-            <div class="chart-panel-header"><h3>📦 近 12 個月訂單數量</h3></div>
+            <div class="chart-panel-header">
+                <h3>📦 全年訂單數量(依月份)</h3>
+                {# 年份查詢區:輸入框 + 查詢按鈕。空白代表「全部年份」 #}
+                <div class="year-filter">
+                    <input type="number"
+                           id="year-input"
+                           class="year-input"
+                           min="2000" max="2100"
+                           placeholder="年份"
+                           aria-label="輸入年份查詢">
+                    <button type="button" id="year-search-btn" class="year-search-btn">🔍 查詢</button>
+                    <button type="button" id="year-reset-btn" class="year-reset-btn" title="顯示全部年份">全部</button>
+                </div>
+            </div>
             <div class="chart-panel-body"><canvas id="chartOrders"></canvas></div>
-        </div>
-        <div class="chart-panel">
-            <div class="chart-panel-header"><h3>👥 會員消費分布</h3></div>
-            <div class="chart-panel-body"><canvas id="chartMembers"></canvas></div>
         </div>
     </div>
 
@@ -189,6 +253,10 @@
         bodyFont:  { family: '"Press Start 2P"', size: 9 },
     };
 
+    /* 訂單數量圖的 Chart 實例 (保留 reference,切換年份時用 destroy 重建)
+       Chart.js 不能直接更新同一個 canvas 而不清理舊圖,否則會疊圖. */
+    let ordersChart = null;
+
     // ── 主流程 ──────────────────────────────────────────────────
     fetch("/manage/dashboard/data")
         .then(r => {
@@ -201,7 +269,10 @@
             renderRevenueTrend(data.revenue_trend);
             renderOrdersByMonth(data.orders_by_month);
             renderTopProducts(data.top_products);
-            renderMemberDist(data.member_dist);
+            // renderMemberDist 已移除 (會員消費分布圖已從版面刪除)
+
+            // 填入年份下拉選單,並綁定切換事件
+            setupYearSelector(data.available_years, data.selected_year);
         })
         .catch(err => {
             const lb = document.getElementById("dashboard-loading");
@@ -211,6 +282,70 @@
             }
             console.error(err);
         });
+
+    /* ────────────────────────────────────────────────────────────
+       年份查詢:輸入框 + 按鈕 (依使用者偏好,不綁 Enter 鍵)
+       - 輸入年份按「查詢」按鈕 → fetch 該年資料
+       - 點「全部」按鈕 → 清空輸入框並 fetch 全部年份的彙總
+       - 切換時只重新打 API 拿訂單資料,只重畫該圖,其他不動
+       ──────────────────────────────────────────────────────────── */
+    function setupYearSelector(years, selected) {
+        const input    = document.getElementById("year-input");
+        const searchBtn= document.getElementById("year-search-btn");
+        const resetBtn = document.getElementById("year-reset-btn");
+        if (!input || !searchBtn || !resetBtn) return;
+
+        // 預設值:後端決定的年份 (通常是最新有資料的年份);若為 null 代表「全部」
+        input.value = (selected === null || selected === undefined) ? "" : String(selected);
+
+        // 提示使用者哪幾年有資料 (放在 placeholder / title,不強制限制輸入)
+        if (years && years.length > 0) {
+            const hint = `有資料:${years.join(", ")}`;
+            input.title = hint;
+            // 若使用者清空輸入框,placeholder 給點提示
+            if (years.length === 1) {
+                input.placeholder = String(years[0]);
+            } else {
+                input.placeholder = `${years[years.length - 1]}~${years[0]}`;
+            }
+        }
+
+        async function applyYearFilter() {
+            const raw = input.value.trim();
+            // 空字串視為「全部年份」 (後端 year=all)
+            const yearParam = raw === "" ? "all" : raw;
+
+            // 簡單防呆:若有輸入,必須是 4 位數年份
+            if (raw !== "" && !/^\d{4}$/.test(raw)) {
+                alert("請輸入 4 位數的年份,例如 2026");
+                input.focus();
+                return;
+            }
+
+            try {
+                const res = await fetch("/manage/dashboard/data?year=" + encodeURIComponent(yearParam));
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                const data = await res.json();
+                renderOrdersByMonth(data.orders_by_month);
+            } catch (err) {
+                console.error("查詢年份失敗:", err);
+                alert("載入失敗:" + err.message);
+            }
+        }
+
+        // 按下「查詢」按鈕
+        searchBtn.addEventListener("click", applyYearFilter);
+
+        /* 注意:依照需求,只透過「查詢」按鈕觸發查詢,
+           不綁定 Enter 鍵。若使用者按 Enter,瀏覽器不會做任何事
+           (此 input 不在 form 內,Enter 不會送出表單) */
+
+        // 按下「全部」清空輸入並查詢全部年份
+        resetBtn.addEventListener("click", () => {
+            input.value = "";
+            applyYearFilter();
+        });
+    }
 
     function renderSummary(s) {
         document.getElementById("sum-revenue").textContent = fmtMoney(s.total_revenue);
@@ -259,9 +394,17 @@
     }
 
     function renderOrdersByMonth(rows) {
-        new Chart(document.getElementById("chartOrders"), {
+        // 切換年份時會重新呼叫此函數;Chart.js 不允許同 canvas 重複 new,
+        // 因此先銷毀舊實例 (若存在) 再建立新的,避免圖表疊加或事件殘留.
+        if (ordersChart) {
+            ordersChart.destroy();
+            ordersChart = null;
+        }
+        ordersChart = new Chart(document.getElementById("chartOrders"), {
             type: "bar",
             data: {
+                /* X 軸標籤:後端 get_orders_count_by_month 已經回傳 '1月'..'12月' 共 12 筆,
+                   且依月份升冪排序 (見 models.py)。前端直接取用,不再做轉換或排序。 */
                 labels: rows.map(r => r.month),
                 datasets: [{
                     label: "訂單數",
@@ -272,9 +415,36 @@
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: pixelTooltip },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        ...pixelTooltip,
+                        /* 因為這張圖是「彙總所有年份」,不顯示特定年月,
+                           tooltip 顯示「X 月訂單數: N 筆」即可,不含年份。 */
+                        callbacks: {
+                            title: ctx => rows[ctx[0].dataIndex].month + " 訂單數",
+                            label: ctx => ctx.parsed.y + " 筆"
+                        }
+                    }
+                },
                 scales: {
-                    x: { grid: gridStyle, ticks: { font: { size: 8 } } },
+                    x: {
+                        grid: gridStyle,
+                        ticks: {
+                            font: { size: 8 },
+                            color: "#1A1A1A",
+                            /* 強制顯示每一個月的標籤:
+                               - autoSkip:false → Chart.js 不要為了避免重疊而省略標籤
+                               - maxTicksLimit:12 → 上限 12 (剛好對應 1~12 月)
+                               - maxRotation/minRotation 0 → 水平不傾斜
+                               - padding:4 → 標籤與柱子的間距 */
+                            autoSkip: false,
+                            maxTicksLimit: 12,
+                            maxRotation: 0,
+                            minRotation: 0,
+                            padding: 4,
+                        }
+                    },
                     y: { beginAtZero: true, grid: gridStyle, ticks: { stepSize: 1, font: { size: 8 } } }
                 }
             }
@@ -305,31 +475,9 @@
         });
     }
 
-    function renderMemberDist(rows) {
-        new Chart(document.getElementById("chartMembers"), {
-            type: "doughnut",
-            data: {
-                labels: rows.map(r => r.user_account),
-                datasets: [{
-                    data: rows.map(r => r.total_spent),
-                    backgroundColor: rows.map((_, i) => PALETTE[i % PALETTE.length]),
-                    borderColor: "#000", borderWidth: 3,
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "right",
-                        labels: { font: { family: '"Press Start 2P"', size: 7 }, boxWidth: 14, padding: 8 }
-                    },
-                    tooltip: {
-                        ...pixelTooltip,
-                        callbacks: { label: ctx => ctx.label + ": " + fmtMoney(ctx.parsed) }
-                    }
-                }
-            }
-        });
-    }
+    /* renderMemberDist 函數已移除
+       原本用於繪製「會員消費分布」甜甜圈圖,後來決定從版面刪除該圖,
+       對應的 JS 邏輯一起拿掉。後端 /manage/dashboard/data 仍會回傳
+       member_dist 欄位 (保留資料,以便未來想加回來),但前端不再使用。 */
 })();
 </script>

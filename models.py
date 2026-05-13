@@ -116,18 +116,38 @@ def getUser(cursor, where: dict, *selections):
         return users
     return None
 
+
 @db_transaction
-def getUserList(cursor, *selections, where: dict = None):
-    cols = ",".join(f"`{s}`" for s in selections)
-    
-    if where:
-        where_key = tuple(where.keys())
-        where_value = tuple(where.values())
-        where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
-        cursor.execute(f"SELECT {cols} FROM {BRANCH_A_TABLE} WHERE {where_sql}", where_value)
+def getUserList(cursor, *selections):
+    """
+    取得所有會員清單。
+
+    :param selections: 可變數欄位名（類似 getUser），不傳則取全部欄位。
+                       例：getUserList("user_account", "user_email")
+                       將回傳 [{"user_account": ..., "user_email": ...}, ...]
+
+    :return: 一律回傳 list of dict；若資料表沒有會員，回傳空 list []。
+             即使只指定一個欄位，也維持 list of dict 結構，
+             方便上層用 `any(u[field] == value for u in users)` 比對。
+
+    使用情境：
+        register_service 在註冊時要檢查「帳號 / 信箱是否已被使用」，
+        會抓出所有會員的帳號與信箱清單做比對。
+
+    【效能小提醒】
+    會員一多時，逐筆查詢 (getUser) 會比抓整張表來得有效率。
+    若 user_account / user_email 在資料庫已加 UNIQUE 索引，
+    更建議直接用 getUser 二次查詢來判斷重複。
+    """
+    if selections == ():
+        selections = "*"
     else:
-        cursor.execute(f"SELECT {cols} FROM {BRANCH_A_TABLE}")
-    
+        selections = ",".join(f"`{selection}`" for selection in selections)
+
+    cursor.execute(f"""
+        SELECT {selections}
+        FROM {BRANCH_A_TABLE}
+    """)
     return cursor.fetchall()
 
 
@@ -192,11 +212,7 @@ def index(cursor):
 @db_transaction
 def get_product_by_id(cursor, product_id):
     # 依 id 取得單一商品的完整資料
-    cursor.execute("""
-        SELECT p.*, pc.category as category
-        FROM products p    
-        LEFT JOIN product_category pc ON p.category = pc.id
-        WHERE p.id = %s""", (product_id,))
+    cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     return cursor.fetchone()
 
 @db_transaction
@@ -389,6 +405,7 @@ def get_orders(cursor, user_account):
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            AND status != '已取消'
             ORDER BY created_at ASC''',
         (user_account,)
     )
@@ -402,6 +419,7 @@ def search_orders(cursor, user_account, keyword):
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            AND status != '已取消'
             AND status LIKE ?
             ORDER BY created_at DESC''',
         (user_account, like_keyword)
@@ -955,27 +973,79 @@ def get_revenue_trend(cursor, months=12):
 
 
 @db_transaction
-def get_orders_count_by_month(cursor, months=12):
+def get_orders_count_by_month(cursor, year=None):
     """
-    取近 N 個月的訂單數量統計 (預設 12 個月)。
+    依「月份」彙總訂單數量,固定回傳 1~12 月共 12 筆 (沒資料的月份補 0)。
 
-    回傳 list of dict,每筆: { 'month': 'YYYY-MM', 'order_count': 訂單數 }
-    供直條圖使用。
+    :param year: 指定年份 (例如 2026)。若為 None 則彙總所有年份。
+
+    回傳格式:
+        [
+          {'month': '1月', 'month_num': 1, 'order_count': N},
+          {'month': '2月', 'month_num': 2, 'order_count': N},
+          ...
+          {'month': '12月', 'month_num': 12, 'order_count': N},
+        ]
+
+    【設計理由】
+    X 軸永遠固定為 1月~12月 (使用者偏好,不看時間軸跨年),
+    透過 year 參數讓使用者切換要看哪一年的全年資料,
+    或選「全部」彙總所有年份的同月份。
+    """
+    if year is None:
+        # 不限年份:所有年份同月份加總
+        cursor.execute(f"""
+            SELECT
+                MONTH(created_at) AS month_num,
+                COUNT(*)          AS order_count
+            FROM `{BRANCH_C_ORDER_TABLE}`
+            WHERE status = '已完成'
+            GROUP BY month_num
+        """)
+    else:
+        # 指定年份:只取該年的資料
+        cursor.execute(f"""
+            SELECT
+                MONTH(created_at) AS month_num,
+                COUNT(*)          AS order_count
+            FROM `{BRANCH_C_ORDER_TABLE}`
+            WHERE status = '已完成'
+              AND YEAR(created_at) = %s
+            GROUP BY month_num
+        """ % int(year))
+    # 把 SQL 結果轉成 {月份數字 -> 訂單數} 的字典,方便補齊缺月份
+    counts_by_month = {
+        int(r["month_num"]): int(r["order_count"])
+        for r in cursor.fetchall()
+    }
+    # 固定回傳 1-12 月共 12 筆,沒資料的月份補 0
+    return [
+        {
+            "month":       f"{m}月",
+            "month_num":   m,
+            "order_count": counts_by_month.get(m, 0),
+        }
+        for m in range(1, 13)
+    ]
+
+
+@db_transaction
+def get_available_order_years(cursor):
+    """
+    查詢「有訂單資料」的年份清單 (供前端下拉選單使用)。
+
+    回傳 list of int,依年份由新到舊排序。
+    例如:[2026, 2025, 2024]
+
+    若資料表沒有任何已完成訂單,回傳空 list。
     """
     cursor.execute(f"""
-        SELECT
-            DATE_FORMAT(created_at, '%%Y-%%m') AS month,
-            COUNT(*)                          AS order_count
+        SELECT DISTINCT YEAR(created_at) AS year
         FROM `{BRANCH_C_ORDER_TABLE}`
         WHERE status = '已完成'
-          AND created_at >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
-        GROUP BY month
-        ORDER BY month ASC
-    """ % int(months))
-    return [
-        {"month": r["month"], "order_count": int(r["order_count"])}
-        for r in cursor.fetchall()
-    ]
+        ORDER BY year DESC
+    """)
+    return [int(r["year"]) for r in cursor.fetchall()]
 
 
 @db_transaction

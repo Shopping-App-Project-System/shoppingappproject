@@ -14,6 +14,7 @@ from models import (
     # 後台儀表板 (圖表) 用的統計查詢
     get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
     get_top_products,get_member_spending_distribution,
+    get_available_order_years,
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -438,20 +439,43 @@ def manage_dashboard_data_service():
     """
     儀表板資料 API,回傳 JSON 給前端 Chart.js 使用。
 
+    支援 query string:
+      ?year=2026    → 訂單數量圖只顯示 2026 年資料
+      ?year=all     → 訂單數量圖彙總所有年份
+      (省略)        → 預設為「最新有資料的年份」
+
     回傳結構:
       {
-        "summary": { total_revenue, total_orders, avg_order_value, total_members },
-        "revenue_trend":   [ {month, revenue}, ... ],
-        "orders_by_month": [ {month, order_count}, ... ],
-        "top_products":    [ {product_name, total_qty}, ... ],
-        "member_dist":     [ {user_account, total_spent}, ... ]
+        "summary":         { ... },
+        "revenue_trend":   [ ... ],
+        "orders_by_month": [ ... ],   # 受 year 影響
+        "top_products":    [ ... ],
+        "member_dist":     [ ... ],
+        "available_years": [2026, 2025, ...],  # 有資料的年份清單,給下拉選單用
+        "selected_year":   2026 or None,        # 目前查詢的年份 (None 代表「全部」)
       }
     """
-    from flask import jsonify
+    from flask import jsonify, request
+
+    # 處理 year 參數
+    year_param = request.args.get("year", "").strip()
+    available_years = get_available_order_years()
+    if year_param == "all":
+        # 使用者明確選「全部年份」
+        selected_year = None
+    elif year_param.isdigit():
+        # 使用者選了某一年
+        selected_year = int(year_param)
+    else:
+        # 沒指定:預設選最新有資料的年份
+        selected_year = available_years[0] if available_years else None
+
     return jsonify({
         "summary":         get_dashboard_summary(),
         "revenue_trend":   get_revenue_trend(months=12),
-        "orders_by_month": get_orders_count_by_month(months=12),
+        "orders_by_month": get_orders_count_by_month(year=selected_year),
         "top_products":    get_top_products(limit=10),
         "member_dist":     get_member_spending_distribution(limit=8),
+        "available_years": available_years,
+        "selected_year":   selected_year,
     })
