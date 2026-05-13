@@ -17,6 +17,12 @@
             --gold-ore:#F0C93A; --redstone:#E03030;
             --lapis:#1A44A8; --lapis-dk:#0d2a6e;
             --emerald:#17B85A; --emerald-dk:#0d7a3a;
+            /* 鐵方塊:反光的銀白,Minecraft 鐵方塊的高光配色
+               用於 mc-block 區塊背景與表格列,替換原本的石頭灰
+               iron-light/iron-dark:外圈大區塊,亮反光
+               iron-row/iron-row-dk:表格列,稍暗一階做層次區隔 */
+            --iron-light:#E0E0E0; --iron-dark:#B8B8B8;
+            --iron-row:#D8D8D8; --iron-row-dk:#ACACAC;
             --white-mc:#F0F0F0; --black-mc:#1A1A1A;
             --shadow-inset:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25);
             --shadow-block:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),5px 5px 0 #000;
@@ -83,7 +89,7 @@
         .flash-message.error{background:repeating-linear-gradient(180deg,#6a1010 0,#6a1010 6px,#420a0a 6px,#420a0a 12px);color:#ff8080;text-shadow:2px 2px 0 #000;}
 
         /* mc block panel */
-        .mc-block{border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);overflow:hidden;margin-bottom:28px;}
+        .mc-block{border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;background:repeating-linear-gradient(180deg,var(--iron-light) 0,var(--iron-light) 6px,var(--iron-dark) 6px,var(--iron-dark) 12px);overflow:hidden;margin-bottom:28px;}
         .mc-block-header{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:14px 20px;}
         .mc-block-header h2{font-family:var(--font-pixel);font-size:.9rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;}
         .mc-block-body{padding:24px;}
@@ -97,6 +103,21 @@
         .form-control::placeholder{color:#666;}
         textarea.form-control{resize:vertical;min-height:160px;line-height:1.9;font-family:var(--font-ui);font-size:.85rem;}
         input[type="file"].form-control{color:#aaa;padding:8px 10px;}
+
+        /* ── 新增商品區塊文字顏色覆寫 ─────────────────────────────────
+           原本 .form-group label / .form-control 等都用白色文字
+           (適合石頭灰背景);因為新增商品區塊改用鐵方塊銀白色背景,
+           白字會看不清楚,在此將 label 覆寫成黑色 (僅限本區塊,
+           不影響商品列表 / 修改商品 modal)。
+
+           注意:`📦 新增商品` 標題 (.mc-block-header h2) 不覆寫,
+           因為它的背景仍是深棕色 (dirt),白字搭配剛好。
+           ────────────────────────────────────────────────────────── */
+        .add-product-block .form-group label{color:var(--black-mc);text-shadow:1px 1px 0 rgba(255,255,255,.4);}
+        .add-product-block .form-control{color:var(--white-mc);}
+        /* input/textarea/select 內部維持白字 (因為背景是深色#1a1a1a),
+           但「商品圖片」(file input) 視覺上跟其他不一樣,改成淺灰即可 */
+        .add-product-block input[type="file"].form-control{color:#ddd;}
 
         /* buttons */
         .btn{font-family:var(--font-pixel);font-size:.7rem;color:var(--black-mc);border:var(--border-block);padding:9px 16px;cursor:pointer;box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);white-space:nowrap;display:inline-block;text-align:center;}
@@ -115,9 +136,9 @@
         .table{width:100%;border-collapse:collapse;text-align:left;}
         .table th,.table td{padding:12px 14px;border-bottom:4px solid #000;font-family:var(--font-pixel);font-size:.6rem;}
         .table th{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);color:var(--white-mc);text-shadow:2px 2px 0 #000;}
-        .table td{background:repeating-linear-gradient(180deg,#5a5a5a 0,#5a5a5a 6px,#484848 6px,#484848 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
+        .table td{background:repeating-linear-gradient(180deg,var(--iron-row) 0,var(--iron-row) 6px,var(--iron-row-dk) 6px,var(--iron-row-dk) 12px);color:var(--black-mc);text-shadow:1px 1px 0 rgba(255,255,255,.4);}
         .table tr:hover td{filter:brightness(1.15);}
-        .table td.name-cell{font-family:var(--font-pixel);font-size:.65rem;color:var(--white-mc);}
+        .table td.name-cell{font-family:var(--font-pixel);font-size:.65rem;color:var(--black-mc);text-shadow:1px 1px 0 rgba(255,255,255,.5);}
 
         /* status badges */
         .status-active{font-family:var(--font-pixel);font-size:.55rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;padding:4px 10px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--emerald) 0,var(--emerald) 6px,var(--emerald-dk) 6px,var(--emerald-dk) 12px);box-shadow:var(--shadow-inset),2px 2px 0 #000;display:inline-block;}
@@ -131,7 +152,7 @@
         .modal-overlay.active{display:flex;}
         .modal-box{
             border:var(--border-block);box-shadow:var(--shadow-inset),8px 8px 0 #000;
-            background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);
+            background:repeating-linear-gradient(180deg,var(--iron-light) 0,var(--iron-light) 6px,var(--iron-dark) 6px,var(--iron-dark) 12px);
             width:min(580px,100%);max-height:90vh;overflow-y:auto;
         }
         .modal-header{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:14px 20px;}
@@ -208,7 +229,7 @@
         <div id="panel-products" style="display:none;">
 
         <!-- 新增商品 -->
-        <div class="mc-block">
+        <div class="mc-block add-product-block">
             <div class="mc-block-header"><h2>📦 新增商品</h2></div>
             <div class="mc-block-body">
                 <form method="POST" action="/manage/add" enctype="multipart/form-data">
@@ -585,57 +606,12 @@ async function loadDashboard() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────
-   頁面初始載入
-
-   【預設分頁邏輯】
-   - 進到 /manage 時,預設顯示「📈 數據圖表」分頁。
-   - 但若 URL 含有 hash「#products」,代表使用者剛從商品管理操作
-     (新增/下架/上架/刪除/修改) redirect 回來,應該停留在商品管理分頁,
-     而不是被丟回圖表頁。
-
-   【為什麼用 hash 而不是 query string?】
-   - hash 只存在前端,不會被伺服器看到,完全不用改後端
-   - 即使後端 redirect 回 /manage,瀏覽器會自動把 hash 帶上去保留
-   - URL 看起來:/manage#products
+   頁面初始載入:由於預設分頁已改為「數據圖表」,進到 /manage 時要立刻
+   主動載入儀表板 partial,使用者才看得到圖表;若預設仍是商品管理分頁
+   則不必這段 (使用者要等點到圖表按鈕才載入)。
    ──────────────────────────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. 根據 URL hash 決定預設分頁
-    if (window.location.hash === "#products") {
-        // 模擬點擊「商品管理」分頁 (不重新整理,純切換顯示)
-        // 注意:這裡不能用 switchTab 因為它需要 event 物件;直接控制 DOM
-        document.querySelectorAll(".nav-links a[data-tab]").forEach(a => {
-            a.classList.toggle("active", a.dataset.tab === "products");
-        });
-        document.getElementById("panel-products").style.display  = "";
-        document.getElementById("panel-dashboard").style.display = "none";
-        // 商品管理分頁不需要 AJAX 載入,所以不呼叫 loadDashboard
-    } else {
-        // 預設行為:載入數據圖表分頁
-        loadDashboard();
-    }
-
-    // 2. 攔截所有「商品管理」相關表單,送出時在 action 加上 #products,
-    //    這樣後端 redirect 回 /manage 後,瀏覽器會自動 navigate 到 /manage#products,
-    //    上面的 hash 偵測就能把使用者留在商品管理分頁。
-    //
-    //    要攔截的表單:/manage/add  /manage/edit  /manage/remove
-    //                /manage/restock  /manage/clear
-    const productMgmtActions = [
-        "/manage/add", "/manage/edit", "/manage/remove",
-        "/manage/restock", "/manage/clear"
-    ];
-    document.querySelectorAll("form").forEach(form => {
-        // 取出 action,去掉 query/hash 後比對
-        const action = (form.getAttribute("action") || "").split("#")[0].split("?")[0];
-        if (productMgmtActions.includes(action)) {
-            form.addEventListener("submit", () => {
-                // 若 action 已有 hash 不重複加
-                if (!form.action.includes("#")) {
-                    form.action = form.action + "#products";
-                }
-            });
-        }
-    });
+    loadDashboard();
 });
 </script>
 

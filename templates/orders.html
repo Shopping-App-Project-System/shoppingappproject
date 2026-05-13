@@ -8,6 +8,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/mc-common.css">
 <style>
+    /* 鐵方塊配色變數 (此頁專用)
+       原本 .filter-bar / .order-body 用石頭灰,現改為鐵方塊銀白色
+       讓畫面看起來更亮、更有金屬感 */
+    :root {
+        --iron-light:#E0E0E0; --iron-dark:#B8B8B8;
+        --iron-row:#D8D8D8; --iron-row-dk:#ACACAC;
+    }
     body {
         background:
             linear-gradient(#fff 0,#fff 100%) 5% 20px/120px 24px no-repeat,
@@ -23,12 +30,12 @@
     /* filter bar */
     .filter-bar {
         border:var(--border-block); box-shadow:var(--shadow-inset),4px 4px 0 #000;
-        background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);
+        background:repeating-linear-gradient(180deg,var(--iron-light) 0,var(--iron-light) 6px,var(--iron-dark) 6px,var(--iron-dark) 12px);
         padding:18px 20px; margin-bottom:20px;
     }
     .filter-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
     .filter-grid .field { display:flex; flex-direction:column; gap:6px; }
-    .filter-grid label { font-family:var(--font-pixel); font-size:.6rem; color:var(--white-mc); text-shadow:1px 1px 0 #000; }
+    .filter-grid label { font-family:var(--font-pixel); font-size:.6rem; color:var(--black-mc); text-shadow:1px 1px 0 rgba(255,255,255,.4); }
     .filter-grid input,.filter-grid select {
         font-family:var(--font-pixel); font-size:.6rem;
         background:repeating-linear-gradient(180deg,#1a1a1a 0,#1a1a1a 6px,#222 6px,#222 12px);
@@ -46,8 +53,8 @@
     }
     .filter-actions button:hover { filter:brightness(1.15); transform:translateY(-2px); }
     .reset-link { font-family:var(--font-pixel); font-size:.6rem; color:var(--diamond); text-shadow:1px 1px 0 #000; text-decoration:underline; }
-    .summary { margin-left:auto; font-family:var(--font-pixel); font-size:.6rem; color:#ccc; text-shadow:1px 1px 0 #000; }
-    .summary strong { color:var(--gold-ore); font-size:.72rem; }
+    .summary { margin-left:auto; font-family:var(--font-pixel); font-size:.6rem; color:#333; text-shadow:1px 1px 0 rgba(255,255,255,.4); }
+    .summary strong { color:#B8740B; font-size:.72rem; }
 
     /* order list */
     .order-list { list-style:none; padding:0; margin:0; }
@@ -70,11 +77,11 @@
     .order-user { font-family:var(--font-pixel); font-size:.6rem; color:var(--gold-ore); text-shadow:1px 1px 0 #000; border:2px solid var(--gold-ore); padding:2px 8px; }
     .order-payment { font-family:var(--font-pixel); font-size:.6rem; color:#ccc; text-shadow:1px 1px 0 #000; }
     .order-total { font-family:var(--font-pixel); font-size:.85rem; color:var(--redstone); text-shadow:2px 2px 0 #000; font-weight:700; white-space:nowrap; text-align:right; }
-    .order-body { display:none; padding:16px 18px 18px; background:repeating-linear-gradient(180deg,#5a5a5a 0,#5a5a5a 6px,#484848 6px,#484848 12px); border-top:var(--border-block); }
+    .order-body { display:none; padding:16px 18px 18px; background:repeating-linear-gradient(180deg,var(--iron-row) 0,var(--iron-row) 6px,var(--iron-row-dk) 6px,var(--iron-row-dk) 12px); border-top:var(--border-block); }
     .order-body.visible { display:block; }
-    .extra-info { margin-bottom:12px; padding:10px 14px; background:repeating-linear-gradient(180deg,#3a3a3a 0,#3a3a3a 6px,#2a2a2a 6px,#2a2a2a 12px); border:2px solid #555; }
-    .extra-info>div { font-family:var(--font-pixel); font-size:.6rem; color:#ccc; text-shadow:1px 1px 0 #000; margin:4px 0; }
-    .extra-info .label { color:#aaa; margin-right:8px; }
+    .extra-info { margin-bottom:12px; padding:10px 14px; background:repeating-linear-gradient(180deg,#888 0,#888 6px,#6a6a6a 6px,#6a6a6a 12px); border:2px solid #000; }
+    .extra-info>div { font-family:var(--font-pixel); font-size:.6rem; color:var(--white-mc); text-shadow:1px 1px 0 #000; margin:4px 0; }
+    .extra-info .label { color:#ddd; margin-right:8px; }
     .loading { font-family:var(--font-pixel); font-size:.6rem; color:#aaa; text-shadow:1px 1px 0 #000; padding:8px 0; }
     .empty-state { text-align:center; font-family:var(--font-pixel); font-size:.65rem; color:#aaa; text-shadow:1px 1px 0 #000; padding:40px 0; }
 
