@@ -106,21 +106,24 @@ def getUserList(cursor, *selections):
 
 @db_transaction
 def search_categories(cursor, category, keyword):
-    # 依分類名稱 與關鍵字搜尋上架商品，兩個條件都是選填
+    """依分類名稱 與關鍵字搜尋上架商品,兩個條件都是選填.
+    
+    分類儲存設計:products.category 直接存分類名稱字串(A 案),
+    不再 join product_category 表(該表結構與此邏輯不符).
+    """
     sql = """
      SELECT p.id, p.product_pic, p.original_price, p.sale_price, 
-            p.name, p.description, pc.category, p.tag,
+            p.name, p.description, p.category, p.tag,
             ps.product_quantity
      FROM products p
      LEFT JOIN product_stock ps ON p.id = ps.product_id
-     LEFT JOIN product_category pc ON p.category = pc.id   
      WHERE p.is_active = 1
  """
     params = []
 
     if category:
-        sql += " AND pc.category = %s"
-        params.append(category)  
+        sql += " AND p.category = %s"
+        params.append(category)
         
     if keyword:
         sql += " AND (p.id LIKE %s OR p.name LIKE %s OR p.description LIKE %s)"
@@ -133,11 +136,22 @@ def search_categories(cursor, category, keyword):
 
 @db_transaction
 def get_all_categories(cursor):
-    # 取得所有上架商品的不重複分類清單
+    """取得目前實際使用中的不重複商品分類清單,供下拉選單使用。
+    
+    回傳: [{'id': ..., 'name': ...}, ...]
+    
+    說明:分類名稱直接存在 products.category 欄(字串)。這裡用 GROUP BY 取得
+    不重複的分類名稱;id 取同名商品的最小 id,僅用於前端 React/DOM key,實際
+    儲存仍是分類字串。is_deleted = 0 過濾掉軟刪除的商品,避免下拉出現殘留分類.
+    """
     cursor.execute("""
-        SELECT DISTINCT pc.category 
-        FROM product_category pc
-        LEFT JOIN products p ON p.category = pc.id
+        SELECT MIN(id) AS id, category AS name
+        FROM products
+        WHERE category IS NOT NULL
+          AND category != ''
+          AND is_deleted = 0
+        GROUP BY category
+        ORDER BY category
     """)
     return cursor.fetchall()
 
@@ -467,15 +481,15 @@ def get_user_minecraft_name(cursor, user_account):
 # 新增商品，預設為上架狀態，回傳新商品的 id
 # mc_item_id 為選填，填入 Minecraft 道具 ID（例如 minecraft:diamond）
 # 若為序號類商品則不填，預設為 None
+# category 為選填,填入分類名稱字串(直接存在 products.category 欄),留空表示不分類
 @db_transaction
-def add_product(cursor, name, original_price, sale_price, description, img_filename, mc_item_id):
+def add_product(cursor, name, original_price, sale_price, description, img_filename, mc_item_id, category=None):
     # 新增商品，預設為上架狀態，回傳新商品的 id
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
-        (`mc_item_id`, `name`, `original_price`, `sale_price`, `description`, `product_pic`, `is_active`)
-        VALUES (?, ?, ?, ?, ?, ?, 1)
-    """, (mc_item_id, name, original_price, sale_price, description, img_filename))
-    #     ↑ 順序改為與欄位一致
+        (`mc_item_id`, `name`, `original_price`, `sale_price`, `description`, `product_pic`, `category`, `is_active`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+    """, (mc_item_id, name, original_price, sale_price, description, img_filename, category))
     return cursor.lastrowid
 
 @db_transaction
@@ -530,10 +544,10 @@ def update_product(cursor, set_: dict, product_id):
 
 @db_transaction
 def get_all_products(cursor):
-    # 取得所有未刪除的商品清單（含庫存），供後台管理頁使用
+    # 取得所有未刪除的商品清單（含庫存、分類），供後台管理頁使用
     cursor.execute(f"""
         SELECT p.id, p.name, p.product_pic, p.original_price,
-               p.sale_price, p.is_active, ps.product_quantity
+               p.sale_price, p.is_active, p.category, ps.product_quantity
         FROM `{BRANCH_B_PRODUCTS_TABLE}` p
         LEFT JOIN product_stock ps ON p.id = ps.product_id
         WHERE p.is_deleted = 0

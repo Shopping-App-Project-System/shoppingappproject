@@ -15,6 +15,8 @@ from models import (
     get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
     get_top_products,get_member_spending_distribution,
     get_available_order_years,
+    # 商品分類:供新增/編輯下拉選單使用
+    get_all_categories,
     # 永久刪除功能已停用,連同 hard_delete_product 一起不再 import
     # hard_delete_product
 )
@@ -27,11 +29,12 @@ from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 # mc_item_id 設為選填，預設 None
 # 寶石類商品填入（例如 minecraft:diamond），序號類商品不填
 @requestParsor
-def manage_add_service(name,original_price,sale_price,description,image,product_quantity,mc_item_id=None):
-    print(f"name={name}, original_price={original_price}, sale_price={sale_price}, description={description}, mc_item_id={mc_item_id}")
+def manage_add_service(name,original_price,sale_price,description,image,product_quantity,mc_item_id=None,category=None):
+    print(f"name={name}, original_price={original_price}, sale_price={sale_price}, description={description}, mc_item_id={mc_item_id}, category={category}")
     sale_price = sale_price or None
+    category   = category or None   # 空字串轉 None,語意為「不分類」
     img_filename   = save_image(image, UPLOAD_FOLDER, filename=name)
-    product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id)
+    product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id, category)
     add_product_stock(product_id,int(product_quantity))
     add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
     flash("商品已上架", "success")
@@ -57,7 +60,8 @@ def manage_add_service(name,original_price,sale_price,description,image,product_
 
 def manage_service():
     products = get_all_products()
-    return render_template("manage.html", products=products)
+    category_list = get_all_categories()   # 商品類別下拉選單(可搜尋)用
+    return render_template("manage.html", products=products, category_list=category_list)
 
 @requestParsor
 def manage_remove_service(product_id):

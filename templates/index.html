@@ -514,7 +514,7 @@
                     <select name="category" class="search-select">
                         <option value="">所有分類</option>
                         {% for cat in categories %}
-                        <option value="{{ cat.category }}" {% if current_cat==cat.category %}selected{% endif %}>{{ cat.category }}</option>
+                        <option value="{{ cat.name }}" {% if current_cat==cat.name %}selected{% endif %}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                     <input type="text" name="keyword" class="search-input" placeholder="輸入商品名稱..." value="{{ current_kw or '' }}">

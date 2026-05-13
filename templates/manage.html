@@ -253,12 +253,14 @@
                             </div>
                             <div class="form-group">
                                 <label for="category">商品類別 (選填)</label>
-                                <select id="category" name="category" class="form-control">
-                                    <option value="">-- 不分類 --</option>
+                                <input type="text" id="category" name="category" class="form-control"
+                                       list="category-options" autocomplete="off"
+                                       placeholder="輸入分類名稱(可從下拉選擇,或新建);留空表示不分類">
+                                <datalist id="category-options">
                                     {% for cat in category_list %}
-                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                    <option value="{{ cat.name }}">
                                     {% endfor %}
-                                </select>
+                                </datalist>
                             </div>
                             <div class="form-group">
                                 <label for="product_quantity">上架數量</label>
@@ -455,12 +457,14 @@
 
                 <div class="form-group">
                     <label for="edit_category">商品類別</label>
-                    <select id="edit_category" name="category" class="form-control">
-                        <option value="">-- 不分類 --</option>
+                    <input type="text" id="edit_category" name="category" class="form-control"
+                           list="edit-category-options" autocomplete="off"
+                           placeholder="輸入分類名稱(可從下拉選擇,或新建);留空表示不分類">
+                    <datalist id="edit-category-options">
                         {% for cat in category_list %}
-                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        <option value="{{ cat.name }}">
                         {% endfor %}
-                    </select>
+                    </datalist>
                 </div>
 
                 <div class="modal-actions">
@@ -508,6 +512,7 @@
         document.getElementById("edit_name").value = name;
         document.getElementById("edit_original_price").value = originalPrice;
         document.getElementById("edit_sale_price").value = salePrice || "";
+        // 分類:product_category 表存的就是名稱字串,直接帶入即可
         document.getElementById("edit_category").value = category || "";
         document.getElementById("edit_product_quantity").value = (quantity !== undefined && quantity !== "") ? quantity : "";
 
