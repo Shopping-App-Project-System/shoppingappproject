@@ -585,12 +585,57 @@ async function loadDashboard() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────
-   頁面初始載入:由於預設分頁已改為「數據圖表」,進到 /manage 時要立刻
-   主動載入儀表板 partial,使用者才看得到圖表;若預設仍是商品管理分頁
-   則不必這段 (使用者要等點到圖表按鈕才載入)。
+   頁面初始載入
+
+   【預設分頁邏輯】
+   - 進到 /manage 時,預設顯示「📈 數據圖表」分頁。
+   - 但若 URL 含有 hash「#products」,代表使用者剛從商品管理操作
+     (新增/下架/上架/刪除/修改) redirect 回來,應該停留在商品管理分頁,
+     而不是被丟回圖表頁。
+
+   【為什麼用 hash 而不是 query string?】
+   - hash 只存在前端,不會被伺服器看到,完全不用改後端
+   - 即使後端 redirect 回 /manage,瀏覽器會自動把 hash 帶上去保留
+   - URL 看起來:/manage#products
    ──────────────────────────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
-    loadDashboard();
+    // 1. 根據 URL hash 決定預設分頁
+    if (window.location.hash === "#products") {
+        // 模擬點擊「商品管理」分頁 (不重新整理,純切換顯示)
+        // 注意:這裡不能用 switchTab 因為它需要 event 物件;直接控制 DOM
+        document.querySelectorAll(".nav-links a[data-tab]").forEach(a => {
+            a.classList.toggle("active", a.dataset.tab === "products");
+        });
+        document.getElementById("panel-products").style.display  = "";
+        document.getElementById("panel-dashboard").style.display = "none";
+        // 商品管理分頁不需要 AJAX 載入,所以不呼叫 loadDashboard
+    } else {
+        // 預設行為:載入數據圖表分頁
+        loadDashboard();
+    }
+
+    // 2. 攔截所有「商品管理」相關表單,送出時在 action 加上 #products,
+    //    這樣後端 redirect 回 /manage 後,瀏覽器會自動 navigate 到 /manage#products,
+    //    上面的 hash 偵測就能把使用者留在商品管理分頁。
+    //
+    //    要攔截的表單:/manage/add  /manage/edit  /manage/remove
+    //                /manage/restock  /manage/clear
+    const productMgmtActions = [
+        "/manage/add", "/manage/edit", "/manage/remove",
+        "/manage/restock", "/manage/clear"
+    ];
+    document.querySelectorAll("form").forEach(form => {
+        // 取出 action,去掉 query/hash 後比對
+        const action = (form.getAttribute("action") || "").split("#")[0].split("?")[0];
+        if (productMgmtActions.includes(action)) {
+            form.addEventListener("submit", () => {
+                // 若 action 已有 hash 不重複加
+                if (!form.action.includes("#")) {
+                    form.action = form.action + "#products";
+                }
+            });
+        }
+    });
 });
 </script>
 
