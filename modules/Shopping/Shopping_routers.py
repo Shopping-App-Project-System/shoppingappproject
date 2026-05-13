@@ -4,7 +4,7 @@
 ==========================================================
 
 【負責範圍】
-  Branch C 負責購物車、結帳、訂單取消等消費者購物流程。
+  Branch C 負責購物車、結帳等消費者購物流程。
 
 【路由總覽】
   POST /cart/add
@@ -30,18 +30,13 @@
 
   POST /checkout
       送出訂單。
-      驗證必填欄位（姓名、地址、付款方式、配送方式）、
-      手機格式、信用卡卡號格式、
+      驗證付款方式、信用卡卡號格式，
       結帳前確認商品未下架，再次確認庫存是否足夠，
-      建立訂單與訂單明細，扣減庫存，清空購物車。
+      建立訂單與訂單明細，扣減庫存，發放道具或序號，清空購物車。
 
   GET  /order/<order_id>/items
       回傳指定訂單的商品明細（JSON 陣列）。
       供前端動態顯示訂單購買內容使用。
-
-  POST /order/<order_id>/cancel
-      取消指定訂單（僅限「處理中」狀態且屬於本人）。
-      取消後自動將該訂單的所有商品庫存補回。
 
 【安全機制】
   - 所有路由皆套用 @userRequired，未登入自動導向登入頁，
@@ -59,7 +54,6 @@ from .Shopping_services import (cart_add_service,
                                 cart_service,
                                 cart_remove_service,
                                 checkout_service,
-                                order_cancel_service,
                                 cart_update_service,
                                 order_items_service,
                                 redeem_service)
@@ -94,10 +88,6 @@ def checkout():return checkout_service()
 @bp.route("/order/<int:order_id>/items", methods=["GET"])
 @userRequired
 def order_items(order_id):return order_items_service(order_id)
-
-@bp.route("/order/<int:order_id>/cancel", methods=["POST"])
-@userRequired
-def order_cancel(order_id):return order_cancel_service(order_id)
 
 # 玩家在首頁輸入序號按下兌換，表單需要一個路由來接收
 @bp.route("/redeem", methods=["POST"])

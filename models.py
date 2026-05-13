@@ -225,7 +225,7 @@ def insert_order(cursor, user_account, total, payment_method, note, credit_card_
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
             (user_id, total, payment_method, note, status, credit_card_number)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'處理中',?)''',
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'已完成',?)''',
         (user_account, total, payment_method, note, credit_card_number)
     )
     return cursor.lastrowid
@@ -275,7 +275,6 @@ def get_orders(cursor, user_account):
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            AND status != '已取消'
             ORDER BY created_at ASC''',
         (user_account,)
     )
@@ -288,7 +287,6 @@ def search_orders(cursor, user_account, keyword):
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            AND status != '已取消'
             AND status LIKE ?
             ORDER BY created_at DESC''',
         (user_account, like_keyword)

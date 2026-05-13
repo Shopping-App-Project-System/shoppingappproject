@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
+        /* ========== CSS 變數：色盤與字型 ========== */
         :root {
             --dirt:#8B5E3C; --dirt-dark:#5C3A1E;
             --grass-top:#5D9E3F; --leaf-dark:#2A6320;
@@ -40,9 +41,12 @@
         a{text-decoration:none;color:inherit;}
         .container{width:min(1400px,94%);margin:auto;}
 
+        /* ========== 全域基礎樣式 ========== */
+
         /* ground strip */
         .ground-strip{height:24px;background:repeating-linear-gradient(90deg,var(--grass-top) 0,var(--grass-top) 24px,#4e8a33 24px,#4e8a33 48px);border-bottom:var(--border-block);box-shadow:0 4px 0 #000;}
 
+        /* ========== 頂部導覽列 ========== */
         /* topbar */
         .topbar{position:sticky;top:0;z-index:100;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);box-shadow:0 6px 0 #000;}
         .topbar-inner{display:flex;justify-content:center;align-items:center;min-height:80px;position:relative;padding:0 8px;}
@@ -71,6 +75,7 @@
         .topbar-btn{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:10px 18px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,#a02020 6px,#a02020 12px);box-shadow:var(--shadow-block);transition:transform .08s steps(2);}
         .topbar-btn:hover{filter:brightness(1.2);transform:translateY(-2px);}
 
+        /* ========== Flash 訊息通知 ========== */
         /* flash */
         .flash-wrapper{margin-top:24px;}
         .flash-message{font-family:var(--font-pixel);font-size:.75rem;line-height:2;padding:16px 20px;border:var(--border-block);margin-bottom:12px;box-shadow:var(--shadow-block);animation:pixelPop .2s steps(4) both;}
@@ -79,6 +84,7 @@
         .flash-message.error{background:repeating-linear-gradient(180deg,#6a1010 0,#6a1010 6px,#420a0a 6px,#420a0a 12px);color:#ff8080;text-shadow:2px 2px 0 #000;}
         .flash-message.info{background:repeating-linear-gradient(180deg,#10316a 0,#10316a 6px,#0a1f42 6px,#0a1f42 12px);color:#80c0ff;text-shadow:2px 2px 0 #000;}
 
+        /* ========== 頁面主體與購物車雙欄版型 ========== */
         /* page */
         .panel-page{padding:40px 0 80px;}
         .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);margin:6px 0;}
@@ -92,6 +98,7 @@
         /* cart layout */
         .cart-layout{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;margin-top:28px;}
 
+        /* ========== 購物車商品列 ========== */
         /* cart item — 緊湊橫列 */
         .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;padding:12px 16px;border-bottom:4px solid #000;background:repeating-linear-gradient(180deg,#5a5a5a 0,#5a5a5a 6px,#484848 6px,#484848 12px);transition:filter .15s;align-items:center;}
         .cart-item:last-child{border-bottom:none;}
@@ -100,12 +107,14 @@
         .cart-item-image img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;}
         .cart-item-info h3{font-family:var(--font-pixel);font-size:.75rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;margin-bottom:8px;line-height:1.8;}
 
+        /* ========== 庫存狀態標籤（正常 / 偏低 / 售完）========== */
         /* stock labels */
         .stock-label{font-family:var(--font-pixel);font-size:.6rem;margin-bottom:12px;padding:5px 10px;border:var(--border-block);display:inline-block;box-shadow:var(--shadow-inset),2px 2px 0 #000;}
         .stock-label.normal{background:repeating-linear-gradient(180deg,var(--stone) 0,var(--stone) 6px,var(--stone-dark) 6px,var(--stone-dark) 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
         .stock-label.low{background:repeating-linear-gradient(180deg,#b45309 0,#b45309 6px,#7a3800 6px,#7a3800 12px);color:var(--gold-ore);text-shadow:1px 1px 0 #000;}
         .stock-label.out{background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,#a02020 6px,#a02020 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
 
+        /* ========== 數量選擇器（−  數字  ＋）========== */
         /* qty picker */
         .qty-picker{display:inline-flex;align-items:center;gap:0;border:var(--border-block);box-shadow:var(--shadow-inset),3px 3px 0 #000;overflow:hidden;}
         .qty-picker button{width:40px;height:40px;border:none;border-right:3px solid #000;background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);font-family:var(--font-pixel);font-size:1rem;font-weight:700;cursor:pointer;color:var(--white-mc);text-shadow:2px 2px 0 #000;display:flex;align-items:center;justify-content:center;transition:filter .1s;}
@@ -116,16 +125,19 @@
         .qty-picker .qty-num{width:54px;height:40px;text-align:center;font-family:var(--font-pixel);font-size:.85rem;font-weight:700;color:var(--white-mc);background:repeating-linear-gradient(180deg,#2a2a2a 0,#2a2a2a 6px,#1a1a1a 6px,#1a1a1a 12px);padding:0 6px;border:none;outline:none;-moz-appearance:textfield;}
         .qty-picker .qty-num::-webkit-outer-spin-button,.qty-picker .qty-num::-webkit-inner-spin-button{-webkit-appearance:none;}
 
+        /* ========== 商品列右側（單項小計 + 移除按鈕）========== */
         /* item side */
         .item-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:12px;}
         .item-total{font-family:var(--font-pixel);font-size:.9rem;color:var(--gold-ore);text-shadow:2px 2px 0 #000;}
 
+        /* ========== 結帳摘要面板 ========== */
         /* summary */
         .summary-line{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:3px solid #000;}
         .summary-line span{font-family:var(--font-pixel);font-size:.75rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;}
         .summary-line.total span{font-size:.9rem;color:var(--gold-ore);}
         .summary-line.total{border-bottom:none;}
 
+        /* ========== 通用按鈕（btn-primary / btn-danger / btn-diamond）========== */
         /* buttons */
         .btn{font-family:var(--font-pixel);font-size:.75rem;color:var(--black-mc);border:var(--border-block);padding:10px 18px;cursor:pointer;box-shadow:var(--shadow-block);display:inline-block;transition:transform .08s steps(2),box-shadow .08s steps(2);text-align:center;}
         .btn:hover{filter:brightness(1.2);transform:translateY(-3px);box-shadow:var(--shadow-inset),3px 6px 0 #000;}
@@ -135,6 +147,7 @@
         .btn-full{width:100%;box-sizing:border-box;}
         .btn-diamond{background:repeating-linear-gradient(180deg,var(--diamond) 0,var(--diamond) 6px,var(--diamond-dk) 6px,var(--diamond-dk) 12px);}
 
+        /* ========== 空購物車提示 ========== */
         /* empty state */
         .empty-state{text-align:center;padding:60px 20px;}
         .empty-block{width:80px;height:80px;margin:0 auto 24px;border:var(--border-block);box-shadow:var(--shadow-block);background:repeating-linear-gradient(45deg,#555 0,#555 10px,#444 10px,#444 20px);position:relative;}
@@ -142,6 +155,7 @@
         .empty-state h3{font-family:var(--font-pixel);font-size:.9rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;margin-bottom:14px;line-height:2;}
         .empty-state p{font-family:var(--font-pixel);font-size:.65rem;color:#aaa;text-shadow:1px 1px 0 #000;line-height:2;}
 
+        /* ========== 像素角色裝飾（Steve）========== */
         /* pixel char */
         .pixel-char{display:inline-flex;flex-direction:column;align-items:center;image-rendering:pixelated;}
         .pc-head{width:44px;height:44px;border:var(--border-block);box-shadow:var(--shadow-inset);background:linear-gradient(#5a3a1a 0,#5a3a1a 100%) 0 0/44px 7px no-repeat,linear-gradient(#c8a068 0,#c8a068 100%) 0 7px/44px 26px no-repeat,linear-gradient(#fff 0,#fff 100%) 4px 12px/12px 10px no-repeat,linear-gradient(#fff 0,#fff 100%) 28px 12px/12px 10px no-repeat,linear-gradient(#3a6fff 0,#3a6fff 100%) 5px 13px/10px 8px no-repeat,linear-gradient(#3a6fff 0,#3a6fff 100%) 29px 13px/10px 8px no-repeat,linear-gradient(#7a3010 0,#7a3010 100%) 12px 28px/20px 4px no-repeat,#c8a068;}
@@ -149,6 +163,7 @@
         .pc-legs{display:flex;gap:2px;margin-top:2px;}
         .pc-leg{width:14px;height:22px;border:var(--border-block);box-shadow:var(--shadow-inset);background:repeating-linear-gradient(180deg,#3a5cff 0,#3a5cff 6px,#1a3ccc 6px,#1a3ccc 12px);}
 
+        /* ========== 頁尾 ========== */
         /* footer */
         .footer{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 10px,var(--dirt-dark) 10px,var(--dirt-dark) 20px);border-top:var(--border-block);padding:36px 40px;text-align:center;position:relative;overflow:hidden;}
         .footer::before{content:'';position:absolute;right:64px;top:20px;width:40px;height:40px;background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);border:var(--border-block);box-shadow:var(--shadow-inset),3px 3px 0 #000;}
@@ -163,8 +178,10 @@
 </head>
 <body>
 
+<!-- ==================== 裝飾性草地條紋 ==================== -->
 <div class="ground-strip"></div>
 
+<!-- ==================== 頂部導覽列 ==================== -->
 <header class="topbar">
     <div class="container topbar-inner">
         <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
@@ -203,7 +220,10 @@
     </nav>
 </header>
 
+<!-- ==================== 主內容區 ==================== -->
 <main class="panel-page">
+
+    <!-- ---- Flash 訊息通知 ---- -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="container flash-wrapper">
@@ -216,6 +236,7 @@
 
     <div class="dirt-divider"></div>
 
+    <!-- ---- 購物車雙欄版型（左：商品列表  右：結帳摘要）---- -->
     <div class="container cart-layout">
 
         <!-- 商品區 -->
@@ -225,6 +246,7 @@
             </div>
             <div class="mc-block-body" style="padding:0;">
 
+                <!-- ---- 有商品：逐項渲染 ---- -->
                 {% if cart_items %}
                 {% for item in cart_items %}
                 <article class="cart-item {% if not item.is_active or item.stock == 0 %}out-of-stock{% endif %}"
@@ -268,6 +290,7 @@
                 </article>
                 {% endfor %}
 
+                <!-- ---- 購物車為空：顯示引導訊息 ---- -->
                 {% else %}
                 <div class="empty-state">
                     <div class="empty-block"></div>
@@ -322,6 +345,7 @@
     </div>
 </main>
 
+<!-- ==================== 頁尾 ==================== -->
 <div class="dirt-divider"></div>
 <footer class="mc-footer">
     <div class="footer-inner">
@@ -344,10 +368,12 @@
 </footer>
 <script src="/static/js/mc-common.js"></script>
 
+<!-- ==================== 購物車 AJAX 互動邏輯 ==================== -->
 <script>
 
 const UPDATE_URL = '/cart/update';
 
+/* ---- 數量更新：每個商品列獨立處理，AJAX 送出後若失敗則回復原值 ---- */
 document.querySelectorAll('.cart-item').forEach(articleEl => {
     const itemId = articleEl.dataset.itemId;
     const price  = parseInt(articleEl.dataset.price, 10);
@@ -358,8 +384,13 @@ document.querySelectorAll('.cart-item').forEach(articleEl => {
     const totalEl  = articleEl.querySelector('.item-total');
     if (!minusBtn || !plusBtn) return;
 
+    /* 取得目前數量 */
     function getQty() { return parseInt(qtyNumEl.value, 10); }
+
+    /* 更新按鈕狀態（是否禁用）*/
     function updateButtons(qty) { minusBtn.disabled = qty <= 1 || stock === 0; plusBtn.disabled = qty >= stock || stock === 0; }
+
+    /* 更新數量顯示與小計，並更新摘要區 */
     function updateDisplay(qty) { qtyNumEl.value = qty; totalEl.textContent = 'NT$ ' + (price * qty).toLocaleString(); updateButtons(qty); updateSummary(); }
     function sendUpdate(qty) {
         const fd = new FormData(); fd.append('item_id', itemId); fd.append('qty', qty);
@@ -376,6 +407,7 @@ document.querySelectorAll('.cart-item').forEach(articleEl => {
     });
 });
 
+/* ---- 重新計算右側摘要（小計 / 總計），每次數量變動後呼叫 ---- */
 function updateSummary() {
     let subtotal = 0;
     document.querySelectorAll('.cart-item').forEach(el => {

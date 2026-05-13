@@ -10,9 +10,8 @@
   4. 購物車數量更新（cart_update_service）
   5. 結帳頁面 GET（checkout_service）
   6. 結帳送出 POST（checkout_service）
-  7. 取消訂單（order_cancel_service）
-  8. 訂單明細查詢 API（order_items_service）
-  9. 序號兌換（redeem_service）
+  7. 訂單明細查詢 API（order_items_service）
+  8. 序號兌換（redeem_service）
 
 【資料表依賴】
  cart_items、orders、order_items、products、
@@ -41,14 +40,10 @@ from models import (get_product_by_id,
                     remove_cart_item,
                     insert_order,
                     insert_order_item,
-                    get_order_items,
                     get_order_items_detail,
                     clear_cart,
-                    get_order,
-                    cancel_order,
                     get_member_cards,
                     deduct_product_stock,
-                    restore_product_stock,
                     get_cart_item_stock,
                     update_cart_qty,
                     update_order_item_serial,
@@ -237,7 +232,7 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
     # 清空購物車
     clear_cart(user_account)
     # 訂單建立成功通知
-    notify_player(user_account, f"🎉 訂單 #{order_id} 建立成功！感謝購買！")
+    notify_player(user_account, f"訂單 #{order_id} 建立成功！感謝購買！")
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
@@ -258,26 +253,6 @@ def order_items_service(order_id):
         for r in rows
     ]
     return jsonify(result)
-
-
-# ── 取消訂單 ──────────────────────────────────────────────────────────────────────────────────
-# 對應路由：POST /order/<order_id>/cancel
-def order_cancel_service(order_id):
-    user_account = session[SESSION_AUTHO]
-
-    order = get_order(order_id, user_account)
-    if not order:                       # 訂單不存在、不屬於本人，或狀態不是「處理中」
-        flash("訂單不存在")
-        return redirect(url_for("D.member"))
-
-    order_items = get_order_items(order_id)
-    cancel_order(order_id)
-    for item in order_items:            # 取消後補回各商品庫存
-        restore_product_stock(item["product_id"], item["quantity"])
-    # 透過 RCON 通知玩家訂單已取消
-    notify_player(user_account, f"❌ 訂單 #{order_id} 已取消")
-    flash("訂單已取消", "success")
-    return redirect(url_for("D.member"))
 
 
 # ── 序號兌換 ──────────────────────────────────────────────────────────────────────────────────
