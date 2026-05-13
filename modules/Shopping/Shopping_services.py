@@ -219,12 +219,25 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
         mc_item_id = product.get("mc_item_id")
         if mc_item_id:
             give_item(user_account, mc_item_id, row["quantity"])
+            # 客製化通知:在玩家的 MC 聊天視窗顯示「✅ 已發放:商品名 xN」.
+            # MC 內建的 'Gave 1 [Emerald] to xxx' 是英文且容易被其他訊息洗掉,
+            # 我們額外用 tellraw 發中文訊息,讓玩家清楚知道收到什麼.
+            # 每件商品各發一條,例如:
+            #   ✅ 已發放:綠寶石 x1
+            #   ✅ 已發放:鑽石 x3
+            notify_player(
+                user_account,
+                f"✅ 已發放:{product['name']} x{row['quantity']}"
+            )
 
     # 清空購物車
     clear_cart(user_account)
-    # 訂單建立成功通知
-    order_seq = get_user_order_seq(user_account, order_id)
-    notify_player(user_account, f"訂單 #{order_seq} 建立成功！感謝購買！")
+    # 訂單建立成功通知 (已停用 RCON 通知;改為僅在網站端顯示 flash 訊息)
+    # 原因:每件商品的 give_item 本身就會在遊戲內出現 'Gave X to xxx' 訊息,
+    #      再多一條「訂單 #N 建立成功」反而干擾遊戲體驗。
+    # 註解保留 get_user_order_seq 邏輯,以便日後若想恢復通知時可直接還原。
+    # order_seq = get_user_order_seq(user_account, order_id)
+    # notify_player(user_account, f"訂單 #{order_seq} 建立成功!感謝購買!")
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
