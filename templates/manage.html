@@ -373,10 +373,13 @@
                                             <input type="hidden" name="product_id" value="{{ p.id }}">
                                             <button type="submit" class="btn btn-success">▲ 上架</button>
                                         </form>
+                                        {# 永久刪除按鈕已停用:有訂單紀錄的商品無法刪除 (外鍵約束),
+                                           而沒訂單的商品下架就好,沒必要徹底移除.故整段註解保留以備將來恢復.
                                         <form method="POST" action="/manage/clear" onsubmit="return confirm('確定要永久刪除此商品紀錄嗎？此操作無法復原！')" style="display:inline;">
                                             <input type="hidden" name="product_id" value="{{ p.id }}">
                                             <button type="submit" class="btn btn-danger" title="刪除商品紀錄">✕ 刪除</button>
                                         </form>
+                                        #}
                                         {% endif %}
                                     </div>
                                 </td>
@@ -606,12 +609,32 @@ async function loadDashboard() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────
-   頁面初始載入:由於預設分頁已改為「數據圖表」,進到 /manage 時要立刻
-   主動載入儀表板 partial,使用者才看得到圖表;若預設仍是商品管理分頁
-   則不必這段 (使用者要等點到圖表按鈕才載入)。
+   頁面初始載入
+
+   【預設分頁邏輯】
+   - 進到 /manage 時,預設顯示「📈 數據圖表」分頁。
+   - 但若 URL 含有 hash「#products」,代表使用者從別處 (操作紀錄 / 交易訂單)
+     點「⚙ 商品管理」連結過來,應該直接打開商品管理分頁,而不是落在預設的
+     數據圖表。
+
+   【為什麼用 hash 而不是 query string?】
+   - hash 只存在前端,不會被伺服器看到,完全不用改後端
+   - URL 看起來:/manage#products 比 /manage?tab=products 更語意化
    ──────────────────────────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
-    loadDashboard();
+    // 偵測 URL 是否帶 #products,決定預設要打開哪一個分頁
+    if (window.location.hash === "#products") {
+        // 切到「⚙ 商品管理」分頁:更新 nav 樣式 + 切換容器顯示
+        document.querySelectorAll(".nav-links a[data-tab]").forEach(a => {
+            a.classList.toggle("active", a.dataset.tab === "products");
+        });
+        document.getElementById("panel-products").style.display  = "";
+        document.getElementById("panel-dashboard").style.display = "none";
+        // 商品管理分頁是純 HTML,不需要 AJAX 載入,所以不呼叫 loadDashboard()
+    } else {
+        // 預設行為:載入數據圖表分頁
+        loadDashboard();
+    }
 });
 </script>
 

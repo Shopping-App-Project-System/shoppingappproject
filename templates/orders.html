@@ -106,7 +106,8 @@
         <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         {% if is_admin %}
         <nav class="nav-links">
-            <a href="/manage">⚙ 商品管理</a>
+            <a href="/manage#dashboard">📈 數據圖表</a>
+            <a href="/manage#products">⚙ 商品管理</a>
             <a href="/manage/log">📋 操作紀錄</a>
             <a href="/manage/orders" class="active">📊 交易訂單</a>
         </nav>
@@ -124,7 +125,8 @@
     </div>
     <nav class="nav-drawer" id="navDrawer">
         {% if is_admin %}
-        <a href="/manage">▶ 商品管理</a>
+        <a href="/manage#dashboard">▶ 數據圖表</a>
+        <a href="/manage#products">▶ 商品管理</a>
         <a href="/manage/log">▶ 操作紀錄</a>
         <a href="/manage/orders">▶ 交易訂單</a>
         <a href="/manage/logout">▶ 登出</a>

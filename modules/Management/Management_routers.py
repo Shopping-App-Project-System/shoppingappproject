@@ -4,11 +4,13 @@ from flask import Blueprint
 # _______________________________________自定義模組_______________________________________
 from AuthDecorator import adminRequired,userRequired
 from .Management_services import (
-    manage_add_service,manage_clear_service,manage_service,
+    manage_add_service,manage_service,
     manage_remove_service,manage_restock_service,
     member_edit_service,member_service,
     manage_logout_service,manage_log_service,manage_edit_service,
     member_cards_service,add_card_service,delete_card_service,set_default_card_service,
+    # 永久刪除功能已停用 (manage_clear_service)
+    # manage_clear_service,
     # 後台操作日誌(月份分組)的 partial
     manage_log_month_service,
     # 已完成訂單查詢
@@ -26,9 +28,11 @@ bp = Blueprint("D",__name__)
 @adminRequired
 def manage_add():return manage_add_service()
 
-@bp.route("/manage/clear", methods=["GET", "POST"])
-@adminRequired
-def manage_clear():return manage_clear_service()
+# 永久刪除路由已停用 (有訂單的商品因外鍵約束無法 hard delete,
+# 沒訂單的商品用「下架」即可,故整段註解保留以備將來恢復).
+# @bp.route("/manage/clear", methods=["GET", "POST"])
+# @adminRequired
+# def manage_clear():return manage_clear_service()
 
 @bp.route("/manage", methods=["GET"])
 @adminRequired

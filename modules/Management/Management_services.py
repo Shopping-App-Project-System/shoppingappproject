@@ -15,7 +15,8 @@ from models import (
     get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
     get_top_products,get_member_spending_distribution,
     get_available_order_years,
-    hard_delete_product
+    # 永久刪除功能已停用,連同 hard_delete_product 一起不再 import
+    # hard_delete_product
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -36,16 +37,23 @@ def manage_add_service(name,original_price,sale_price,description,image,product_
     flash("商品已上架", "success")
     return redirect(url_for("D.manage"))
 
-@requestParsor
-def manage_clear_service(product_id):
-    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回管理頁
-        return redirect(url_for("D.manage"))
-
-    product    = get_product_by_id(product_id)
-    hard_delete_product(product_id)
-    add_log(session.get(SESSION_AUTHO), "刪除", product_id, product["name"])
-    flash("商品已刪除", "success")
-    return redirect(url_for("D.manage"))
+# 永久刪除功能已停用 ── 整個 function 註解保留以備將來恢復.
+# 理由:
+#   1. 有訂單紀錄的商品因為 order_items.product_id 外鍵約束,hard delete 會失敗
+#   2. 沒訂單的商品用「下架」(soft delete) 已足夠應付實務需求
+#   3. 連同 manage.html 的「✕ 刪除」按鈕、Management_routers.py 的 /manage/clear
+#      路由都已停用,但程式碼保留以備將來恢復或改成軟刪除.
+#
+# @requestParsor
+# def manage_clear_service(product_id):
+#     if request.method == "GET":         # 防止誤觸或直接輸入網址,導回管理頁
+#         return redirect(url_for("D.manage"))
+#
+#     product    = get_product_by_id(product_id)
+#     hard_delete_product(product_id)
+#     add_log(session.get(SESSION_AUTHO), "刪除", product_id, product["name"])
+#     flash("商品已刪除", "success")
+#     return redirect(url_for("D.manage"))
 
 def manage_service():
     products = get_all_products()
