@@ -11,7 +11,6 @@
   5. 結帳頁面 GET（checkout_service）
   6. 結帳送出 POST（checkout_service）
   7. 訂單明細查詢 API（order_items_service）
-  8. 序號兌換（redeem_service）
 
 【資料表依賴】
  cart_items、orders、order_items、products、
@@ -24,7 +23,7 @@ from flask import request, redirect, render_template, session, url_for, flash
 
 # _______________________________________自定義模組_______________________________________
 from settings import SESSION_AUTHO
-from utils import get_auth, validateCreditCard, requestParsor, getVerifyToken
+from utils import get_auth, validateCreditCard, requestParsor
 
 # 【修改說明】
 # notify_player 和 give_item 原本從 models import，
@@ -207,10 +206,10 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
 
     total    = sum(row['price'] * row['quantity'] for row in rows)
     order_id = insert_order(user_account, total, payment, note, credit_card_number)
+    order_seq = get_user_order_seq(user_account, order_id)
     # 逐筆將購物車商品寫入訂單明細、扣庫存、發放道具
     for row in rows:
-        # 建立訂單明細並取得 id
-        order_item_id = insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
+        insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
         # 扣減庫存
         deduct_product_stock(row["product_id"], row['quantity'])
         # 查出商品的 MC 道具 ID，直接發道具進背包
@@ -218,25 +217,11 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
         mc_item_id = product.get("mc_item_id")
         if mc_item_id:
             give_item(user_account, mc_item_id, row["quantity"])
-            # 客製化通知:在玩家的 MC 聊天視窗顯示「✅ 已發放:商品名 xN」.
-            # MC 內建的 'Gave 1 [Emerald] to xxx' 是英文且容易被其他訊息洗掉,
-            # 我們額外用 tellraw 發中文訊息,讓玩家清楚知道收到什麼.
-            # 每件商品各發一條,例如:
-            #   ✅ 已發放:綠寶石 x1
-            #   ✅ 已發放:鑽石 x3
-            notify_player(
-                user_account,
-                f"✅ 已發放:{product['name']} x{row['quantity']}"
-            )
+            notify_player(user_account, f"✅ 訂單 #{order_seq} 已發放:{product['name']} x{row['quantity']}")
 
     # 清空購物車
     clear_cart(user_account)
-    # 訂單建立成功通知 (已停用 RCON 通知;改為僅在網站端顯示 flash 訊息)
-    # 原因:每件商品的 give_item 本身就會在遊戲內出現 'Gave X to xxx' 訊息,
-    #      再多一條「訂單 #N 建立成功」反而干擾遊戲體驗。
-    # 註解保留 get_user_order_seq 邏輯,以便日後若想恢復通知時可直接還原。
-    # order_seq = get_user_order_seq(user_account, order_id)
-    # notify_player(user_account, f"訂單 #{order_seq} 建立成功!感謝購買!")
+    notify_player(user_account, f"訂單 #{order_seq} 建立成功!感謝購買!")
     flash("訂單建立成功！", "success")
     return redirect(url_for("D.member"))
 
