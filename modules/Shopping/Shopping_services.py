@@ -46,9 +46,7 @@ from models import (get_product_by_id,
                     deduct_product_stock,
                     get_cart_item_stock,
                     update_cart_qty,
-                    update_order_item_serial,
-                    get_order_item_by_serial,
-                    redeem_serial)
+                    )
 
 
 # ── 加入購物車 ────────────────────────────────────────────────────────────────────────────────
@@ -210,24 +208,17 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
     total    = sum(row['price'] * row['quantity'] for row in rows)
     order_id = insert_order(user_account, total, payment, note, credit_card_number)
 
-    # 逐筆將購物車商品寫入訂單明細、扣庫存、產生序號、發放道具或傳送序號
+    # 逐筆將購物車商品寫入訂單明細、扣庫存、發放道具
     for row in rows:
         # 建立訂單明細並取得 id
         order_item_id = insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
         # 扣減庫存
         deduct_product_stock(row["product_id"], row['quantity'])
-        # 產生唯一序號並存入訂單明細，防止重複兌換
-        serial = getVerifyToken(16)
-        update_order_item_serial(order_item_id, serial)
-        # 查出商品的 MC 道具 ID
+        # 查出商品的 MC 道具 ID，直接發道具進背包
         product = get_product_by_id(row["product_id"])
         mc_item_id = product.get("mc_item_id")
         if mc_item_id:
-            # 寶石類：直接發道具進背包
             give_item(user_account, mc_item_id, row["quantity"])
-        else:
-            # 序號類：透過 RCON 傳序號給玩家
-            notify_player(user_account, f"你的兌換序號：{serial}")
 
     # 清空購物車
     clear_cart(user_account)
@@ -255,26 +246,3 @@ def order_items_service(order_id):
     return jsonify(result)
 
 
-# ── 序號兌換 ──────────────────────────────────────────────────────────────────────────────────
-# 對應路由：POST /redeem
-# 玩家輸入序號後，驗證是否有效且未兌換，成功則標記已兌換並透過 RCON 通知玩家
-@requestParsor
-def redeem_service(serial_code=""):
-    user_account = session[SESSION_AUTHO]
-
-    if not serial_code:
-        flash("請輸入序號", "error")
-        return redirect(url_for("B.index"))
-
-    # 查詢序號是否有效且未兌換
-    item = get_order_item_by_serial(serial_code)
-    if not item:
-        flash("序號無效或已使用", "error")
-        return redirect(url_for("B.index"))
-
-    # 標記為已兌換，防止重複使用
-    redeem_serial(serial_code)
-    # 透過 RCON 通知玩家兌換成功
-    notify_player(user_account, f"✅ 序號兌換成功！道具已發放！")
-    flash("兌換成功！", "success")
-    return redirect(url_for("B.index"))

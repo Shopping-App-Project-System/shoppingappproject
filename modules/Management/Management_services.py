@@ -356,6 +356,7 @@ def manage_completed_orders_service():
     )
 
 
+
 def member_completed_orders_service():
     """使用者:看自己的已完成訂單。"""
     user_account = session[SESSION_AUTHO]
@@ -371,7 +372,7 @@ def member_completed_orders_service():
     return render_template("orders.html",
         orders=orders,
         filters=filters,
-        user_options=[],  # 使用者頁不需要使用者下拉
+        user_options=[],
         is_admin=False,
         items_url_base="/member/orders",
         page_title="我的交易成功訂單"
@@ -409,7 +410,6 @@ def member_order_items_service(order_id):
     user_account = session[SESSION_AUTHO]
     items = get_order_items_with_user_check(order_id, user_account=user_account)
     if items is None:
-        # 不是這個人的訂單就直接拒,不洩漏訂單資訊
         return render_template("_order_items.html", items=[], not_found=True)
     return render_template("_order_items.html", items=items, not_found=False)
 

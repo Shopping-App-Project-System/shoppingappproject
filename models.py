@@ -430,35 +430,6 @@ def restore_product_stock(cursor, product_id, quantity):
         (quantity, product_id)
     )
 
-# 查詢 order_items 裡 serial_code 符合且尚未兌換的那筆資料
-@db_transaction
-def get_order_item_by_serial(cursor, serial_code):
-
-    cursor.execute(
-                    f"""
-                       SELECT * 
-                       FROM {BRANCH_C_ORDER_ITEMS_TABLE}
-                       WHERE `serial_code` = ? AND `is_redeemed` = ?
-                   """,(serial_code,0)
-                   )
-    return cursor.fetchone()
-
-# 將指定序號標記為已兌換，防止重複使用
-@db_transaction
-def redeem_serial(cursor, serial_code):
-    cursor.execute(
-        f"UPDATE `{BRANCH_C_ORDER_ITEMS_TABLE}` SET is_redeemed = 1 WHERE serial_code = ?",
-        (serial_code,)
-    )
-    
-# 將產生的序號寫入指定的訂單明細    
-@db_transaction
-def update_order_item_serial(cursor, order_item_id, serial_code):
-    cursor.execute(
-        f"UPDATE `{BRANCH_C_ORDER_ITEMS_TABLE}` SET serial_code = ? WHERE id = ?",
-        (serial_code, order_item_id)
-    )
-
 
 # ── Minecraft 結帳即時發貨 ────────────────────────────────────────────────
 
@@ -750,7 +721,7 @@ def search_completed_orders(cursor, user_account=None, target_user=None,
         sql += " AND o.total <= ?"
         params.append(max_total)
 
-    sql += " ORDER BY o.created_at DESC"
+    sql += " ORDER BY o.created_at ASC"
     cursor.execute(sql, tuple(params))
     return cursor.fetchall()
 
@@ -781,7 +752,7 @@ def get_order_items_with_user_check(cursor, order_id, user_account=None):
             return None
 
     cursor.execute(f"""
-        SELECT oi.quantity, oi.price, oi.serial_code,
+        SELECT oi.quantity, oi.price,
                p.name AS product_name, p.product_pic
         FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
         JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON p.id = oi.product_id
