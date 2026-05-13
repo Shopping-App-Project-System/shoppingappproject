@@ -207,7 +207,6 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
 
     total    = sum(row['price'] * row['quantity'] for row in rows)
     order_id = insert_order(user_account, total, payment, note, credit_card_number)
-
     # 逐筆將購物車商品寫入訂單明細、扣庫存、發放道具
     for row in rows:
         # 建立訂單明細並取得 id

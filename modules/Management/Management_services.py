@@ -4,7 +4,7 @@ from flask import request,redirect,render_template,session,url_for,flash
 # _______________________________________自定義模組_______________________________________
 from models import (
     getUser,updateUser,
-    add_product,add_log,get_product_by_id,soft_delete_product,
+    add_product,add_log,get_product_by_id,
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
     get_member_cards,add_member_card,delete_member_card,set_default_card,
@@ -15,6 +15,7 @@ from models import (
     get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
     get_top_products,get_member_spending_distribution,
     get_available_order_years,
+    hard_delete_product
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
 from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
@@ -41,7 +42,7 @@ def manage_clear_service(product_id):
         return redirect(url_for("D.manage"))
 
     product    = get_product_by_id(product_id)
-    soft_delete_product(product_id)
+    hard_delete_product(product_id)
     add_log(session.get(SESSION_AUTHO), "刪除", product_id, product["name"])
     flash("商品已刪除", "success")
     return redirect(url_for("D.manage"))
