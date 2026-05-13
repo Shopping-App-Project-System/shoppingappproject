@@ -7,61 +7,12 @@ from settings import (BRANCH_A_TABLE,
                       
                       BRANCH_C_CART_TABLE,
                       BRANCH_C_ORDER_TABLE,
-                      BRANCH_C_ORDER_ITEMS_TABLE)
+                      BRANCH_C_ORDER_ITEMS_TABLE,
+                      
+                      BRANCH_D_MANAGE_LOG_TABLE,
+                      BRANCH_D_MEMBER_CARDS_TABLE)
 
 from db import db_transaction
-
-
-# ── RCON:與 Minecraft 伺服器通訊 ────────────────────────────────────────────────────
-# 需要 pip install mcrcon
-import logging
-from mcrcon import MCRcon, MCRconException
-
-from settings import MC_RCON_HOST, MC_RCON_PORT, MC_RCON_PASSWORD
-
-_rcon_logger = logging.getLogger(__name__)
-
-RCON_HOST = MC_RCON_HOST
-RCON_PORT = MC_RCON_PORT
-RCON_PASSWORD = MC_RCON_PASSWORD
-
-
-def _rcon_send(command):
-    # 每次建新連線,簡單可靠
-    with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
-        return mcr.command(command)
-
-
-def rcon_is_player_online(player_name):
-    # 用 /list 確認玩家是否在線
-    try:
-        response = _rcon_send("list")
-    except (MCRconException, ConnectionError, OSError) as e:
-        _rcon_logger.warning("RCON list 失敗: %s", e)
-        return False
-    if ":" not in response:
-        return False
-    online_part = response.split(":", 1)[1]
-    names = [n.strip() for n in online_part.split(",") if n.strip()]
-    return player_name in names
-
-
-def rcon_give_item(player_name, item_id, quantity, nbt=None):
-    # 對玩家執行 /give,回傳 (ok: bool, response: str)
-    if nbt:
-        cmd = f"give {player_name} {item_id}{nbt} {quantity}"
-    else:
-        cmd = f"give {player_name} {item_id} {quantity}"
-    try:
-        response = _rcon_send(cmd)
-    except (MCRconException, ConnectionError, OSError) as e:
-        _rcon_logger.exception("RCON give 失敗")
-        return False, f"RCON error: {e}"
-    failed_markers = ("No player", "Unknown", "Incorrect", "Expected", "is not a valid")
-    if any(m in response for m in failed_markers):
-        return False, response
-    return True, response
-
 
 # ── Branch A:使用者帳號相關方法 ────────────────────────────────────────────────────
 
@@ -524,76 +475,6 @@ def get_user_minecraft_name(cursor, user_account):
     return row['minecraft_name'] if isinstance(row, dict) else row[0]
 
 
-def give_item(user_account, mc_item_id, quantity, nbt=None):
-    """
-    供 Shopping_services 直接呼叫:依 user_account 查 minecraft_name,然後 /give。
-    回傳 (ok: bool, response: str)
-      - ok=False 的情況: 玩家未綁定 / 玩家不在線 / RCON 連線失敗 / /give 指令失敗
-    """
-    player_name = get_user_minecraft_name(user_account)
-    if not player_name:
-        return False, "玩家未綁定 minecraft_name"
-    if not rcon_is_player_online(player_name):
-        return False, f"玩家 {player_name} 不在線上"
-    return rcon_give_item(player_name, mc_item_id, quantity, nbt)
-
-
-def notify_player(user_account, message):
-    """
-    供 Shopping_services 直接呼叫:對玩家發送遊戲內訊息 (/tell)。
-    回傳 (ok: bool, response: str)
-    /tell 即使玩家不在線指令也會回 "No player was found",我們當失敗處理。
-    """
-    player_name = get_user_minecraft_name(user_account)
-    if not player_name:
-        return False, "玩家未綁定 minecraft_name"
-    # 用 /tell 私訊玩家。如果想全頻廣播就改成 /say
-    try:
-        response = _rcon_send(f"tell {player_name} {message}")
-    except (MCRconException, ConnectionError, OSError) as e:
-        _rcon_logger.warning("RCON tell 失敗: %s", e)
-        return False, f"RCON error: {e}"
-    failed_markers = ("No player", "Unknown", "Incorrect", "Expected")
-    if any(m in response for m in failed_markers):
-        return False, response
-    return True, response
-
-
-def deliver_cart_to_player(user_account, cart_items):
-    """
-    結帳時呼叫,直接把購物車裡每個品項 /give 給玩家。
-    cart_items 格式: [{'mc_item_id': 'minecraft:diamond', 'quantity': 64}, ...]
-    回傳: (ok: bool, message: str, details: list)
-      - ok=True 表示全部發送成功,可建立訂單
-      - ok=False 表示玩家不在線或部分失敗,結帳路由應拒絕並回覆使用者
-    """
-    player_name = get_user_minecraft_name(user_account)
-    if not player_name:
-        return False, "尚未綁定 Minecraft 角色名", []
-
-    # 先確認玩家在線,離線就直接擋下
-    if not rcon_is_player_online(player_name):
-        return False, f"玩家 {player_name} 不在線上,請先進入遊戲再購買", []
-
-    details = []
-    all_ok = True
-    for item in cart_items:
-        mc_item_id = item.get('mc_item_id')
-        if not mc_item_id:
-            details.append({'item': item, 'ok': False, 'msg': '商品未設定 mc_item_id'})
-            all_ok = False
-            continue
-        ok, response = rcon_give_item(
-            player_name=player_name,
-            item_id=mc_item_id,
-            quantity=item['quantity'],
-        )
-        details.append({'item': item, 'ok': ok, 'msg': response})
-        if not ok:
-            all_ok = False
-
-    return all_ok, "OK" if all_ok else "部分發送失敗", details
-
 # ── Branch D：商品管理（後台） ────────────────────────────────────────────────
 
 # 新增商品，預設為上架狀態，回傳新商品的 id
@@ -684,8 +565,8 @@ def soft_delete_product(cursor, product_id):
 @db_transaction
 def add_log(cursor, admin_account, action, product_id, product_name):
     # 新增一筆後台操作記錄
-    cursor.execute("""
-        INSERT INTO manage_log
+    cursor.execute(f"""
+        INSERT INTO {BRANCH_D_MANAGE_LOG_TABLE}
         (admin_account, action, product_id, product_name)
         VALUES (?, ?, ?, ?)
     """, (admin_account, action, product_id, product_name))
@@ -693,8 +574,8 @@ def add_log(cursor, admin_account, action, product_id, product_name):
 @db_transaction
 def get_logs(cursor):
     # 取得所有後台操作記錄，依時間降冪排列
-    cursor.execute("""
-        SELECT * FROM manage_log
+    cursor.execute(f"""
+        SELECT * FROM {BRANCH_D_MANAGE_LOG_TABLE}
         ORDER BY created_at DESC
     """)
     return cursor.fetchall()
@@ -720,7 +601,7 @@ def get_member_cards(cursor, user_account):
     """
     cursor.execute(
         f"""SELECT mc.id, mc.card_number, mc.expiry, mc.holder_name, mc.is_default, mc.created_at
-            FROM `member_cards` mc
+            FROM `{BRANCH_D_MEMBER_CARDS_TABLE}` mc
             WHERE mc.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
             ORDER BY mc.is_default DESC, mc.created_at DESC""",
         (user_account,)
@@ -734,7 +615,7 @@ def add_member_card(cursor, user_account, card_number, expiry, holder_name, is_d
     若 is_default=1，會先把該會員其他卡的 is_default 全部設為 0，避免有兩張預設卡。
     """
     cursor.execute(
-        f"""INSERT INTO `member_cards`
+        f"""INSERT INTO `{BRANCH_D_MEMBER_CARDS_TABLE}`
             (user_id, card_number, expiry, holder_name, is_default)
             VALUES (
                 (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),
@@ -750,7 +631,7 @@ def delete_member_card(cursor, user_account, card_id):
     WHERE 條件多帶一個 user_id 比對，避免有人改 hidden input 刪別人的卡。
     """
     cursor.execute(
-        f"""DELETE FROM `member_cards`
+        f"""DELETE FROM `{BRANCH_D_MEMBER_CARDS_TABLE}`
             WHERE id = ?
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (card_id, user_account)
@@ -762,7 +643,7 @@ def clear_default_cards(cursor, user_account):
     把該會員所有卡片設為非預設。
     """
     cursor.execute(
-        f"""UPDATE `member_cards`
+        f"""UPDATE `{BRANCH_D_MEMBER_CARDS_TABLE}`
             SET is_default = 0
             WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
         (user_account,)
@@ -774,7 +655,7 @@ def set_default_card(cursor, user_account, card_id):
     把指定卡片設為預設卡。
     """
     cursor.execute(
-        f"""UPDATE `member_cards`
+        f"""UPDATE `{BRANCH_D_MEMBER_CARDS_TABLE}`
             SET is_default = 1
             WHERE id = ?
             AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
@@ -789,10 +670,10 @@ def get_log_months(cursor):
     取得 manage_log 中有紀錄的月份清單,以及每個月的筆數。
     回傳格式: [{"month": "2025-11", "log_count": 8}, ...]
     """
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT DATE_FORMAT(created_at, '%Y-%m') AS month,
                COUNT(*) AS log_count
-        FROM manage_log
+        FROM {BRANCH_D_MANAGE_LOG_TABLE}
         GROUP BY month
         ORDER BY month DESC
     """)
@@ -804,9 +685,9 @@ def get_logs_by_month(cursor, month):
     """
     取得指定月份(格式 YYYY-MM)的所有日誌紀錄,依時間降冪排列。
     """
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT created_at, admin_account, action, product_id, product_name
-        FROM manage_log
+        FROM {BRANCH_D_MANAGE_LOG_TABLE}
         WHERE DATE_FORMAT(created_at, '%Y-%m') = ?
         ORDER BY created_at DESC
     """, (month,))

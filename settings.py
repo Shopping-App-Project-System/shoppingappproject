@@ -27,6 +27,10 @@ BRANCH_B_PRODUCT_STOCK_TABLE    = "product_stock"
 BRANCH_C_CART_TABLE             = "cart_items"
 BRANCH_C_ORDER_TABLE            = "orders"
 BRANCH_C_ORDER_ITEMS_TABLE      = "order_items"
+BRANCH_C_ACTIVE_TAG_TABLE       = "active_tag"
+
+BRANCH_D_MANAGE_LOG_TABLE       = "manage_log"
+BRANCH_D_MEMBER_CARDS_TABLE      = "member_cards"
 
 # ________________________EMAIL_________________________
 MAIL_SERVER='smtp.gmail.com'
@@ -56,7 +60,3 @@ PRODUCT_PIC_PATH = os.path.join(PRODUCT_PIC_FOLDER, "{}")
 # ________________________MANAGE________________________
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-"""
-關於專案的設定 都可以於此做撰寫 用settings.VARIABLE的方式 來做使用
-好處是 : 以便於收整 以及 後續維護
-"""
