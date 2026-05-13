@@ -307,6 +307,16 @@ def insert_order(cursor, user_account, total, payment_method, note, credit_card_
     return cursor.lastrowid
 
 @db_transaction
+def get_user_order_seq(cursor, user_account, order_id):
+    cursor.execute(f"""
+        SELECT COUNT(*) as seq
+        FROM `{BRANCH_C_ORDER_TABLE}` o
+        JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+        WHERE u.user_account = ? AND o.status = '已完成' AND o.id <= ?
+    """, (user_account, order_id))
+    return cursor.fetchone()['seq']
+
+@db_transaction
 def insert_order_item(cursor, order_id, product_id, quantity, price):
     # 新增一筆訂單明細，記錄下單當下的價格
     cursor.execute(
