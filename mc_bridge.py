@@ -60,4 +60,15 @@ def give_item(user_account: str, mc_item_id: str, quantity: int = 1, nbt=None):
         cmd = f"give {user_account} {mc_item_id}{nbt} {quantity}"
     else:
         cmd = f"give {user_account} {mc_item_id} {quantity}"
-    send_mc_command(cmd)
+    return send_mc_command(cmd)
+
+
+def is_player_online(mc_username: str) -> bool:
+    """透過 RCON list 指令確認玩家是否在線"""
+    try:
+        with MCRcon(HOST, PASSWORD, port=PORT) as mcr:
+            response = mcr.command("list")
+            return mc_username.lower() in response.lower()
+    except Exception as e:
+        print(f"[MC] ✗ 無法查詢玩家狀態: {e}")
+        return False

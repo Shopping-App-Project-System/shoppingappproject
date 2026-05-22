@@ -11,14 +11,17 @@
   5. 結帳頁面 GET（checkout_service）
   6. 結帳送出 POST（checkout_service）
   7. 訂單明細查詢 API（order_items_service）
+  8. 待發道具背景發放（start_delivery_worker）
 
 【資料表依賴】
  cart_items、orders、order_items、products、
- product_stock、member_cards、users
+ product_stock、member_cards、users、pending_deliveries
 ==========================================================
 '''
 
 # __________________________________________內部模組_____________________________________
+import threading
+import time
 from flask import request, redirect, render_template, session, url_for, flash
 
 # _______________________________________自定義模組_______________________________________
@@ -29,7 +32,7 @@ from utils import get_auth, validateCreditCard, requestParsor
 # notify_player 和 give_item 原本從 models import，
 # 但 models 是放資料庫操作的，RCON 功能不應該放那裡。
 # 改成從 mc_bridge 直接 import，邏輯更清晰。
-from mc_bridge import notify_player, give_item
+from mc_bridge import notify_player, give_item, is_player_online
 
 from models import (get_product_by_id,
                     get_product_stock,
@@ -45,7 +48,10 @@ from models import (get_product_by_id,
                     deduct_product_stock,
                     get_cart_item_stock,
                     update_cart_qty,
-                    get_user_order_seq)
+                    get_user_order_seq,
+                    add_pending_delivery,
+                    get_all_pending_deliveries,
+                    delete_pending_delivery)
 
 
 # ── 加入購物車 ────────────────────────────────────────────────────────────────────────────────
@@ -210,21 +216,36 @@ def checkout_service(payment="", note="", card_id="", card_number=""):
     total    = sum(row['price'] * row['quantity'] for row in rows)
     order_id = insert_order(user_account, total, payment, note, credit_card_number)
     order_seq = get_user_order_seq(user_account, order_id)
+
+    online = is_player_online(user_account)
+
     # 逐筆將購物車商品寫入訂單明細、扣庫存、發放道具
     items_list = []
+    pending_list = []
     for row in rows:
         insert_order_item(order_id, row["product_id"], row['quantity'], row['price'])
         deduct_product_stock(row["product_id"], row['quantity'])
         product = get_product_by_id(row["product_id"])
         mc_item_id = product.get("mc_item_id")
         if mc_item_id:
-            give_item(user_account, mc_item_id, row["quantity"])
-        items_list.append(f"{row['name']} x{row['quantity']}")
+            if online:
+                give_item(user_account, mc_item_id, row["quantity"])
+                items_list.append(f"{row['name']} x{row['quantity']}")
+            else:
+                add_pending_delivery(user_account, mc_item_id, row["quantity"], order_id)
+                pending_list.append(f"{row['name']} x{row['quantity']}")
 
     # 清空購物車
     clear_cart(user_account)
-    notify_player(user_account, f"✅ 訂單 #{order_seq} 已發放:{', '.join(items_list)}")
-    flash("訂單建立成功！", "success")
+
+    if online and items_list:
+        notify_player(user_account, f"✅ 訂單 #{order_seq} 已發放:{', '.join(items_list)}")
+
+    if pending_list:
+        flash(f"訂單建立成功！以下道具將於你下次上線時自動發放：{', '.join(pending_list)}", "success")
+    else:
+        flash("訂單建立成功！", "success")
+
     return redirect(url_for("D.member"))
 
 
@@ -246,3 +267,23 @@ def order_items_service(order_id):
     return jsonify(result)
 
 
+# ── 待發道具背景發放 ──────────────────────────────────────────────────────────────────────────
+def start_delivery_worker():
+    def _worker():
+        while True:
+            time.sleep(30)
+            try:
+                pending = get_all_pending_deliveries()
+                if not pending:
+                    continue
+                for item in pending:
+                    if is_player_online(item['user_account']):
+                        success = give_item(item['user_account'], item['mc_item_id'], item['quantity'])
+                        if success:
+                            delete_pending_delivery(item['id'])
+                            notify_player(item['user_account'], f"✅ 待發道具已送達: {item['mc_item_id']} x{item['quantity']}")
+                            print(f"[Delivery] ✓ 發放給 {item['user_account']}: {item['mc_item_id']} x{item['quantity']}")
+            except Exception as e:
+                print(f"[Delivery] ✗ 輪詢錯誤: {e}")
+
+    threading.Thread(target=_worker, daemon=True).start()

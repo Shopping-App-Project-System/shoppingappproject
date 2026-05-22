@@ -47,6 +47,8 @@
 ==========================================================
 '''
 # __________________________________________內部模組_____________________________________
+import threading
+import time
 from flask import Blueprint
 
 # _______________________________________自定義模組_______________________________________
@@ -56,7 +58,8 @@ from .Shopping_services import (cart_add_service,
                                 cart_remove_service,
                                 checkout_service,
                                 cart_update_service,
-                                order_items_service)
+                                order_items_service,
+                                start_delivery_worker)
 
 # _______________________________________初始化___________________________________________
 bp = Blueprint("C",__name__)
@@ -88,4 +91,8 @@ def checkout():return checkout_service()
 @bp.route("/order/<int:order_id>/items", methods=["GET"])
 @userRequired
 def order_items(order_id):return order_items_service(order_id)
+
+
+# ______________________________________待發道具輪詢______________________________________
+start_delivery_worker()
 

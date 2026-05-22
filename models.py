@@ -1,14 +1,15 @@
 from settings import (BRANCH_A_TABLE,
-                      
+
                       BRANCH_B_PRODUCTS_TABLE,
                       BRANCH_B_PRODUCT_CATEGORY_TABLE,
                       BRANCH_B_PRODUCT_PICS_TABLE,
                       BRANCH_B_PRODUCT_STOCK_TABLE,
-                      
+
                       BRANCH_C_CART_TABLE,
                       BRANCH_C_ORDER_TABLE,
                       BRANCH_C_ORDER_ITEMS_TABLE,
-                      
+                      BRANCH_C_PENDING_DELIVERIES_TABLE,
+
                       BRANCH_D_MANAGE_LOG_TABLE,
                       BRANCH_D_MEMBER_CARDS_TABLE)
 
@@ -454,6 +455,26 @@ def restore_product_stock(cursor, product_id, quantity):
         f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity + ? WHERE product_id = ?",
         (quantity, product_id)
     )
+
+# ── Branch C：待發道具 ────────────────────────────────────────────────────────────────
+
+@db_transaction
+def add_pending_delivery(cursor, user_account, mc_item_id, quantity, order_id):
+    cursor.execute(f"""
+        INSERT INTO `{BRANCH_C_PENDING_DELIVERIES_TABLE}`
+        (user_account, mc_item_id, quantity, order_id)
+        VALUES (?, ?, ?, ?)
+    """, (user_account, mc_item_id, quantity, order_id))
+
+@db_transaction
+def get_all_pending_deliveries(cursor):
+    cursor.execute(f"SELECT * FROM `{BRANCH_C_PENDING_DELIVERIES_TABLE}` ORDER BY created_at ASC")
+    return cursor.fetchall()
+
+@db_transaction
+def delete_pending_delivery(cursor, delivery_id):
+    cursor.execute(f"DELETE FROM `{BRANCH_C_PENDING_DELIVERIES_TABLE}` WHERE id = ?", (delivery_id,))
+
 
 @db_transaction
 def hard_delete_product(cursor, product_id):
