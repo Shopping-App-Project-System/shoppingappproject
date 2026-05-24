@@ -9,18 +9,18 @@ from models import (
     search_orders,get_orders,update_product,
     add_product_stock,set_product_stock,
     get_log_months,get_logs_by_month,
-    get_user_accounts_with_orders,search_completed_orders,get_order_items_with_user_check,
+    get_user_accounts_with_orders,
+    search_completed_orders,
+    get_order_items_with_user_check,
     # 後台儀表板 (圖表) 用的統計查詢
     get_dashboard_summary,get_revenue_trend,get_orders_count_by_month,
     get_top_products,get_member_spending_distribution,
     get_available_order_years,
-    # 商品分類:供新增/編輯下拉選單使用
-    get_all_categories,
     # 永久刪除功能已停用,連同 hard_delete_product 一起不再 import
     # hard_delete_product
 )
-from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER
-from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
+from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER,MC_PRODUCT_ITEMS
+from utils import get_auth,save_image,del_imgae,requestParsor
 # _______________________________________初始化___________________________________________
 
 # _______________________________________services___________________________________________
@@ -28,16 +28,25 @@ from utils import get_auth,validateMobile,save_image,del_imgae,requestParsor
 # mc_item_id 設為選填，預設 None
 # 寶石類商品填入（例如 minecraft:diamond），序號類商品不填
 @requestParsor
-def manage_add_service(name,original_price,sale_price,description,image,product_quantity,mc_item_id=None,category=None):
-    print(f"name={name}, original_price={original_price}, sale_price={sale_price}, description={description}, mc_item_id={mc_item_id}, category={category}")
-    sale_price = sale_price or None
-    category   = category or None   # 空字串轉 None,語意為「不分類」
-    img_filename   = save_image(image, UPLOAD_FOLDER, filename=name)
+def manage_add_service(name, original_price, sale_price, description, image, product_quantity, mc_item_name, category=None):
+    sale_price   = sale_price or None
+    img_filename = save_image(image, UPLOAD_FOLDER, filename=name)
+
+    # category 和 mc_item_name 都必填
+    if not category or not mc_item_name:
+        flash("請選擇商品類別與MC道具", "error")
+        return redirect(url_for("D.manage"))
+
+    mc_item_id = MC_PRODUCT_ITEMS.get(category, {}).get(mc_item_name)
+    if not mc_item_id:
+        flash("MC道具輸入錯誤，請查閱相關文件後重新嘗試上架", "error")
+        return redirect(url_for("D.manage"))
+
     product_id = add_product(name, original_price, sale_price, description, img_filename, mc_item_id, category)
-    add_product_stock(product_id,int(product_quantity))
+    add_product_stock(product_id, int(product_quantity))
     add_log(session.get(SESSION_AUTHO), "上架", product_id, name)
     flash("商品已上架", "success")
-    return redirect(url_for("D.manage"))
+    return redirect(url_for("D.manage") + "#products")
 
 # 永久刪除功能已停用 ── 整個 function 註解保留以備將來恢復.
 # 理由:
@@ -57,10 +66,10 @@ def manage_add_service(name,original_price,sale_price,description,image,product_
 #     flash("商品已刪除", "success")
 #     return redirect(url_for("D.manage"))
 
-def manage_service():
+@requestParsor
+def manage_service(mc_item_class, mc_item_name, mc_item_id):
     products = get_all_products()
-    category_list = get_all_categories()   # 商品類別下拉選單(可搜尋)用
-    return render_template("manage.html", products=products, category_list=category_list)
+    return render_template("manage.html", products=products, mc_items=MC_PRODUCT_ITEMS)
 
 @requestParsor
 def manage_remove_service(product_id):
@@ -127,33 +136,25 @@ def manage_edit_service(product_id, name, original_price, sale_price=None, categ
     return redirect(url_for("D.manage"))
 
 @requestParsor
-def member_edit_service(name=None, mobile=None, profile_pic=None):
+def member_edit_service(profile_pic=None):
     user_account = session.get(SESSION_AUTHO)
 
     if request.method == "GET":
         user = getUser(
             {"user_account": user_account},
-            "user_name", "user_email", "user_mobile", "user_account"
+            "user_account", "user_email"
         )
-        user["level"] = "一般會員"
         return render_template("member_edit.html",
             user=user,
             auth=get_auth(user_account)
         )
 
-    if mobile and not validateMobile(mobile):
-        flash("手機格式錯誤", "error")
-        return redirect(url_for("D.member_edit"))
-
-    update_data = {"user_name": name, "user_mobile": mobile}
-
     if profile_pic and profile_pic.filename != "":
-        old_pic_path = getUser({"user_account":user_account}, "pic_path")
+        old_pic_path = getUser({"user_account": user_account}, "pic_path")
         new_pic_path = save_image(profile_pic, PROFILE_PIC_FOLDER, filename=user_account)
-        update_data["pic_path"] = new_pic_path
         del_imgae(old_pic_path)
+        updateUser({"pic_path": new_pic_path}, {"user_account": user_account})
 
-    updateUser(update_data, {"user_account": user_account})
     flash("資料更新成功", "success")
     return redirect(url_for("D.member"))
 
@@ -169,7 +170,7 @@ def member_service(keyword=""):
 
     user = getUser(
         {"user_account": user_account},
-        "user_name", "user_account", "user_email", "user_mobile"
+        "user_account", "user_email"
     )
     user.update({"level": "一般會員"})
 

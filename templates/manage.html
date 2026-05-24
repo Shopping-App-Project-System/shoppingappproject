@@ -17,10 +17,6 @@
             --gold-ore:#F0C93A; --redstone:#E03030;
             --lapis:#1A44A8; --lapis-dk:#0d2a6e;
             --emerald:#17B85A; --emerald-dk:#0d7a3a;
-            /* 鐵方塊:反光的銀白,Minecraft 鐵方塊的高光配色
-               用於 mc-block 區塊背景與表格列,替換原本的石頭灰
-               iron-light/iron-dark:外圈大區塊,亮反光
-               iron-row/iron-row-dk:表格列,稍暗一階做層次區隔 */
             --iron-light:#E0E0E0; --iron-dark:#B8B8B8;
             --iron-row:#D8D8D8; --iron-row-dk:#ACACAC;
             --white-mc:#F0F0F0; --black-mc:#1A1A1A;
@@ -45,7 +41,6 @@
         a{text-decoration:none;color:inherit;}
         .container{width:min(1200px,94%);margin:auto;}
 
-        /* image preview — keep original logic intact */
         .img-preview-box{position:relative;width:200px;height:200px;margin-top:10px;border:var(--border-block);box-shadow:var(--shadow-inset),3px 3px 0 #000;background:repeating-linear-gradient(45deg,#333 0,#333 8px,#2a2a2a 8px,#2a2a2a 16px);overflow:hidden;display:none;image-rendering:pixelated;}
         .img-preview-box.visible{display:block;}
         .img-preview-box img{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;max-width:none!important;max-height:none!important;image-rendering:pixelated;}
@@ -55,46 +50,22 @@
         .img-preview-box-sm.visible{display:block;}
         .img-preview-box-sm img{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;max-width:none!important;max-height:none!important;}
 
-        /* ground strip */
-        
-
-        /* topbar */
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         .topbar-title{font-family:var(--font-pixel);font-size:1.1rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;}
-        
-        
-
-        /* tab nav */
         .tab-nav{display:flex;gap:8px;align-items:center;margin-bottom:28px;margin-top:32px;}
         .tab-nav a{font-family:var(--font-pixel);font-size:.75rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:10px 20px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);}
         .tab-nav a.active{background:repeating-linear-gradient(180deg,var(--grass-top) 0,var(--grass-top) 6px,var(--leaf-dark) 6px,var(--leaf-dark) 12px);}
         .tab-nav a:hover{filter:brightness(1.2);transform:translateY(-2px);box-shadow:var(--shadow-inset),3px 6px 0 #000;}
-        .tab-sep{font-family:var(--font-pixel);font-size:.75rem;color:#666;text-shadow:1px 1px 0 #000;}
 
-        /* flash */
         .flash-wrapper{margin-bottom:20px;}
         .flash-message{font-family:var(--font-pixel);font-size:.7rem;line-height:2;padding:14px 18px;border:var(--border-block);margin-bottom:10px;box-shadow:var(--shadow-block);}
         .flash-message.success{background:repeating-linear-gradient(180deg,#1a5c2a 0,#1a5c2a 6px,#0d3a1a 6px,#0d3a1a 12px);color:#7fff7f;text-shadow:2px 2px 0 #000;}
         .flash-message.error{background:repeating-linear-gradient(180deg,#6a1010 0,#6a1010 6px,#420a0a 6px,#420a0a 12px);color:#ff8080;text-shadow:2px 2px 0 #000;}
 
-        /* mc block panel */
         .mc-block{border:var(--border-block);box-shadow:var(--shadow-inset),6px 6px 0 #000;background:repeating-linear-gradient(180deg,var(--iron-light) 0,var(--iron-light) 6px,var(--iron-dark) 6px,var(--iron-dark) 12px);overflow:hidden;margin-bottom:28px;}
         .mc-block-header{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:14px 20px;}
         .mc-block-header h2{font-family:var(--font-pixel);font-size:.9rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;}
         .mc-block-body{padding:24px;}
 
-        /* form */
         .form-group{margin-bottom:16px;display:flex;flex-direction:column;gap:8px;}
         .form-group label{font-family:var(--font-pixel);font-size:.65rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;}
         .form-control{font-family:var(--font-pixel);font-size:.65rem;background:repeating-linear-gradient(180deg,#1a1a1a 0,#1a1a1a 6px,#222 6px,#222 12px);border:3px solid #444;color:var(--white-mc);padding:11px 12px;outline:none;box-shadow:inset 2px 2px 0 rgba(255,255,255,.08);transition:border-color .15s steps(2);width:100%;}
@@ -104,22 +75,38 @@
         textarea.form-control{resize:vertical;min-height:160px;line-height:1.9;font-family:var(--font-ui);font-size:.85rem;}
         input[type="file"].form-control{color:#aaa;padding:8px 10px;}
 
-        /* ── 新增商品區塊文字顏色覆寫 ─────────────────────────────────
-           原本 .form-group label / .form-control 等都用白色文字
-           (適合石頭灰背景);因為新增商品區塊改用鐵方塊銀白色背景,
-           白字會看不清楚,在此將 label 覆寫成黑色 (僅限本區塊,
-           不影響商品列表 / 修改商品 modal)。
-
-           注意:`📦 新增商品` 標題 (.mc-block-header h2) 不覆寫,
-           因為它的背景仍是深棕色 (dirt),白字搭配剛好。
-           ────────────────────────────────────────────────────────── */
         .add-product-block .form-group label{color:var(--black-mc);text-shadow:1px 1px 0 rgba(255,255,255,.4);}
         .add-product-block .form-control{color:var(--white-mc);}
-        /* input/textarea/select 內部維持白字 (因為背景是深色#1a1a1a),
-           但「商品圖片」(file input) 視覺上跟其他不一樣,改成淺灰即可 */
         .add-product-block input[type="file"].form-control{color:#ddd;}
 
-        /* buttons */
+        /* MC 道具選單 */
+        .mc-selector-wrap{border:var(--border-block);box-shadow:var(--shadow-inset),4px 4px 0 #000;overflow:hidden;}
+        .mc-cat-bar{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;}
+        .mc-cat-btn{font-family:var(--font-pixel);font-size:.6rem;color:#fff;text-shadow:2px 2px 0 #000;padding:8px 11px;border:3px solid #000;background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 5px,var(--stone) 5px,var(--stone) 10px);box-shadow:inset -2px -2px 0 rgba(0,0,0,.5),inset 2px 2px 0 rgba(255,255,255,.2),3px 3px 0 #000;cursor:pointer;white-space:nowrap;transition:transform .08s steps(2),filter .08s;}
+        .mc-cat-btn:hover{filter:brightness(1.25);transform:translateY(-2px);}
+        .mc-cat-btn:active{transform:translateY(1px);}
+        .mc-cat-btn.active{background:repeating-linear-gradient(180deg,var(--grass-top) 0,var(--grass-top) 5px,var(--leaf-dark) 5px,var(--leaf-dark) 10px);box-shadow:inset -2px -2px 0 rgba(0,0,0,.5),inset 2px 2px 0 rgba(255,255,255,.1);transform:translateY(1px);}
+        .mc-item-area{display:none;}
+        .mc-item-area.show{display:block;}
+        .mc-item-search-row{background:#111;border-bottom:3px solid #000;padding:8px 12px;display:flex;align-items:center;gap:10px;}
+        .mc-item-cat-label{font-family:var(--font-pixel);font-size:.6rem;color:#fff;text-shadow:2px 2px 0 #000;white-space:nowrap;}
+        .mc-item-search{flex:1;font-family:var(--font-pixel);font-size:.6rem;background:#1a1a1a;border:3px solid #444;color:#fff;padding:7px 10px;outline:none;}
+        .mc-item-search:focus{border-color:var(--diamond);}
+        .mc-item-search::placeholder{color:#555;}
+        .mc-item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));max-height:220px;overflow-y:auto;background:#111;scrollbar-width:thin;scrollbar-color:#444 #111;}
+        .mc-item-btn{font-family:var(--font-pixel);font-size:.55rem;color:#ddd;text-shadow:1px 1px 0 #000;padding:12px 8px;border:0;border-right:2px solid #222;border-bottom:2px solid #222;background:#111;cursor:pointer;text-align:center;line-height:1.7;word-break:break-all;transition:background .06s steps(2),color .06s;}
+        .mc-item-btn:hover{background:#1e3320;color:#fff;}
+        .mc-item-btn.selected{background:repeating-linear-gradient(180deg,#0d3a1a 0,#0d3a1a 5px,#0a2512 5px,#0a2512 10px);color:#7fff7f;text-shadow:0 0 4px #0f0,1px 1px 0 #000;border-color:#1a5c2a;}
+        .mc-item-empty{grid-column:1/-1;font-family:var(--font-pixel);font-size:.55rem;color:#555;text-align:center;padding:28px;}
+        .mc-result-bar{background:repeating-linear-gradient(180deg,#111 0,#111 5px,#181818 5px,#181818 10px);border-top:3px solid #000;padding:12px 16px;display:flex;align-items:center;gap:12px;min-height:58px;}
+        .mc-result-tag{font-family:var(--font-pixel);font-size:.7rem;color:#fff;text-shadow:2px 2px 0 #000;white-space:nowrap;}
+        .mc-result-content{flex:1;}
+        .mc-result-name{font-family:var(--font-pixel);font-size:.8rem;color:#fff;text-shadow:2px 2px 0 #000;}
+        .mc-result-name.has-val{color:var(--diamond);}
+        .mc-result-id{font-family:var(--font-pixel);font-size:.6rem;color:#fff;text-shadow:1px 1px 0 #000;margin-top:6px;}
+        .mc-clear-btn{font-family:var(--font-pixel);font-size:.6rem;color:#fff;text-shadow:1px 1px 0 #000;padding:8px 12px;border:3px solid #000;background:repeating-linear-gradient(180deg,#c0392b 0,#c0392b 5px,#7a1e14 5px,#7a1e14 10px);box-shadow:inset -2px -2px 0 rgba(0,0,0,.5),inset 2px 2px 0 rgba(255,255,255,.15),3px 3px 0 #000;cursor:pointer;white-space:nowrap;}
+        .mc-clear-btn:hover{filter:brightness(1.2);}
+
         .btn{font-family:var(--font-pixel);font-size:.7rem;color:var(--black-mc);border:var(--border-block);padding:9px 16px;cursor:pointer;box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);white-space:nowrap;display:inline-block;text-align:center;}
         .btn:hover{filter:brightness(1.2);transform:translateY(-2px);box-shadow:var(--shadow-inset),3px 5px 0 #000;}
         .btn:active{transform:translateY(2px);box-shadow:var(--shadow-inset),1px 1px 0 #000;}
@@ -130,8 +117,6 @@
         .btn-cancel{background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
 
         .action-btns{display:flex;gap:8px;flex-wrap:wrap;}
-
-        /* table */
         .table-responsive{overflow-x:auto;}
         .table{width:100%;border-collapse:collapse;text-align:left;}
         .table th,.table td{padding:12px 14px;border-bottom:4px solid #000;font-family:var(--font-pixel);font-size:.6rem;}
@@ -139,50 +124,35 @@
         .table td{background:repeating-linear-gradient(180deg,var(--iron-row) 0,var(--iron-row) 6px,var(--iron-row-dk) 6px,var(--iron-row-dk) 12px);color:var(--black-mc);text-shadow:1px 1px 0 rgba(255,255,255,.4);}
         .table tr:hover td{filter:brightness(1.15);}
         .table td.name-cell{font-family:var(--font-pixel);font-size:.65rem;color:var(--black-mc);text-shadow:1px 1px 0 rgba(255,255,255,.5);}
-
-        /* status badges */
         .status-active{font-family:var(--font-pixel);font-size:.55rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;padding:4px 10px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--emerald) 0,var(--emerald) 6px,var(--emerald-dk) 6px,var(--emerald-dk) 12px);box-shadow:var(--shadow-inset),2px 2px 0 #000;display:inline-block;}
         .status-inactive{font-family:var(--font-pixel);font-size:.55rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;padding:4px 10px;border:var(--border-block);background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,#a02020 6px,#a02020 12px);box-shadow:var(--shadow-inset),2px 2px 0 #000;display:inline-block;}
-
-        /* submit row */
         .submit-row{margin-top:24px;text-align:right;border-top:4px solid #000;padding-top:20px;}
 
-        /* modal */
         .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:20px;}
         .modal-overlay.active{display:flex;}
-        .modal-box{
-            border:var(--border-block);box-shadow:var(--shadow-inset),8px 8px 0 #000;
-            background:repeating-linear-gradient(180deg,var(--iron-light) 0,var(--iron-light) 6px,var(--iron-dark) 6px,var(--iron-dark) 12px);
-            width:min(580px,100%);max-height:90vh;overflow-y:auto;
-        }
+        .modal-box{border:var(--border-block);box-shadow:var(--shadow-inset),8px 8px 0 #000;background:repeating-linear-gradient(180deg,var(--iron-light) 0,var(--iron-light) 6px,var(--iron-dark) 6px,var(--iron-dark) 12px);width:min(620px,100%);max-height:90vh;overflow-y:auto;}
         .modal-header{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 8px,var(--dirt-dark) 8px,var(--dirt-dark) 16px);border-bottom:var(--border-block);padding:14px 20px;}
         .modal-title{font-family:var(--font-pixel);font-size:.9rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;}
         .modal-body{padding:24px;}
         .modal-actions{margin-top:20px;display:flex;justify-content:flex-end;gap:10px;}
 
-        /* product image in table */
         .product-thumb{width:56px;height:56px;object-fit:cover;border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;image-rendering:pixelated;}
         .no-thumb{width:56px;height:56px;border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;background:repeating-linear-gradient(45deg,#444 0,#444 8px,#333 8px,#333 16px);display:flex;align-items:center;justify-content:center;font-family:var(--font-pixel);font-size:.35rem;color:#777;}
-
         .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);}
-
         .panel-page{padding:28px 0 80px;}
 
         @media(max-width:800px){
-    .table th,.table td{font-size:.5rem;padding:8px;}
-    .btn{font-size:.55rem;padding:7px 10px;}
-    .tab-nav{flex-wrap:wrap;gap:6px;}
-    .tab-nav a{font-size:.65rem;padding:8px 12px;}
-}
-@media(max-width:600px){
-    .mc-block-body form>div[style*="grid-template-columns:1fr 1fr"]{display:block!important;}
-    .mc-block-body form>div[style*="grid"]{display:block!important;}
-    .action-btns{flex-wrap:wrap;}
-    .table-responsive{font-size:.45rem;}
-}
+            .table th,.table td{font-size:.5rem;padding:8px;}
+            .btn{font-size:.55rem;padding:7px 10px;}
+            .tab-nav{flex-wrap:wrap;gap:6px;}
+            .tab-nav a{font-size:.65rem;padding:8px 12px;}
+        }
+        @media(max-width:600px){
+            .mc-block-body form>div[style*="grid"]{display:block!important;}
+            .action-btns{flex-wrap:wrap;}
+            .table-responsive{font-size:.45rem;}
+        }
     </style>
-
-    {# Chart.js (CDN) — 供「數據圖表」分頁的 partial 使用 #}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -193,23 +163,19 @@
     <div class="container topbar-inner">
         <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         <nav class="nav-links">
-            {# 「數據圖表」與「商品管理」是同一個頁面的兩個分頁,點擊用 JS 切換不換 URL #}
-            {# 預設分頁:數據圖表 (進到 /manage 第一眼看到的就是圖表) #}
             <a href="#" data-tab="dashboard" class="active" onclick="switchTab(event,'dashboard')">📈 數據圖表</a>
             <a href="#" data-tab="products" onclick="switchTab(event,'products')">⚙ 商品管理</a>
-            <a href="/manage/log" >📋 操作紀錄</a>
-            <a href="/manage/orders" >📊 交易訂單</a>
+            <a href="/manage/log">📋 操作紀錄</a>
+            <a href="/manage/orders">📊 交易訂單</a>
         </nav>
-        <button class="nav-toggle" id="navToggle" aria-label="選單">
-            <span></span><span></span><span></span>
-        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="選單"><span></span><span></span><span></span></button>
         <div class="user-panel"><a href="/manage/logout" class="topbar-btn">登出</a></div>
     </div>
 </header>
 
 <main class="panel-page">
     <div class="container">
-{% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flash-wrapper">
             {% for category, message in messages %}
@@ -219,13 +185,6 @@
         {% endif %}
         {% endwith %}
 
-        {# ─────────────────────────────────────────────────────────────
-           分頁容器:
-             - #panel-dashboard 是預設顯示的「數據圖表」分頁
-               (進到 /manage 第一眼看到的就是儀表板)
-             - #panel-products 切過去才會顯示
-           點擊 nav-links 的 data-tab="..." 會切換顯示哪一個。
-           ───────────────────────────────────────────────────────────── #}
         <div id="panel-products" style="display:none;">
 
         <!-- 新增商品 -->
@@ -233,64 +192,74 @@
             <div class="mc-block-header"><h2>📦 新增商品</h2></div>
             <div class="mc-block-body">
                 <form method="POST" action="/manage/add" enctype="multipart/form-data">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
 
-                        <!-- 左欄：基本資訊 -->
-                        <div>
-                            <div class="form-group">
-                                <label for="name">商品名稱</label>
-                                <input type="text" id="name" name="name" class="form-control" placeholder="輸入商品名稱" required>
-                            </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                                <div class="form-group">
-                                    <label for="original_price">原價</label>
-                                    <input type="number" id="original_price" name="original_price" class="form-control" placeholder="例如：1000" required>
+                    <!-- 上方區塊：道具選單 -->
+                    <div class="form-group" style="margin-bottom:24px;">
+                        <label>商品類別 與 MC 道具</label>
+                        <input type="hidden" id="add_category"     name="category"    value="">
+                        <input type="hidden" id="add_mc_item_name" name="mc_item_name" value="">
+                        <div class="mc-selector-wrap">
+                            <div class="mc-cat-bar" id="addCatBar"></div>
+                            <div class="mc-item-area" id="addItemArea">
+                                <div class="mc-item-search-row">
+                                    <span class="mc-item-cat-label" id="addCatLabel">—</span>
+                                    <input class="mc-item-search" id="addItemSearch" placeholder="搜尋物品..." oninput="mcFilterItems('add')">
                                 </div>
-                                <div class="form-group">
-                                    <label for="sale_price">特價 (選填)</label>
-                                    <input type="number" id="sale_price" name="sale_price" class="form-control" placeholder="若無請留空">
+                                <div class="mc-item-grid" id="addItemGrid"></div>
+                            </div>
+                            <div class="mc-result-bar">
+                                <span class="mc-result-tag">已選：</span>
+                                <div class="mc-result-content">
+                                    <div class="mc-result-name" id="addResultName">尚未選擇</div>
+                                    <div class="mc-result-id"   id="addResultId"></div>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="category">商品類別 (選填)</label>
-                                <input type="text" id="category" name="category" class="form-control"
-                                       list="category-options" autocomplete="off"
-                                       placeholder="輸入分類名稱(可從下拉選擇,或新建);留空表示不分類">
-                                <datalist id="category-options">
-                                    {% for cat in category_list %}
-                                    <option value="{{ cat.name }}">
-                                    {% endfor %}
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label for="product_quantity">上架數量</label>
-                                <input type="number" id="product_quantity" name="product_quantity" class="form-control" placeholder="輸入上架數量" min="1" required>
-                            </div>
-                            <!-- MC 道具 ID，填入後結帳時自動發放道具給玩家，序號類商品留空 -->
-                            <div class="form-group">
-                                <label for="mc_item_id">MC 道具 ID (選填)</label>
-                                <input type="text" id="mc_item_id" name="mc_item_id" class="form-control" placeholder="例如：minecraft:diamond">
-                            </div>
-                            <div class="form-group">
-                                <label for="imageInput">商品圖片 (選填)</label>
-                                <input type="file" id="imageInput" name="image" class="form-control" accept="image/*">
-                                <div id="previewBox" class="img-preview-box">
-                                    <img id="preview" src="" alt="圖片預覽">
-                                </div>
+                                <button type="button" class="mc-clear-btn" onclick="mcClear('add')">✕ 清除</button>
                             </div>
                         </div>
-
-                        <!-- 右欄：描述 -->
-                        <div style="display:flex;flex-direction:column;height:100%;">
-                            <div class="form-group" style="flex:1;display:flex;flex-direction:column;">
-                                <label for="description">商品描述</label>
-                                <textarea id="description" name="description" class="form-control"
-                                    placeholder="輸入商品詳細說明，例如：&#10;・材質：100% 純棉&#10;・尺寸：M / L / XL&#10;・產地：台灣&#10;・注意事項：請勿漂白"
-                                    style="flex:1;min-height:200px;"></textarea>
-                            </div>
-                        </div>
-
                     </div>
+
+                    <!-- 下方區塊：商品資訊 -->
+                    <div style="border-top:4px solid #000;padding-top:20px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
+                            <div>
+                                <div class="form-group">
+                                    <label for="name">商品名稱</label>
+                                    <input type="text" id="name" name="name" class="form-control" placeholder="選擇道具後自動填入，可手動修改" required>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                                    <div class="form-group">
+                                        <label for="original_price">原價</label>
+                                        <input type="number" id="original_price" name="original_price" class="form-control" placeholder="例如：1000" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sale_price">特價 (選填)</label>
+                                        <input type="number" id="sale_price" name="sale_price" class="form-control" placeholder="若無請留空">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="product_quantity">上架數量</label>
+                                    <input type="number" id="product_quantity" name="product_quantity" class="form-control" placeholder="輸入上架數量" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="imageInput">商品圖片 (選填)</label>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <input type="file" id="imageInput" name="image" class="form-control" accept="image/*" style="flex:1;">
+                                        <button type="button" class="btn btn-danger" id="clearImageBtn" style="display:none;" onclick="clearImage()">✕</button>
+                                    </div>
+                                    <div id="previewBox" class="img-preview-box"><img id="preview" src="" alt="圖片預覽"></div>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;height:100%;">
+                                <div class="form-group" style="flex:1;display:flex;flex-direction:column;">
+                                    <label for="description">商品描述</label>
+                                    <textarea id="description" name="description" class="form-control"
+                                        placeholder="輸入商品詳細說明"
+                                        style="flex:1;min-height:260px;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="submit-row">
                         <button type="submit" class="btn btn-primary">+ 新增商品</button>
                     </div>
@@ -302,7 +271,6 @@
         <div class="mc-block">
             <div class="mc-block-header"><h2>📋 商品列表</h2></div>
             <div class="mc-block-body" style="padding:0;">
-
                 {% if products %}
                 <div class="table-responsive">
                     <table class="table">
@@ -334,28 +302,17 @@
                                 <td>{{ p.category if p.category else '-' }}</td>
                                 <td>
                                     {% if p.product_quantity is not none %}
-                                        {% if p.product_quantity == 0 %}
-                                            <span style="color:#c0392b;font-weight:600;">缺貨</span>
-                                        {% elif p.product_quantity < 10 %}
-                                            <span style="color:#e67e22;font-weight:600;">{{ p.product_quantity }}</span>
-                                        {% else %}
-                                            {{ p.product_quantity }}
-                                        {% endif %}
-                                    {% else %}
-                                        <span style="color:#999;">-</span>
-                                    {% endif %}
+                                        {% if p.product_quantity == 0 %}<span style="color:#c0392b;font-weight:600;">缺貨</span>
+                                        {% elif p.product_quantity < 10 %}<span style="color:#e67e22;font-weight:600;">{{ p.product_quantity }}</span>
+                                        {% else %}{{ p.product_quantity }}{% endif %}
+                                    {% else %}<span style="color:#999;">-</span>{% endif %}
                                 </td>
                                 <td>
-                                    {% if p.is_active %}
-                                    <span class="status-active">銷售中</span>
-                                    {% else %}
-                                    <span class="status-inactive">已下架</span>
-                                    {% endif %}
+                                    {% if p.is_active %}<span class="status-active">銷售中</span>
+                                    {% else %}<span class="status-inactive">已下架</span>{% endif %}
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        {# 修改按鈕：點擊後開啟對應的編輯視窗
-                                           改用 data-* 屬性傳資料，避免商品名稱含引號時 onclick 被截斷 #}
                                         <button type="button" class="btn btn-edit btn-edit-trigger"
                                             data-id="{{ p.id }}"
                                             data-name="{{ p.name }}"
@@ -363,8 +320,8 @@
                                             data-sale-price="{{ p.sale_price if p.sale_price else '' }}"
                                             data-product-pic="{{ p.product_pic if p.product_pic else '' }}"
                                             data-category="{{ p.category if p.category else '' }}"
-                                            data-quantity="{{ p.product_quantity if p.product_quantity is not none else '' }}">✏ 修改</button>
-
+                                            data-quantity="{{ p.product_quantity if p.product_quantity is not none else '' }}"
+                                            data-mc-item-name="{{ p.mc_item_name if p.mc_item_name else '' }}">✏ 修改</button>
                                         {% if p.is_active %}
                                         <form method="POST" action="/manage/remove" onsubmit="return confirm('確定要下架此商品嗎？')" style="display:inline;">
                                             <input type="hidden" name="product_id" value="{{ p.id }}">
@@ -375,13 +332,6 @@
                                             <input type="hidden" name="product_id" value="{{ p.id }}">
                                             <button type="submit" class="btn btn-success">▲ 上架</button>
                                         </form>
-                                        {# 永久刪除按鈕已停用:有訂單紀錄的商品無法刪除 (外鍵約束),
-                                           而沒訂單的商品下架就好,沒必要徹底移除.故整段註解保留以備將來恢復.
-                                        <form method="POST" action="/manage/clear" onsubmit="return confirm('確定要永久刪除此商品紀錄嗎？此操作無法復原！')" style="display:inline;">
-                                            <input type="hidden" name="product_id" value="{{ p.id }}">
-                                            <button type="submit" class="btn btn-danger" title="刪除商品紀錄">✕ 刪除</button>
-                                        </form>
-                                        #}
                                         {% endif %}
                                     </div>
                                 </td>
@@ -393,17 +343,14 @@
                 {% else %}
                 <div style="text-align:center;padding:60px 20px;font-family:var(--font-pixel);font-size:.7rem;color:#aaa;text-shadow:1px 1px 0 #000;line-height:2;">目前沒有商品</div>
                 {% endif %}
-
             </div>
         </div>
 
-        </div> {# /#panel-products #}
+        </div>
 
-        {# 數據圖表分頁容器 — 預設顯示,頁面載入後自動觸發 AJAX 載入 partial #}
         <div id="panel-dashboard">
             <div style="text-align:center;padding:60px 20px;font-family:var(--font-pixel);font-size:.7rem;color:#aaa;text-shadow:1px 1px 0 #000;">📡 載入儀表板中...</div>
         </div>
-
     </div>
 </main>
 
@@ -412,18 +359,17 @@
 <!-- 編輯 Modal -->
 <div id="editModal" class="modal-overlay" onclick="closeEditModalIfBackdrop(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <div class="modal-title">✏ 修改商品</div>
-        </div>
+        <div class="modal-header"><div class="modal-title">✏ 修改商品</div></div>
         <div class="modal-body">
             <form id="editForm" method="POST" action="/manage/edit" enctype="multipart/form-data">
-                <input type="hidden" id="edit_product_id" name="product_id">
+                <input type="hidden" id="edit_product_id"   name="product_id">
+                <input type="hidden" id="edit_category"     name="category"    value="">
+                <input type="hidden" id="edit_mc_item_name" name="mc_item_name" value="">
 
                 <div class="form-group">
                     <label for="edit_name">商品名稱</label>
                     <input type="text" id="edit_name" name="name" class="form-control" required>
                 </div>
-
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
                     <div class="form-group">
                         <label for="edit_original_price">原價</label>
@@ -438,33 +384,38 @@
                         <input type="number" id="edit_product_quantity" name="product_quantity" class="form-control" min="0" placeholder="留空則不變">
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>目前圖片</label>
-                    <div id="edit_current_pic_box" class="img-preview-box-sm solid">
-                        <img id="edit_current_pic" src="" alt="目前圖片">
-                    </div>
+                    <div id="edit_current_pic_box" class="img-preview-box-sm solid"><img id="edit_current_pic" src="" alt="目前圖片"></div>
                     <span id="edit_no_pic" style="font-family:var(--font-pixel);font-size:.55rem;color:#777;text-shadow:1px 1px 0 #000;display:none;">（無圖片）</span>
                 </div>
-
                 <div class="form-group">
                     <label for="edit_image">更換圖片 (選填，不選擇則保留原圖)</label>
                     <input type="file" id="edit_image" name="image" class="form-control" accept="image/*">
-                    <div id="edit_preview_box" class="img-preview-box-sm dashed">
-                        <img id="edit_preview" src="" alt="新圖片預覽">
-                    </div>
+                    <div id="edit_preview_box" class="img-preview-box-sm dashed"><img id="edit_preview" src="" alt="新圖片預覽"></div>
                 </div>
 
+                <!-- Edit Modal MC 道具選單 -->
                 <div class="form-group">
-                    <label for="edit_category">商品類別</label>
-                    <input type="text" id="edit_category" name="category" class="form-control"
-                           list="edit-category-options" autocomplete="off"
-                           placeholder="輸入分類名稱(可從下拉選擇,或新建);留空表示不分類">
-                    <datalist id="edit-category-options">
-                        {% for cat in category_list %}
-                        <option value="{{ cat.name }}">
-                        {% endfor %}
-                    </datalist>
+                    <label>商品類別 與 MC 道具 (選填)</label>
+                    <div class="mc-selector-wrap">
+                        <div class="mc-cat-bar" id="editCatBar"></div>
+                        <div class="mc-item-area" id="editItemArea">
+                            <div class="mc-item-search-row">
+                                <span class="mc-item-cat-label" id="editCatLabel">—</span>
+                                <input class="mc-item-search" id="editItemSearch" placeholder="搜尋物品..." oninput="mcFilterItems('edit')">
+                            </div>
+                            <div class="mc-item-grid" id="editItemGrid"></div>
+                        </div>
+                        <div class="mc-result-bar">
+                            <span class="mc-result-tag">已選：</span>
+                            <div class="mc-result-content">
+                                <div class="mc-result-name" id="editResultName">尚未選擇</div>
+                                <div class="mc-result-id"   id="editResultId"></div>
+                            </div>
+                            <button type="button" class="mc-clear-btn" onclick="mcClear('edit')">✕ 清除</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-actions">
@@ -476,173 +427,219 @@
     </div>
 </div>
 
+<!-- 圖片預覽 -->
 <script>
-    // 新增圖片預覽
-    const input = document.getElementById("imageInput");
-    const preview = document.getElementById("preview");
-    const previewBox = document.getElementById("previewBox");
-    input.addEventListener("change", function () {
-        const file = this.files[0];
-        if (!file) { previewBox.classList.remove("visible"); return; }
-        const reader = new FileReader();
-        reader.onload = e => { preview.src = e.target.result; previewBox.classList.add("visible"); }
-        reader.readAsDataURL(file);
-    });
-
-    // 編輯 modal
-    const editModal = document.getElementById("editModal");
-
-    // 為所有「修改」按鈕綁定點擊事件，從 data-* 屬性讀取商品資料
-    document.querySelectorAll(".btn-edit-trigger").forEach(btn => {
-        btn.addEventListener("click", function () {
-            openEditModal(
-                this.dataset.id,
-                this.dataset.name,
-                this.dataset.originalPrice,
-                this.dataset.salePrice,
-                this.dataset.productPic,
-                this.dataset.category,
-                this.dataset.quantity
-            );
-        });
-    });
-
-    function openEditModal(id, name, originalPrice, salePrice, productPic, category, quantity) {
-        document.getElementById("edit_product_id").value = id;
-        document.getElementById("edit_name").value = name;
-        document.getElementById("edit_original_price").value = originalPrice;
-        document.getElementById("edit_sale_price").value = salePrice || "";
-        // 分類:product_category 表存的就是名稱字串,直接帶入即可
-        document.getElementById("edit_category").value = category || "";
-        document.getElementById("edit_product_quantity").value = (quantity !== undefined && quantity !== "") ? quantity : "";
-
-        const curImg = document.getElementById("edit_current_pic");
-        const curBox = document.getElementById("edit_current_pic_box");
-        const noPic  = document.getElementById("edit_no_pic");
-        if (productPic) {
-            curImg.src = productPic;
-            curBox.classList.add("visible");
-            noPic.style.display = "none";
-        } else {
-            curBox.classList.remove("visible");
-            noPic.style.display = "inline";
-        }
-        document.getElementById("edit_image").value = "";
-        document.getElementById("edit_preview_box").classList.remove("visible");
-        document.getElementById("edit_preview").src = "";
-        editModal.classList.add("active");
-    }
-
-    function closeEditModal() { editModal.classList.remove("active"); }
-    function closeEditModalIfBackdrop(e) { if (e.target === editModal) closeEditModal(); }
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && editModal.classList.contains("active")) closeEditModal(); });
-
-    const editImageInput = document.getElementById("edit_image");
-    const editPreview    = document.getElementById("edit_preview");
-    const editPreviewBox = document.getElementById("edit_preview_box");
-    editImageInput.addEventListener("change", function () {
-        const file = this.files[0];
-        if (!file) { editPreviewBox.classList.remove("visible"); return; }
-        const reader = new FileReader();
-        reader.onload = e => { editPreview.src = e.target.result; editPreviewBox.classList.add("visible"); }
-        reader.readAsDataURL(file);
-    });
+document.getElementById("imageInput").addEventListener("change", function(){
+    const file=this.files[0]; const box=document.getElementById("previewBox"); const img=document.getElementById("preview");
+    const clearBtn=document.getElementById("clearImageBtn");
+    if(!file){box.classList.remove("visible");clearBtn.style.display="none";return;}
+    const r=new FileReader(); r.onload=e=>{img.src=e.target.result;box.classList.add("visible");clearBtn.style.display="";}; r.readAsDataURL(file);
+});
+function clearImage(){
+    const input=document.getElementById("imageInput");
+    const box=document.getElementById("previewBox");
+    const img=document.getElementById("preview");
+    const clearBtn=document.getElementById("clearImageBtn");
+    input.value="";
+    img.src="";
+    box.classList.remove("visible");
+    clearBtn.style.display="none";
+}
+document.getElementById("edit_image").addEventListener("change", function(){
+    const file=this.files[0]; const box=document.getElementById("edit_preview_box"); const img=document.getElementById("edit_preview");
+    if(!file){box.classList.remove("visible");return;}
+    const r=new FileReader(); r.onload=e=>{img.src=e.target.result;box.classList.add("visible");}; r.readAsDataURL(file);
+});
 </script>
 
+<!-- MC 選單核心邏輯 -->
 <script>
-/* ════════════════════════════════════════════════════════════════════════
-   分頁切換邏輯
-   - 「商品管理」與「數據圖表」是同一頁的兩個分頁
-   - 切換時不抽換 URL,純 JS 控制顯示哪個容器
-   - 「數據圖表」內容由 AJAX 載入 /manage/dashboard partial,只載入一次,
-     之後再切回來不會重打 API (避免重新繪圖造成的閃爍)
-   - 切換到「商品管理」時,儀表板分頁會直接隱藏 (DOM 保留,Chart.js 實例
-     不會被銷毀,切回來時不用重新繪)
-   ════════════════════════════════════════════════════════════════════════ */
-let dashboardLoaded = false;   // 標記儀表板 partial 是否已載入,避免重複請求
+const MC_ITEMS = {{ mc_items | tojson }};
+// 結構：{ "武器": {"木劍":"minecraft:wooden_sword", ...}, "工具": {...}, ... }
 
-async function switchTab(event, tabName) {
-    event.preventDefault();   // 阻止 <a href="#"> 預設跳頁行為
+const MC_STATE = { add:{cat:null,item:null}, edit:{cat:null,item:null} };
 
-    // 切換 nav-links 的 active 樣式
-    document.querySelectorAll(".nav-links a[data-tab]").forEach(a => {
-        a.classList.toggle("active", a.dataset.tab === tabName);
+function mcBuildCatBar(prefix){
+    const bar = document.getElementById(prefix==="edit"?"editCatBar":"addCatBar");
+    bar.innerHTML = "";
+    Object.keys(MC_ITEMS).forEach(cat=>{
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mc-cat-btn"+(MC_STATE[prefix].cat===cat?" active":"");
+        btn.textContent = cat;
+        btn.onclick = ()=>mcSelectCat(prefix, cat);
+        bar.appendChild(btn);
     });
+}
 
-    // 切換分頁容器顯示/隱藏
-    document.getElementById("panel-products").style.display  = (tabName === "products")  ? "" : "none";
-    document.getElementById("panel-dashboard").style.display = (tabName === "dashboard") ? "" : "none";
+function mcSelectCat(prefix, cat){
+    MC_STATE[prefix].cat  = cat;
+    MC_STATE[prefix].item = null;
+    mcBuildCatBar(prefix);
+    const area   = document.getElementById(prefix==="edit"?"editItemArea":"addItemArea");
+    const label  = document.getElementById(prefix==="edit"?"editCatLabel":"addCatLabel");
+    const search = document.getElementById(prefix==="edit"?"editItemSearch":"addItemSearch");
+    label.textContent = cat;
+    search.value = "";
+    const keys = Object.keys(MC_ITEMS[cat]);
+    mcRenderItems(prefix, keys);
+    area.classList.add("show");
+    mcSetResult(prefix, null);
+}
 
-    // 第一次切到數據圖表時,才透過 AJAX 載入 partial
-    if (tabName === "dashboard" && !dashboardLoaded) {
-        await loadDashboard();
+function mcFilterItems(prefix){
+    const search = document.getElementById(prefix==="edit"?"editItemSearch":"addItemSearch");
+    const q = search.value.trim();
+    const cat = MC_STATE[prefix].cat;
+    if(!cat) return;
+    const keys = q ? Object.keys(MC_ITEMS[cat]).filter(k=>k.includes(q)) : Object.keys(MC_ITEMS[cat]);
+    mcRenderItems(prefix, keys);
+}
+
+function mcRenderItems(prefix, keys){
+    const grid = document.getElementById(prefix==="edit"?"editItemGrid":"addItemGrid");
+    if(!keys.length){ grid.innerHTML='<div class="mc-item-empty">找不到物品</div>'; return; }
+    grid.innerHTML = keys.map(name=>
+        `<button type="button" class="mc-item-btn${MC_STATE[prefix].item===name?" selected":""}"
+            onclick="mcSelectItem('${prefix}','${name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+            ${name}
+        </button>`
+    ).join("");
+}
+
+function mcSelectItem(prefix, name){
+    MC_STATE[prefix].item = name;
+    document.getElementById(prefix==="edit"?"edit_category":"add_category").value     = MC_STATE[prefix].cat;
+    document.getElementById(prefix==="edit"?"edit_mc_item_name":"add_mc_item_name").value = name;
+    mcSetResult(prefix, name);
+    mcFilterItems(prefix);
+    if(prefix==="add"){
+        const nameInput = document.getElementById("name");
+        if(nameInput) nameInput.value = name;
     }
 }
 
-async function loadDashboard() {
-    const container = document.getElementById("panel-dashboard");
-    try {
-        const res = await fetch("/manage/dashboard");
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const html = await res.text();
-
-        // 把 HTML 塞進去
-        container.innerHTML = html;
-
-        // 重點:innerHTML 不會自動執行裡面的 <script>,要手動把它們抓出來
-        // 建立同等內容的 <script> 元素再 append 進 DOM,瀏覽器才會執行
-        container.querySelectorAll("script").forEach(oldScript => {
-            const newScript = document.createElement("script");
-            // 複製 attributes (例如外部 src)
-            for (const attr of oldScript.attributes) {
-                newScript.setAttribute(attr.name, attr.value);
-            }
-            // 複製內聯內容
-            newScript.textContent = oldScript.textContent;
-            // 替換掉舊的 script (用替換而非 append,避免重複出現)
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-        });
-
-        dashboardLoaded = true;
-    } catch (err) {
-        container.innerHTML =
-            '<div style="text-align:center;padding:40px;font-family:var(--font-pixel);' +
-            'font-size:.7rem;color:#ff8080;text-shadow:1px 1px 0 #000;">❌ 載入儀表板失敗:' +
-            err.message + '</div>';
-        console.error(err);
-    }
-}
-
-/* ────────────────────────────────────────────────────────────────────────
-   頁面初始載入
-
-   【預設分頁邏輯】
-   - 進到 /manage 時,預設顯示「📈 數據圖表」分頁。
-   - 但若 URL 含有 hash「#products」,代表使用者從別處 (操作紀錄 / 交易訂單)
-     點「⚙ 商品管理」連結過來,應該直接打開商品管理分頁,而不是落在預設的
-     數據圖表。
-
-   【為什麼用 hash 而不是 query string?】
-   - hash 只存在前端,不會被伺服器看到,完全不用改後端
-   - URL 看起來:/manage#products 比 /manage?tab=products 更語意化
-   ──────────────────────────────────────────────────────────────────────── */
-document.addEventListener("DOMContentLoaded", () => {
-    // 偵測 URL 是否帶 #products,決定預設要打開哪一個分頁
-    if (window.location.hash === "#products") {
-        // 切到「⚙ 商品管理」分頁:更新 nav 樣式 + 切換容器顯示
-        document.querySelectorAll(".nav-links a[data-tab]").forEach(a => {
-            a.classList.toggle("active", a.dataset.tab === "products");
-        });
-        document.getElementById("panel-products").style.display  = "";
-        document.getElementById("panel-dashboard").style.display = "none";
-        // 商品管理分頁是純 HTML,不需要 AJAX 載入,所以不呼叫 loadDashboard()
+function mcSetResult(prefix, name){
+    const nameEl = document.getElementById(prefix==="edit"?"editResultName":"addResultName");
+    const idEl   = document.getElementById(prefix==="edit"?"editResultId":"addResultId");
+    if(name){
+        nameEl.textContent = name;
+        nameEl.classList.add("has-val");
+        idEl.textContent   = MC_ITEMS[MC_STATE[prefix].cat][name];
     } else {
-        // 預設行為:載入數據圖表分頁
-        loadDashboard();
+        nameEl.textContent = "尚未選擇";
+        nameEl.classList.remove("has-val");
+        idEl.textContent   = "";
     }
+}
+
+function mcClear(prefix){
+    MC_STATE[prefix].cat  = null;
+    MC_STATE[prefix].item = null;
+    document.getElementById(prefix==="edit"?"edit_category":"add_category").value     = "";
+    document.getElementById(prefix==="edit"?"edit_mc_item_name":"add_mc_item_name").value = "";
+    document.getElementById(prefix==="edit"?"editItemArea":"addItemArea").classList.remove("show");
+    mcBuildCatBar(prefix);
+    mcSetResult(prefix, null);
+}
+
+mcBuildCatBar("add");
+mcBuildCatBar("edit");
+</script>
+
+<!-- 編輯 Modal -->
+<script>
+const editModal = document.getElementById("editModal");
+
+document.querySelectorAll(".btn-edit-trigger").forEach(btn=>{
+    btn.addEventListener("click", function(){
+        openEditModal(
+            this.dataset.id, this.dataset.name,
+            this.dataset.originalPrice, this.dataset.salePrice,
+            this.dataset.productPic, this.dataset.category,
+            this.dataset.quantity, this.dataset.mcItemName
+        );
+    });
+});
+
+function openEditModal(id, name, originalPrice, salePrice, productPic, category, quantity, mcItemName){
+    document.getElementById("edit_product_id").value       = id;
+    document.getElementById("edit_name").value             = name;
+    document.getElementById("edit_original_price").value   = originalPrice;
+    document.getElementById("edit_sale_price").value       = salePrice||"";
+    document.getElementById("edit_product_quantity").value = (quantity!==undefined&&quantity!=="")?quantity:"";
+
+    const curBox = document.getElementById("edit_current_pic_box");
+    const curImg = document.getElementById("edit_current_pic");
+    const noPic  = document.getElementById("edit_no_pic");
+    if(productPic){ curImg.src=productPic; curBox.classList.add("visible"); noPic.style.display="none"; }
+    else { curBox.classList.remove("visible"); noPic.style.display="inline"; }
+    document.getElementById("edit_image").value="";
+    document.getElementById("edit_preview_box").classList.remove("visible");
+    document.getElementById("edit_preview").src="";
+
+    // 還原 MC 選單
+    MC_STATE.edit.cat  = category||null;
+    MC_STATE.edit.item = mcItemName||null;
+    mcBuildCatBar("edit");
+    const editArea = document.getElementById("editItemArea");
+    if(category && MC_ITEMS[category]){
+        editArea.classList.add("show");
+        document.getElementById("editCatLabel").textContent = category;
+        document.getElementById("editItemSearch").value = "";
+        mcRenderItems("edit", Object.keys(MC_ITEMS[category]));
+    } else {
+        editArea.classList.remove("show");
+    }
+    document.getElementById("edit_category").value     = category||"";
+    document.getElementById("edit_mc_item_name").value = mcItemName||"";
+    mcSetResult("edit", mcItemName||null);
+
+    editModal.classList.add("active");
+}
+
+function closeEditModal(){ editModal.classList.remove("active"); }
+function closeEditModalIfBackdrop(e){ if(e.target===editModal) closeEditModal(); }
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&editModal.classList.contains("active")) closeEditModal(); });
+</script>
+
+<!-- 分頁切換 -->
+<script>
+let dashboardLoaded = false;
+async function switchTab(event, tabName){
+    event.preventDefault();
+    document.querySelectorAll(".nav-links a[data-tab]").forEach(a=>a.classList.toggle("active", a.dataset.tab===tabName));
+    document.getElementById("panel-products").style.display  = tabName==="products"  ? "" : "none";
+    document.getElementById("panel-dashboard").style.display = tabName==="dashboard" ? "" : "none";
+    if(tabName==="dashboard"&&!dashboardLoaded) await loadDashboard();
+}
+async function loadDashboard(){
+    const container = document.getElementById("panel-dashboard");
+    try{
+        const res = await fetch("/manage/dashboard");
+        if(!res.ok) throw new Error("HTTP "+res.status);
+        const html = await res.text();
+        container.innerHTML = html;
+        container.querySelectorAll("script").forEach(old=>{
+            const s=document.createElement("script");
+            for(const a of old.attributes) s.setAttribute(a.name,a.value);
+            s.textContent=old.textContent;
+            old.parentNode.replaceChild(s,old);
+        });
+        dashboardLoaded=true;
+    } catch(err){
+        container.innerHTML='<div style="text-align:center;padding:40px;font-family:var(--font-pixel);font-size:.7rem;color:#ff8080;text-shadow:1px 1px 0 #000;">❌ 載入儀表板失敗:'+err.message+'</div>';
+    }
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+    const hasFlash = document.querySelector(".flash-wrapper .flash-message");
+    if(window.location.hash==="#products" || hasFlash){
+        document.querySelectorAll(".nav-links a[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab==="products"));
+        document.getElementById("panel-products").style.display="";
+        document.getElementById("panel-dashboard").style.display="none";
+    } else { loadDashboard(); }
 });
 </script>
 
 </body>
 </html>
-

@@ -23,9 +23,6 @@
         .nav-links a.active{background:repeating-linear-gradient(180deg,var(--grass-top) 0,var(--grass-top) 6px,var(--leaf-dark) 6px,var(--leaf-dark) 12px);}
         .nav-toggle{display:none;position:absolute;right:0;flex-direction:column;gap:6px;background:none;border:none;cursor:pointer;padding:8px;}
         .nav-toggle span{display:block;width:26px;height:5px;background:var(--white-mc);border:2px solid #000;transition:transform .2s steps(4),opacity .2s;}
-        .nav-toggle.open span:nth-child(1){transform:translateY(11px) rotate(45deg);}
-        .nav-toggle.open span:nth-child(2){opacity:0;}
-        .nav-toggle.open span:nth-child(3){transform:translateY(-11px) rotate(-45deg);}
         .nav-drawer{display:none;flex-direction:column;gap:4px;padding:12px 16px;background:repeating-linear-gradient(180deg,var(--wood) 0,var(--wood) 8px,var(--wood-dark) 8px,var(--wood-dark) 12px);border-bottom:var(--border-block);}
         .nav-drawer.open{display:flex;}
         .nav-drawer a{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;padding:12px 16px;border:var(--border-block);background:var(--stone);box-shadow:var(--shadow-block);}
@@ -52,23 +49,27 @@
         .mc-block-header h2{font-family:var(--font-pixel);font-size:.9rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;}
         .mc-block-body{padding:24px;}
 
-        /* profile */
         .profile{text-align:center;margin-bottom:20px;}
+        /* 頭像容器：正常狀態顯示圖片，hover 顯示「更換」提示 */
         .avatar-wrap{width:88px;height:88px;margin:0 auto 14px;border:var(--border-block);box-shadow:var(--shadow-inset),4px 4px 0 #000;overflow:hidden;image-rendering:pixelated;cursor:pointer;position:relative;background:repeating-linear-gradient(45deg,#333 0,#333 8px,#2a2a2a 8px,#2a2a2a 16px);}
-        .avatar-wrap img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated;}
-        .avatar-wrap:hover::after{content:'更換';position:absolute;inset:0;background:rgba(0,0,0,.6);color:var(--white-mc);font-family:var(--font-pixel);font-size:.55rem;text-shadow:1px 1px 0 #000;display:flex;align-items:center;justify-content:center;}
+        .avatar-wrap img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated;transition:opacity .15s;}
+        .avatar-wrap:hover img{opacity:.4;}
+        .avatar-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;pointer-events:none;}
+        .avatar-wrap:hover .avatar-overlay{opacity:1;}
+        .avatar-overlay span{font-family:var(--font-pixel);font-size:.55rem;color:var(--white-mc);text-shadow:1px 1px 0 #000;}
+        /* 選了新圖後顯示「已選擇」badge */
+        .avatar-badge{display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(29,158,117,.85);font-family:var(--font-pixel);font-size:.4rem;color:#fff;text-align:center;padding:3px 0;text-shadow:1px 1px 0 #000;}
+        .avatar-wrap.has-new .avatar-badge{display:block;}
+
         .profile-name{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;margin-bottom:10px;line-height:1.8;}
-        .profile-level{font-family:var(--font-pixel);font-size:.55rem;color:var(--black-mc);background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;padding:5px 14px;display:inline-block;margin-bottom:0;}
+        .profile-level{font-family:var(--font-pixel);font-size:.55rem;color:var(--black-mc);background:repeating-linear-gradient(180deg,var(--gold-ore) 0,var(--gold-ore) 6px,#c0990a 6px,#c0990a 12px);border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;padding:5px 14px;display:inline-block;}
         .mc-hr{height:4px;background:repeating-linear-gradient(90deg,#000 0,#000 8px,#333 8px,#333 16px);margin:18px 0;}
 
         .note{font-family:var(--font-pixel);font-size:.5rem;color:#888;text-shadow:1px 1px 0 #000;margin-bottom:4px;}
         .field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:10px 12px;background:repeating-linear-gradient(180deg,#2a2a2a 0,#2a2a2a 6px,#1a1a1a 6px,#1a1a1a 12px);border:3px solid #000;box-shadow:var(--shadow-inset);gap:12px;}
         .field-label{font-family:var(--font-pixel);font-size:.6rem;color:#aaa;text-shadow:1px 1px 0 #000;flex-shrink:0;}
         .field-input{flex:1;font-family:var(--font-pixel);font-size:.62rem;background:transparent;border:none;color:var(--white-mc);text-shadow:1px 1px 0 #000;text-align:right;outline:none;padding:4px 0;}
-        .field-input:not([disabled]){border-bottom:2px solid #555;transition:border-color .15s steps(2);}
-        .field-input:not([disabled]):focus{border-color:var(--diamond);}
         .field-input[disabled]{color:#555;cursor:not-allowed;}
-        .field-input::placeholder{color:#444;}
 
         .btn{font-family:var(--font-pixel);font-size:.75rem;border:var(--border-block);padding:12px 18px;cursor:pointer;box-shadow:var(--shadow-block);display:block;text-align:center;transition:transform .08s steps(2),box-shadow .08s steps(2);width:100%;margin-top:10px;}
         .btn:hover{filter:brightness(1.2);transform:translateY(-2px);box-shadow:var(--shadow-inset),3px 5px 0 #000;}
@@ -77,8 +78,6 @@
         .btn-back{background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);color:var(--white-mc);text-shadow:1px 1px 0 #000;}
 
         .dirt-divider{height:24px;background:repeating-linear-gradient(90deg,var(--dirt) 0,var(--dirt) 24px,var(--dirt-dark) 24px,var(--dirt-dark) 48px);border-top:var(--border-block);border-bottom:var(--border-block);}
-        .footer{background:repeating-linear-gradient(180deg,var(--dirt) 0,var(--dirt) 10px,var(--dirt-dark) 10px,var(--dirt-dark) 20px);border-top:var(--border-block);padding:36px 40px;text-align:center;}
-        .footer-logo{font-family:var(--font-pixel);font-size:.85rem;color:var(--white-mc);text-shadow:3px 3px 0 #000;display:block;margin-bottom:12px;}
 
         @media(max-width:900px){.layout{grid-template-columns:1fr;}.nav-links,.user-panel{display:none;}.nav-toggle{display:flex;}}
     </style>
@@ -90,9 +89,9 @@
     <div class="container topbar-inner">
         <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
         <nav class="nav-links">
-            <a href="/" >⛏ 主頁</a>
+            <a href="/">⛏ 主頁</a>
             <a href="/member" class="active">👤 會員中心</a>
-            <a href="/cart" >🎒 購物車</a>
+            <a href="/cart">🎒 購物車</a>
         </nav>
         <button class="nav-toggle" id="navToggle" aria-label="選單">
             <span></span><span></span><span></span>
@@ -100,10 +99,10 @@
         <div class="user-panel">
             {% if auth and auth.logged_in %}
             <div class="user-card">
-                <div class="user-avatar"><img src="{{ auth.profile_pic }}" alt="avatar"></div>
+                <div class="user-avatar-sm"><img src="{{ auth.profile_pic }}" alt="avatar"></div>
                 <div class="user-meta">
                     <span class="user-status-text">▶ 登入中</span>
-                    <span class="user-account">{{ auth.account }}</span>
+                    <span class="user-account-text">{{ auth.account }}</span>
                 </div>
             </div>
             <a href="/logout" class="topbar-btn">登出</a>
@@ -132,18 +131,20 @@
         {% endif %}{% endwith %}
 
         <div class="layout">
-            <!-- 左側表單 -->
             <form method="POST" action="/member/edit" enctype="multipart/form-data">
                 <div class="mc-block">
                     <div class="mc-block-header"><h2>✏ 編輯資料</h2></div>
                     <div class="mc-block-body">
                         <div class="profile">
-                            <div class="avatar-wrap" onclick="document.getElementById('picInput').click()">
+                            <!-- 點擊頭像觸發 file input，選圖後即時預覽 -->
+                            <div class="avatar-wrap" id="avatarWrap" onclick="document.getElementById('picInput').click()">
                                 <img id="avatarPreview" src="{{ auth.profile_pic }}" alt="avatar">
+                                <div class="avatar-overlay"><span>更換</span></div>
+                                <div class="avatar-badge">✓ 已選擇新圖片</div>
                             </div>
                             <input type="file" id="picInput" name="profile_pic" accept="image/*" style="display:none">
-                            <div class="profile-name">{{ user.user_name or '使用者' }}</div>
-                            <div class="profile-level">★ {{ user.level or '一般會員' }}</div>
+                            <div class="profile-name">{{ user.user_account or '使用者' }}</div>
+                            <div class="profile-level">★ 一般會員</div>
                         </div>
 
                         <div class="mc-hr"></div>
@@ -160,18 +161,6 @@
                             <input class="field-input" type="text" value="{{ user.user_email or '' }}" disabled>
                         </div>
 
-                        <div class="field-row">
-                            <span class="field-label">姓名</span>
-                            <input class="field-input" type="text" name="name" value="{{ user.user_name or '' }}" placeholder="請輸入姓名">
-                        </div>
-
-                        <div class="field-row">
-                            <span class="field-label">電話</span>
-                            <input class="field-input" type="text" name="mobile" value="{{ user.user_mobile or '' }}" placeholder="請輸入手機號碼">
-                        </div>
-
-                        
-
                         <button type="submit" class="btn btn-save">💾 儲存變更</button>
                         <a href="/member" class="btn btn-back">← 返回會員中心</a>
                     </div>
@@ -183,27 +172,20 @@
 </main>
 
 <div class="dirt-divider"></div>
-<footer class="mc-footer">
-    <div class="footer-inner">
-        <div class="footer-contact">
-            <div class="footer-contact-title">聯絡我們</div>
-            <ul class="footer-contact-list">
-                <li>電話：02-2345-6789</li>
-                <li>傳真：02-2345-6790</li>
-                <li>Line ID：@minemarket</li>
-                <li>Email：support@minemarket.tw</li>
-                <li>地址：台北市信義區信義路五段7號</li>
-                <li>服務時間：週一至週五 09:00–18:00</li>
-            </ul>
-        </div>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。<br>本站所有商品圖文，未經授權不得轉載。</p>
-    </div>
-</footer>
+
 <script src="/static/js/mc-common.js"></script>
-
-
+<script>
+// 選圖後即時預覽，並顯示「已選擇新圖片」badge
+document.getElementById("picInput").addEventListener("change", function(){
+    const file = this.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById("avatarPreview").src = e.target.result;
+        document.getElementById("avatarWrap").classList.add("has-new");
+    };
+    reader.readAsDataURL(file);
+});
+</script>
 </body>
 </html>

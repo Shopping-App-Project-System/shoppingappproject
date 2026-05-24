@@ -1,5 +1,5 @@
 # __________________________________________內部模組_____________________________________
-from flask import request,redirect,url_for,render_template
+from flask import request,render_template
 from werkzeug.utils import secure_filename
 from secrets import token_urlsafe
 from random import randint
@@ -8,10 +8,10 @@ from shutil import move,copy
 import os
 import re
 import inspect
-from datetime import datetime, timedelta
+from datetime import datetime
 # _______________________________________自定義模組_______________________________________
 from models import getUser
-from settings import ALLOWED_EXTENSIONS,SESSION_AUTHO,APP_PORT,CODE_EXPIRE_MINUTES
+from settings import ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES
 import warnings
 # _______________________________________初始化___________________________________________
 
@@ -38,42 +38,9 @@ def requestParsor(fun):
         return fun(*args, **kwargs, **result)
     return wrap
 
-# ________________________________________API_____________________________________________
-
-def getResponseForm(datas, *selections, default=None):
-    if not len(selections):
-        return tuple(datas.get(key, default) for key in datas.keys())
-    else:
-        result = tuple(datas.get(selection, default) for selection in selections)
-        if len(selections) == 1:
-            return result[0]
-        return result
-
-def getResponseArgs(datas, *selections, default=None):
-    if not len(selections):
-        return tuple(datas)
-    else:
-        result = tuple(
-            datas[i] if i < len(datas) else default
-            for i in selections
-        )
-        if len(selections) == 1:
-            return result[0]
-        return result
-
-def getResponseFile(files, *selections):
-    if not selections:
-        return tuple(files.get(key) for key in files.keys())
-    datas = tuple(files.get(selection) for selection in selections)
-    if len(selections) == 1:
-        return datas[0]
-    return datas
-
 def checkUserInput(*args):
     missing = [msg for msg, value in args if not value]
     return "、".join(missing)
-
-# ── 過期判斷 ──────────────────────────────────────────────────────────────────
 
 def _is_expired(expires_at):
     if expires_at is None:
@@ -105,10 +72,6 @@ def getVerifyToken(digits):
 def validateEmail(email):
     pattern = re.compile(r'^[a-zA-Z][a-zA-Z0-9]*@[a-zA-Z0-9]+\.com$')
     return pattern.search(email)
-
-def validateMobile(mobile):
-    pattern = re.compile(r'^09\d{8}$')
-    return pattern.search(mobile)
 
 def validateCreditCard(card):
     pattern = re.compile(r'^\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}$')

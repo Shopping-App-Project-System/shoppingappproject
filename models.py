@@ -1,7 +1,6 @@
 from settings import (BRANCH_A_TABLE,
 
                       BRANCH_B_PRODUCTS_TABLE,
-                      BRANCH_B_PRODUCT_CATEGORY_TABLE,
                       BRANCH_B_PRODUCT_PICS_TABLE,
                       BRANCH_B_PRODUCT_STOCK_TABLE,
 
@@ -17,13 +16,13 @@ from db import db_transaction
 # ── Branch A:使用者帳號相關方法 ────────────────────────────────────────────────────
 
 @db_transaction
-def createUser(cursor, user_name, user_account, user_password, user_mobile, user_email, user_address):
+def createUser(cursor, user_account, user_password, user_email):
     # 新增會員帳號
     cursor.execute(f"""
         INSERT INTO {BRANCH_A_TABLE}
-        (`user_name`,`user_account`,`user_password`,`user_mobile`,`user_email`,`user_address`)
-        VALUES (?,?,?,?,?,?)
-    """, (user_name, user_account, user_password, user_mobile, user_email, user_address))
+        (`user_account`,`user_password`,`user_email`)
+        VALUES (?,?,?)
+    """, (user_account, user_password, user_email))
 
 @db_transaction
 def updateUser(cursor, set_: dict, where: dict):
@@ -105,12 +104,26 @@ def getUserList(cursor, *selections):
 # ── Branch B：商品卡陳列 ──────────────────────────────────────────────────────────
 
 @db_transaction
+def index(cursor):
+    # 取得所有上架且有庫存的商品，供首頁列表使用
+    cursor.execute("""
+        SELECT
+            p.id,
+            p.id,
+            p.product_pic,
+            p.original_price,
+            p.sale_price,
+            p.name,
+            p.description,
+            p.category
+        FROM products p
+        INNER JOIN product_stock ps ON p.id = ps.product_id
+        WHERE p.is_active = 1 AND ps.product_quantity > 0
+    """)
+    return cursor.fetchall()
+
+@db_transaction
 def search_categories(cursor, category, keyword):
-    """依分類名稱 與關鍵字搜尋上架商品,兩個條件都是選填.
-    
-    分類儲存設計:products.category 直接存分類名稱字串(A 案),
-    不再 join product_category 表(該表結構與此邏輯不符).
-    """
     sql = """
      SELECT p.id, p.product_pic, p.original_price, p.sale_price, 
             p.name, p.description, p.category, p.tag,
@@ -132,46 +145,6 @@ def search_categories(cursor, category, keyword):
         params.append(f"%{keyword}%")
 
     cursor.execute(sql, params)
-    return cursor.fetchall()
-
-@db_transaction
-def get_all_categories(cursor):
-    """取得目前實際使用中的不重複商品分類清單,供下拉選單使用。
-    
-    回傳: [{'id': ..., 'name': ...}, ...]
-    
-    說明:分類名稱直接存在 products.category 欄(字串)。這裡用 GROUP BY 取得
-    不重複的分類名稱;id 取同名商品的最小 id,僅用於前端 React/DOM key,實際
-    儲存仍是分類字串。is_deleted = 0 過濾掉軟刪除的商品,避免下拉出現殘留分類.
-    """
-    cursor.execute("""
-        SELECT MIN(id) AS id, category AS name
-        FROM products
-        WHERE category IS NOT NULL
-          AND category != ''
-          AND is_deleted = 0
-        GROUP BY category
-        ORDER BY category
-    """)
-    return cursor.fetchall()
-
-@db_transaction
-def index(cursor):
-    # 取得所有上架且有庫存的商品，供首頁列表使用
-    cursor.execute("""
-        SELECT
-            p.id,
-            p.id,
-            p.product_pic,
-            p.original_price,
-            p.sale_price,
-            p.name,
-            p.description,
-            p.category
-        FROM products p
-        INNER JOIN product_stock ps ON p.id = ps.product_id
-        WHERE p.is_active = 1 AND ps.product_quantity > 0
-    """)
     return cursor.fetchall()
 
 @db_transaction
@@ -531,7 +504,6 @@ def delete_pending_delivery(cursor, delivery_id):
 
 @db_transaction
 def hard_delete_product(cursor, product_id):
-    cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCT_CATEGORY_TABLE}` WHERE product_id = ?", (product_id,))
     cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCT_STOCK_TABLE}` WHERE product_id = ?", (product_id,))
     cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCTS_TABLE}` WHERE id = ?", (product_id,))
     

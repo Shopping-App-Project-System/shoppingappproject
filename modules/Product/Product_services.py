@@ -2,8 +2,8 @@
 from flask import render_template,session
 
 # _______________________________________自定義模組_______________________________________
-from models import search_categories,get_all_categories,get_product_by_id,get_product_stock,get_product_pics
-from settings import SESSION_AUTHO,PRODUCT_PIC_PATH
+from models import search_categories,get_product_by_id,get_product_stock,get_product_pics
+from settings import SESSION_AUTHO,MC_PRODUCT_ITEMS
 from utils import get_auth,requestParsor
 
 # _______________________________________初始化___________________________________________
@@ -13,7 +13,7 @@ from utils import get_auth,requestParsor
 @requestParsor
 def index_service(category="",keyword=""):
     products = search_categories(category, keyword) or []
-    categories = get_all_categories() or []
+    categories = list(MC_PRODUCT_ITEMS.keys())
     
     user_account = session.get(SESSION_AUTHO)
     if user_account:
