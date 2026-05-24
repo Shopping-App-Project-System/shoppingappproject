@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>付款結果確認中｜MineMarket</title>
+    <meta http-equiv="refresh" content="2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --gold:#F0C93A; --diamond:#5DECF5; --diamond-dk:#1ABAC8;
+            --redstone:#E03030;
+            --sky-top:#7DC6FF; --sky-bot:#B8E0FF;
+            --white:#F0F0F0; --black:#1A1A1A;
+            --pixel:"Press Start 2P",monospace;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:var(--pixel);
+            background:linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bot) 100%);
+            min-height:100vh;display:flex;align-items:center;justify-content:center;
+            image-rendering:pixelated;
+        }
+        .result-box{
+            text-align:center;
+            background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);
+            border:4px solid #000;
+            box-shadow:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),8px 8px 0 #000;
+            padding:48px 64px;max-width:520px;
+        }
+        h1{font-size:1rem;color:var(--gold);text-shadow:3px 3px 0 #000;margin-bottom:24px;line-height:1.6;}
+        .order-info{
+            font-size:.6rem;color:var(--white);text-shadow:2px 2px 0 #000;
+            line-height:2;margin-bottom:32px;
+        }
+        .status-text{font-size:.65rem;color:var(--diamond);text-shadow:2px 2px 0 #000;margin-top:16px;line-height:1.8;}
+        .small-note{
+            font-size:.5rem;color:#aaa;text-shadow:1px 1px 0 #000;
+            margin-top:24px;line-height:2;font-family:"Noto Sans TC",sans-serif;
+        }
+        .pixel-loader{display:inline-flex;gap:6px;margin:24px 0;}
+        .pixel-loader span{
+            width:18px;height:18px;background:var(--diamond);
+            border:3px solid #000;
+            animation:bounce 1s steps(4) infinite;
+        }
+        .pixel-loader span:nth-child(2){animation-delay:.15s;}
+        .pixel-loader span:nth-child(3){animation-delay:.3s;}
+        @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+
+        a.btn{
+            display:inline-block;margin-top:16px;
+            padding:10px 18px;border:3px solid #000;
+            background:repeating-linear-gradient(180deg,#A5A5A5 0,#A5A5A5 6px,#7F7F7F 6px,#7F7F7F 12px);
+            color:var(--white);text-decoration:none;
+            text-shadow:2px 2px 0 #000;font-size:.6rem;
+            box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),inset 3px 3px 0 rgba(255,255,255,.25),4px 4px 0 #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box">
+        <h1>⏳ 確認付款結果中</h1>
+        <div class="order-info">
+            訂單編號 #{{ order.id }}<br>
+            金額 NT$ {{ order.total | int }}
+        </div>
+
+        <div class="pixel-loader">
+            <span></span><span></span><span></span>
+        </div>
+
+        <div class="status-text">
+            等待綠界回傳付款結果<br>
+            <small style="font-size:.5rem;color:#aaa;">頁面將每 3 秒自動重新整理</small>
+        </div>
+
+        <div class="small-note">
+            這個頁面很少出現，代表你比綠界 server 跑得快了 😎<br>
+            通常 3~5 秒內就會自動跳轉到結果頁
+        </div>
+
+        <a class="btn" href="/member">手動前往會員中心</a>
+    </div>
+</body>
+</html>

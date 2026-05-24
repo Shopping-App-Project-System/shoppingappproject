@@ -114,6 +114,36 @@
         }
         .card-warning a{color:var(--diamond);text-decoration:underline;}
 
+        /* card-choice radio tabs */
+        .card-mode-tabs{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+        .card-mode-tab{
+            display:flex;align-items:center;gap:10px;cursor:pointer;
+            padding:10px 14px;border:var(--border-block);
+            background:repeating-linear-gradient(180deg,#2a3a4a 0,#2a3a4a 6px,#1a2535 6px,#1a2535 12px);
+            box-shadow:var(--shadow-inset),3px 3px 0 #000;
+            font-family:var(--font-pixel);font-size:.6rem;color:var(--white-mc);
+            text-shadow:1px 1px 0 #000;line-height:1.6;
+            transition:filter .15s steps(2);
+        }
+        .card-mode-tab:hover{filter:brightness(1.2);}
+        .card-mode-tab input[type=radio]{
+            accent-color:var(--diamond);width:14px;height:14px;flex-shrink:0;
+        }
+        .card-mode-tab input[type=radio]:checked + span{color:var(--diamond);}
+
+        /* ecpay 提示框 */
+        .ecpay-notice{
+            padding:12px 16px;
+            background:repeating-linear-gradient(180deg,#0d4a3d 0,#0d4a3d 6px,#0a3528 6px,#0a3528 12px);
+            border:var(--border-block);box-shadow:var(--shadow-inset),2px 2px 0 #000;
+            font-family:var(--font-pixel);font-size:.55rem;color:#7fffd4;
+            text-shadow:1px 1px 0 #000;line-height:2;
+        }
+        .ecpay-notice code{
+            background:#000;color:var(--gold-ore);padding:2px 6px;
+            border:2px solid #444;font-family:var(--font-pixel);font-size:.55rem;
+        }
+
         /* summary */
         .summary-line{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:3px solid #000;}
         .summary-line span{font-family:var(--font-pixel);font-size:.75rem;color:var(--white-mc);text-shadow:2px 2px 0 #000;}
@@ -246,27 +276,14 @@
                         </div>
 
                         <div class="form-group full" id="card-input-group" style="display:none;">
-                            {% if saved_cards %}
-                            <label class="form-label">信用卡</label>
-                            <select name="card_id" id="card-select" onchange="toggleManualCard()">
-                                {% for c in saved_cards %}
-                                <option value="{{ c.id }}" {% if c.is_default %}selected{% endif %}>
-                                    •••• {{ c.card_number[-4:] }}　{{ c.holder_name }}
-                                    {% if c.is_default %}（預設）{% endif %}
-                                </option>
-                                {% endfor %}
-                                <option value="">輸入新卡號</option>
-                            </select>
-                            {% else %}
-                            <div class="card-warning">
-                                ⚠ 尚未綁定信用卡，請手動輸入，或
-                                <a href="/member/cards">前往會員中心綁定</a>
+                            <label class="form-label">💳 信用卡刷卡</label>
+                            <div class="ecpay-notice">
+                                🛡 點擊下方「確認付款」後，會跳轉到綠界 ECPay 進行安全刷卡。<br>
+                                ━━━━━━━━━━━━━━━━━━━━━━━━━<br>
+                                測試卡號：<code>4311-9522-2222-2222</code><br>
+                                有效年：任意未過期（例 30）／月份：任意（例 12）<br>
+                                安全碼：任意 3 碼（例 123）
                             </div>
-                            {% endif %}
-                            <input type="text" name="card_number" id="card-number"
-                                   placeholder="信用卡卡號（16位數字）" maxlength="19"
-                                   value="{{ form.card_number if form else '' }}"
-                                   style="{{ 'display:none' if saved_cards else '' }}">
                         </div>
 
                         <div class="form-group full">
@@ -354,28 +371,18 @@ const drawer = document.getElementById('navDrawer');
 function toggleCardInput() {
     const select = document.getElementById('payment-select');
     const group  = document.getElementById('card-input-group');
-    const input  = document.getElementById('card-number');
     if (select.value === '信用卡') {
         group.style.display = 'flex';
         group.style.flexDirection = 'column';
         group.style.gap = '10px';
     } else {
         group.style.display = 'none';
-        input.value = '';
     }
 }
 
-function toggleManualCard() {
-    const cardSelect = document.getElementById('card-select');
-    const input = document.getElementById('card-number');
-    if (!cardSelect) return;
-    if (cardSelect.value === '') { input.style.display = 'block'; }
-    else { input.style.display = 'none'; input.value = ''; }
-}
-
-document.getElementById('card-number').addEventListener('input', function () {
-    let val = this.value.replace(/\D/g, '').substring(0, 16);
-    this.value = val.replace(/(.{4})/g, '$1 ').trim();
+// 頁面初始化時跑一次
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCardInput();
 });
 </script>
 <script src="/static/js/mc-common.js"></script>

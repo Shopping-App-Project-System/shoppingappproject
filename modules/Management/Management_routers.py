@@ -8,7 +8,6 @@ from .Management_services import (
     manage_remove_service,manage_restock_service,
     member_edit_service,member_service,
     manage_logout_service,manage_log_service,manage_edit_service,
-    member_cards_service,add_card_service,delete_card_service,set_default_card_service,
     # 永久刪除功能已停用 (manage_clear_service)
     # manage_clear_service,
     # 後台操作日誌(月份分組)的 partial
@@ -72,23 +71,6 @@ def manage_log():return manage_log_service()
 @bp.route("/manage/log/month/<month>", methods=["GET"])
 @adminRequired
 def manage_log_month(month):return manage_log_month_service(month)
-
-# ── 信用卡管理 ──────────────────────────────────────────────────────────
-@bp.route("/member/cards", methods=["GET"])
-@userRequired
-def member_cards():return member_cards_service()
-
-@bp.route("/member/cards/add", methods=["GET", "POST"])
-@userRequired
-def add_card():return add_card_service()
-
-@bp.route("/member/cards/delete", methods=["GET", "POST"])
-@userRequired
-def delete_card():return delete_card_service()
-
-@bp.route("/member/cards/set_default", methods=["GET", "POST"])
-@userRequired
-def set_default_card_route():return set_default_card_service()
 
 # ── 已完成訂單查詢(管理員 / 使用者) ────────────────────────────────────────
 @bp.route("/manage/orders", methods=["GET"])

@@ -10,8 +10,7 @@ from settings import (BRANCH_A_TABLE,
                       BRANCH_C_ORDER_ITEMS_TABLE,
                       BRANCH_C_PENDING_DELIVERIES_TABLE,
 
-                      BRANCH_D_MANAGE_LOG_TABLE,
-                      BRANCH_D_MEMBER_CARDS_TABLE)
+                      BRANCH_D_MANAGE_LOG_TABLE)
 
 from db import db_transaction
 
@@ -292,35 +291,89 @@ def get_cart_item_stock(cursor, item_id, user_account):
 # ── Branch C：訂單 ────────────────────────────────────────────────────────────
 
 @db_transaction
-def insert_order(cursor, user_account, total, payment_method, note, credit_card_number=None):
+def insert_order(cursor, user_account, total, payment_method, note,
+                 status='已完成', ecpay_trade_no=None):
     """
     建立新訂單。
 
     【狀態流程說明】
-    原本訂單建立後預設為「處理中」，需等付款 / 出貨等流程完成才會轉為「已完成」。
-    現已調整為下單後直接寫入「已完成」，跳過「處理中」這個中間狀態，
-    讓使用者一下單即視為訂單成立完成。
+    - 預設 status='已完成'（向後相容原本「下單即完成」的設計）
+    - 走綠界刷卡時改傳 status='待付款'，等綠界跳回 /payment/ecpay/return 才更新為「已完成」
 
     【相依功能注意事項】
-    由於狀態直接為「已完成」，新訂單會立即出現在管理員端的已完成訂單列表
-    （search_completed_orders、get_user_accounts_with_orders 等查詢皆以
-    status = '已完成' 為條件）。為了不影響使用者取消訂單的權益，
-    get_order 已同步放寬限制，允許「已完成」狀態的訂單也能被取消。
+    由於既有的營收報表都用 WHERE status = '已完成' 過濾，
+    '待付款' / '付款失敗' 訂單不會被算進營收，不會破壞既有統計。
 
     :param user_account: 下單會員的帳號
     :param total: 訂單總金額
     :param payment_method: 付款方式
     :param note: 訂單備註
-    :param credit_card_number: 信用卡卡號（可選）
+    :param status: 訂單初始狀態（預設「已完成」；綠界訂單請傳「待付款」）
+    :param ecpay_trade_no: 綠界 MerchantTradeNo（可選；走綠界才有）
     :return: 新建立訂單的 id
     """
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
-            (user_id, total, payment_method, note, status, credit_card_number)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,'已完成',?)''',
-        (user_account, total, payment_method, note, credit_card_number)
+            (user_id, total, payment_method, note, status, ecpay_trade_no)
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,?,?)''',
+        (user_account, total, payment_method, note, status, ecpay_trade_no)
     )
     return cursor.lastrowid
+
+
+# ── 綠界 ECPay 相關 ────────────────────────────────────────────────────────────
+
+@db_transaction
+def get_order_by_ecpay_trade_no(cursor, ecpay_trade_no):
+    """
+    依綠界 MerchantTradeNo 查訂單。
+    callback 回來時用這個查單。
+
+    :return: 訂單 row（含 id, user_id, total, status, ecpay_trade_no...）, 找不到回 None
+    """
+    cursor.execute(
+        f'''SELECT o.id, o.user_id, o.total, o.status, o.ecpay_trade_no,
+                   u.user_account
+            FROM `{BRANCH_C_ORDER_TABLE}` o
+            JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+            WHERE o.ecpay_trade_no = ?''',
+        (ecpay_trade_no,)
+    )
+    return cursor.fetchone()
+
+
+@db_transaction
+def update_order_payment_status(cursor, order_id, status, ecpay_rtn_code=None):
+    """
+    更新訂單狀態（綠界 callback 回來時呼叫）。
+
+    :param order_id: 訂單 id
+    :param status: 新狀態（'已完成' / '付款失敗'）
+    :param ecpay_rtn_code: 綠界回傳代碼（1=成功，其他=失敗訊息）
+    """
+    cursor.execute(
+        f'''UPDATE `{BRANCH_C_ORDER_TABLE}`
+            SET status = ?, ecpay_rtn_code = ?
+            WHERE id = ?''',
+        (status, ecpay_rtn_code, order_id)
+    )
+
+
+@db_transaction
+def get_order_status(cursor, order_id, user_account):
+    """
+    使用者進付款結果頁時，查自己的訂單狀態。
+    限本人查詢（避免有人改 URL 看別人的訂單）。
+    """
+    cursor.execute(
+        f'''SELECT o.id, o.total, o.status, o.payment_method, o.created_at,
+                   o.ecpay_trade_no, o.ecpay_rtn_code
+            FROM `{BRANCH_C_ORDER_TABLE}` o
+            JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
+            WHERE o.id = ? AND u.user_account = ?''',
+        (order_id, user_account)
+    )
+    return cursor.fetchone()
 
 @db_transaction
 def get_user_order_seq(cursor, user_account, order_id):
@@ -611,78 +664,6 @@ def restore_product(cursor, product_id):
         WHERE id = ?
     """, (product_id,))
 
-
-# ── 信用卡管理 ────────────────────────────────────────────────────────────────
-# ⚠️ 注意：以下函式直接存取完整卡號，僅適用於學校作業/示意用途。
-#    正式環境請改為儲存金流商產生的 token。
-
-@db_transaction
-def get_member_cards(cursor, user_account):
-    """
-    取得指定會員的所有信用卡，預設卡排在最前面。
-    """
-    cursor.execute(
-        f"""SELECT mc.id, mc.card_number, mc.expiry, mc.holder_name, mc.is_default, mc.created_at
-            FROM `{BRANCH_D_MEMBER_CARDS_TABLE}` mc
-            WHERE mc.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            ORDER BY mc.is_default DESC, mc.created_at DESC""",
-        (user_account,)
-    )
-    return cursor.fetchall()
-
-@db_transaction
-def add_member_card(cursor, user_account, card_number, expiry, holder_name, is_default):
-    """
-    為會員新增一張信用卡。
-    若 is_default=1，會先把該會員其他卡的 is_default 全部設為 0，避免有兩張預設卡。
-    """
-    cursor.execute(
-        f"""INSERT INTO `{BRANCH_D_MEMBER_CARDS_TABLE}`
-            (user_id, card_number, expiry, holder_name, is_default)
-            VALUES (
-                (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),
-                ?, ?, ?, ?
-            )""",
-        (user_account, card_number, expiry, holder_name, is_default)
-    )
-
-@db_transaction
-def delete_member_card(cursor, user_account, card_id):
-    """
-    刪除會員的信用卡（限本人）。
-    WHERE 條件多帶一個 user_id 比對，避免有人改 hidden input 刪別人的卡。
-    """
-    cursor.execute(
-        f"""DELETE FROM `{BRANCH_D_MEMBER_CARDS_TABLE}`
-            WHERE id = ?
-            AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
-        (card_id, user_account)
-    )
-
-@db_transaction
-def clear_default_cards(cursor, user_account):
-    """
-    把該會員所有卡片設為非預設。
-    """
-    cursor.execute(
-        f"""UPDATE `{BRANCH_D_MEMBER_CARDS_TABLE}`
-            SET is_default = 0
-            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
-        (user_account,)
-    )
-
-@db_transaction
-def set_default_card(cursor, user_account, card_id):
-    """
-    把指定卡片設為預設卡。
-    """
-    cursor.execute(
-        f"""UPDATE `{BRANCH_D_MEMBER_CARDS_TABLE}`
-            SET is_default = 1
-            WHERE id = ?
-            AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)""",
-        (card_id, user_account)
-    )
 
 # ── manage_log 報表(管理頁日誌,按月份分組) ─────────────────────────────────
 

@@ -292,27 +292,6 @@
 
                     <a href="/member/edit" class="btn btn-edit">✏ 編輯資料</a>
 
-                    <!-- 付款方式摘要 -->
-                    {% if default_card %}
-                    <div class="payment-summary">
-                        <div class="payment-summary-label">💳 預設付款方式</div>
-                        <div class="payment-summary-number">
-                            •••• •••• •••• {{ default_card.card_number[-4:] }}
-                        </div>
-                        <div class="payment-summary-meta">
-                            <span>{{ default_card.holder_name }}</span>
-                            <span>{{ default_card.expiry }}</span>
-                        </div>
-                    </div>
-                    {% if card_count and card_count > 1 %}
-                    <div class="payment-card-count">共 {{ card_count }} 張信用卡</div>
-                    {% endif %}
-                    {% else %}
-                    <div class="payment-empty">尚未綁定信用卡</div>
-                    {% endif %}
-
-                    <a href="/member/cards" class="btn btn-cards">💳 管理信用卡</a>
-
                 </div>
             </div>
 

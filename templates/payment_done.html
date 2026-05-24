@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if success %}付款成功{% else %}付款結果{% endif %}｜MineMarket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --gold:#F0C93A; --diamond:#5DECF5; --diamond-dk:#1ABAC8;
+            --grass:#5D9E3F; --leaf:#2A6320;
+            --redstone:#E03030; --redstone-dk:#a02020;
+            --sky-top:#7DC6FF; --sky-bot:#B8E0FF;
+            --stone:#7F7F7F; --stone-dk:#545454; --stone-light:#A5A5A5;
+            --white:#F0F0F0; --black:#1A1A1A;
+            --pixel:"Press Start 2P",monospace;
+            --shadow-block:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),5px 5px 0 #000;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:var(--pixel);
+            background:linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bot) 100%);
+            min-height:100vh;display:flex;align-items:center;justify-content:center;
+            image-rendering:pixelated;padding:20px;
+        }
+        .result-box{
+            text-align:center;max-width:560px;width:100%;
+            background:repeating-linear-gradient(180deg,#6b6b6b 0,#6b6b6b 6px,#545454 6px,#545454 12px);
+            border:4px solid #000;
+            box-shadow:inset -4px -4px 0 rgba(0,0,0,.5),inset 4px 4px 0 rgba(255,255,255,.25),8px 8px 0 #000;
+            padding:48px 40px;
+        }
+
+        /* 成功圖標：像素勾勾 */
+        .icon-wrap{
+            width:96px;height:96px;margin:0 auto 24px;
+            display:flex;align-items:center;justify-content:center;
+            border:4px solid #000;
+            box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),inset 3px 3px 0 rgba(255,255,255,.25),4px 4px 0 #000;
+        }
+        .icon-wrap.success{
+            background:repeating-linear-gradient(180deg,var(--grass) 0,var(--grass) 6px,var(--leaf) 6px,var(--leaf) 12px);
+        }
+        .icon-wrap.fail{
+            background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,var(--redstone-dk) 6px,var(--redstone-dk) 12px);
+        }
+        .icon-mark{
+            font-size:2.5rem;color:var(--white);text-shadow:3px 3px 0 #000;
+            animation:pop .3s steps(4);
+        }
+        @keyframes pop{
+            0%{transform:scale(0);}
+            100%{transform:scale(1);}
+        }
+
+        h1{
+            font-size:1.1rem;color:var(--gold);text-shadow:3px 3px 0 #000;
+            margin-bottom:24px;line-height:1.6;
+        }
+        h1.fail{color:#ff8080;}
+
+        .order-info{
+            background:rgba(0,0,0,.4);
+            border:3px solid #000;padding:20px;margin-bottom:24px;
+            box-shadow:inset 2px 2px 0 rgba(0,0,0,.5);
+        }
+        .order-info .row{
+            display:flex;justify-content:space-between;align-items:center;
+            padding:8px 0;font-size:.6rem;color:var(--white);text-shadow:2px 2px 0 #000;
+        }
+        .order-info .row.total{
+            border-top:3px solid var(--diamond);margin-top:8px;padding-top:14px;
+        }
+        .order-info .row.total .val{color:var(--gold);font-size:.85rem;}
+        .order-info .val{color:var(--diamond);}
+
+        /* 商品明細 */
+        .items-box{
+            background:rgba(0,0,0,.4);
+            border:3px solid #000;padding:16px 20px;margin-bottom:20px;
+            box-shadow:inset 2px 2px 0 rgba(0,0,0,.5);
+        }
+        .items-title{
+            font-size:.65rem;color:var(--gold);text-shadow:2px 2px 0 #000;
+            margin-bottom:12px;text-align:left;
+        }
+        .item-row{
+            display:flex;justify-content:space-between;align-items:center;
+            padding:8px 0;font-size:.55rem;color:var(--white);
+            text-shadow:1px 1px 0 #000;border-bottom:1px dashed #444;
+        }
+        .item-row:last-child{border-bottom:none;}
+        .item-name{text-align:left;flex:1;}
+        .item-qty{color:var(--diamond);margin:0 12px;min-width:50px;}
+        .item-price{color:var(--gold);min-width:80px;text-align:right;}
+
+        .btn-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+        .btn{
+            display:inline-block;padding:14px 24px;
+            font-family:var(--pixel);font-size:.7rem;
+            color:var(--white);text-shadow:2px 2px 0 #000;text-decoration:none;
+            border:4px solid #000;box-shadow:var(--shadow-block);
+            transition:transform .08s steps(2);cursor:pointer;
+        }
+        .btn:hover{filter:brightness(1.2);transform:translateY(-2px);}
+        .btn-primary{
+            background:repeating-linear-gradient(180deg,var(--diamond) 0,var(--diamond) 6px,var(--diamond-dk) 6px,var(--diamond-dk) 12px);
+            color:#000;text-shadow:1px 1px 0 rgba(255,255,255,.3);
+        }
+        .btn-stone{
+            background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);
+        }
+        .btn-redstone{
+            background:repeating-linear-gradient(180deg,var(--redstone) 0,var(--redstone) 6px,var(--redstone-dk) 6px,var(--redstone-dk) 12px);
+        }
+
+        .small-note{
+            font-size:.5rem;color:#aaa;text-shadow:1px 1px 0 #000;
+            margin-top:24px;line-height:2;font-family:"Noto Sans TC",sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box">
+
+        {% if success %}
+            <div class="icon-wrap success">
+                <span class="icon-mark">✓</span>
+            </div>
+            <h1>付款成功</h1>
+        {% else %}
+            <div class="icon-wrap fail">
+                <span class="icon-mark">✗</span>
+            </div>
+            <h1 class="fail">付款未完成</h1>
+        {% endif %}
+
+        {% if order %}
+        <div class="order-info">
+            <div class="row">
+                <span>訂單編號</span>
+                <span class="val">#{{ order.id }}</span>
+            </div>
+            {% if order.ecpay_trade_no %}
+            <div class="row">
+                <span>綠界交易號</span>
+                <span class="val" style="font-size:.5rem;">{{ order.ecpay_trade_no }}</span>
+            </div>
+            {% endif %}
+            <div class="row">
+                <span>付款方式</span>
+                <span class="val">綠界 ECPay</span>
+            </div>
+            <div class="row total">
+                <span>總金額</span>
+                <span class="val">NT$ {{ order.total | int }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if items %}
+        <div class="items-box">
+            <div class="items-title">📦 購買商品</div>
+            {% for it in items %}
+            <div class="item-row">
+                <span class="item-name">{{ it.name }}</span>
+                <span class="item-qty">× {{ it.qty }}</span>
+                <span class="item-price">NT$ {{ it.subtotal | int }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="font-size:.6rem;color:#ccc;text-shadow:1px 1px 0 #000;line-height:2;margin-bottom:20px;">
+            {{ message }}
+        </div>
+
+        <div class="btn-group">
+            {% if success %}
+                <a href="/" class="btn btn-primary">🛒 繼續購物</a>
+                <a href="/member" class="btn btn-stone">📋 查看訂單紀錄</a>
+            {% else %}
+                <a href="/checkout" class="btn btn-redstone">🔄 重新結帳</a>
+                <a href="/cart" class="btn btn-stone">🛒 回購物車</a>
+            {% endif %}
+        </div>
+
+        <div class="small-note">
+            {% if success %}
+                ✨ 訂單已建立，購買的道具將自動發送至你的遊戲帳號<br>
+                <span style="color:#888;">想看完整訂單歷史請點「查看訂單紀錄」（需登入）</span>
+            {% else %}
+                💡 請點上方按鈕重新嘗試
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

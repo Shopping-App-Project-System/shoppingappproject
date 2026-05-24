@@ -7,7 +7,6 @@ from models import (
     add_product,add_log,get_product_by_id,
     get_all_products,set_product_active,
     search_orders,get_orders,update_product,
-    get_member_cards,add_member_card,delete_member_card,set_default_card,
     add_product_stock,set_product_stock,
     get_log_months,get_logs_by_month,
     get_user_accounts_with_orders,search_completed_orders,get_order_items_with_user_check,
@@ -174,16 +173,10 @@ def member_service(keyword=""):
     )
     user.update({"level": "一般會員"})
 
-    # 同時把預設卡資訊塞到 user 物件裡，給 member.html 顯示「我的付款方式」摘要
-    cards = get_member_cards(user_account)
-    default_card = next((c for c in cards if c.get("is_default")), None)
-
     return render_template("member.html",
         orders=orders,
         user=user,
-        auth=get_auth(user_account),
-        default_card=default_card,
-        card_count=len(cards)
+        auth=get_auth(user_account)
     )
 
 def manage_logout_service():
@@ -247,70 +240,6 @@ def manage_log_month_service(month):
 
 # ── 信用卡管理 services ────────────────────────────────────────────────────
 # ⚠️ 注意：本功能直接儲存完整卡號，僅適用於學校作業/示意用途。
-
-def member_cards_service():
-    """信用卡管理頁：列出該會員所有信用卡。"""
-    user_account = session[SESSION_AUTHO]
-    cards = get_member_cards(user_account)
-    return render_template("member_cards.html",
-        cards=cards,
-        auth=get_auth(user_account)
-    )
-
-@requestParsor
-def add_card_service(card_number=None, expiry=None, holder_name=None, is_default=None):
-    """新增一張信用卡。"""
-    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
-        return redirect(url_for("D.member_cards"))
-
-    user_account = session[SESSION_AUTHO]
-    card_number  = (card_number or "").strip()
-    expiry       = (expiry or "").strip()
-    holder_name  = (holder_name or "").strip()
-    is_default   = 1 if is_default else 0
-
-    # 簡易驗證（學校作業夠用）
-    if not card_number or not expiry or not holder_name:
-        flash("請完整填寫卡片資訊", "error")
-        return redirect(url_for("D.member_cards"))
-
-    # 卡號可能含空白或減號，去除後檢查長度
-    cleaned_number = card_number.replace(" ", "").replace("-", "")
-    if not cleaned_number.isdigit() or len(cleaned_number) != 16:
-        flash("卡號必須為 16 碼數字", "error")
-        return redirect(url_for("D.member_cards"))
-
-    # 如果這是該會員的第一張卡，自動設為預設
-    existing_cards = get_member_cards(user_account)
-    if not existing_cards:
-        is_default = 1
-
-    add_member_card(user_account, cleaned_number, expiry, holder_name, is_default)
-    flash("信用卡已新增", "success")
-    return redirect(url_for("D.member_cards"))
-
-@requestParsor
-def delete_card_service(card_id=None):
-    """刪除一張信用卡。"""
-    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
-        return redirect(url_for("D.member_cards"))
-
-    user_account = session[SESSION_AUTHO]
-    delete_member_card(user_account, card_id)
-    flash("信用卡已刪除", "success")
-    return redirect(url_for("D.member_cards"))
-
-@requestParsor
-def set_default_card_service(card_id=None):
-    """把指定卡設為預設。"""
-    if request.method == "GET":         # 防止誤觸或直接輸入網址，導回信用卡管理頁
-        return redirect(url_for("D.member_cards"))
-
-    user_account = session[SESSION_AUTHO]
-    set_default_card(user_account, card_id)
-    flash("已設定為預設卡", "success")
-    return redirect(url_for("D.member_cards"))
-
 
 # ── 已完成訂單查詢 services(管理員/使用者共用模板) ────────────────────────────
 
