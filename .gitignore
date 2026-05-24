@@ -2,6 +2,9 @@
 mc_server/
 test_rcon.py
 
+# static
+static/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
