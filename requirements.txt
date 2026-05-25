@@ -1,5 +1,5 @@
 flask
-flask-email
+flask-mail
 pymysql
 mcrcon
 gunicorn
