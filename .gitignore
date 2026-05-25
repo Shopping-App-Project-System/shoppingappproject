@@ -3,7 +3,7 @@ mc_server/
 test_rcon.py
 
 # static
-static/
+# static/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
