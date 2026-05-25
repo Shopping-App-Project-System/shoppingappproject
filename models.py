@@ -21,7 +21,7 @@ def createUser(cursor, user_account, user_password, user_email):
     cursor.execute(f"""
         INSERT INTO {BRANCH_A_TABLE}
         (`user_account`,`user_password`,`user_email`)
-        VALUES (?,?,?)
+        VALUES (%s,%s,%s)
     """, (user_account, user_password, user_email))
 
 @db_transaction
@@ -30,8 +30,8 @@ def updateUser(cursor, set_: dict, where: dict):
     set_key, set_value = tuple(set_.keys()), tuple(set_.values())
     where_key, where_value = tuple(where.keys()), tuple(where.values())
 
-    set_sql = ", ".join(f"`{key}` = ?" for key in set_key)
-    where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
+    set_sql = ", ".join(f"`{key}` = %s" for key in set_key)
+    where_sql = " AND ".join(f"`{key}` = %s" for key in where_key)
 
     cursor.execute(f"""
         UPDATE {BRANCH_A_TABLE}
@@ -50,7 +50,7 @@ def getUser(cursor, where: dict, *selections):
     else:
         selections = ",".join(f"`{selection}`" for selection in selections)
 
-    where_sql = " AND ".join(f"`{key}` = ?" for key in where_key)
+    where_sql = " AND ".join(f"`{key}` = %s" for key in where_key)
 
     cursor.execute(f"""
         SELECT {selections}
@@ -180,7 +180,7 @@ def get_cart_items(cursor, user_account):
             FROM `{BRANCH_C_CART_TABLE}` c
             JOIN `{BRANCH_B_PRODUCT_STOCK_TABLE}` stock ON c.product_id = stock.product_id
             JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON c.product_id = p.id
-            WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
+            WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)''',
         (user_account,)
     )
     return cursor.fetchall()
@@ -189,7 +189,7 @@ def get_cart_items(cursor, user_account):
 def get_product(cursor, product_id):
     # 依商品 id 取得商品基本資料（id、名稱）
     cursor.execute(
-        f'SELECT id, name FROM `{BRANCH_B_PRODUCTS_TABLE}` WHERE id = ?',
+        f'SELECT id, name FROM `{BRANCH_B_PRODUCTS_TABLE}` WHERE id = %s',
         (product_id,)
     )
     return cursor.fetchone()
@@ -203,8 +203,8 @@ def find_cart_item(cursor, user_account, product_id):
     # 查詢該會員購物車中是否已存在指定商品，回傳購物車 id 與數量，不存在回傳 None
     cursor.execute(
         f'''SELECT c.id, c.quantity FROM `{BRANCH_C_CART_TABLE}` c
-            WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
-            AND c.product_id = ?''',
+            WHERE c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)
+            AND c.product_id = %s''',
         (user_account, product_id)
     )
     return cursor.fetchone()
@@ -213,7 +213,7 @@ def find_cart_item(cursor, user_account, product_id):
 def update_cart_qty(cursor, item_id, quantity):
     # 更新購物車中指定項目的數量
     cursor.execute(
-        f'UPDATE `{BRANCH_C_CART_TABLE}` SET quantity = ? WHERE id = ?',
+        f'UPDATE `{BRANCH_C_CART_TABLE}` SET quantity = %s WHERE id = %s',
         (quantity, item_id)
     )
     
@@ -224,7 +224,7 @@ def upsert_cart(cursor, user_account, product_id):
     # 加入購物車，若該商品已存在則數量 +1，不存在則新增一筆數量為 1 的記錄
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_CART_TABLE}` (user_id, product_id, quantity)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?), ?, 1)
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s), %s, 1)
             ON DUPLICATE KEY UPDATE quantity = quantity + 1''',
         (user_account, product_id)
     )
@@ -234,8 +234,8 @@ def remove_cart_item(cursor, item_id, user_account):
     # 從購物車移除指定商品，驗證必須屬於本人才能刪除
     cursor.execute(
         f'''DELETE FROM `{BRANCH_C_CART_TABLE}`
-            WHERE id = ?
-            AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
+            WHERE id = %s
+            AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)''',
         (item_id, user_account)
     )
 
@@ -244,7 +244,7 @@ def clear_cart(cursor, user_account):
     # 清空該會員的整個購物車，結帳完成後呼叫
     cursor.execute(
         f'''DELETE FROM `{BRANCH_C_CART_TABLE}`
-            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
+            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)''',
         (user_account,)
     )
 
@@ -254,7 +254,7 @@ def get_cart_item_stock(cursor, item_id, user_account):
         f'''SELECT stock.product_quantity
             FROM `{BRANCH_C_CART_TABLE}` c
             JOIN `{BRANCH_B_PRODUCT_STOCK_TABLE}` stock ON c.product_id = stock.product_id
-            WHERE c.id = ? AND c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)''',
+            WHERE c.id = %s AND c.user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)''',
         (item_id, user_account)
     )
     row = cursor.fetchone()
@@ -288,7 +288,7 @@ def insert_order(cursor, user_account, total, payment_method, note,
     cursor.execute(
         f'''INSERT INTO `{BRANCH_C_ORDER_TABLE}`
             (user_id, total, payment_method, note, status, ecpay_trade_no)
-            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?),?,?,?,?,?)''',
+            VALUES ((SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s),%s,%s,%s,%s,%s)''',
         (user_account, total, payment_method, note, status, ecpay_trade_no)
     )
     return cursor.lastrowid
@@ -309,7 +309,7 @@ def get_order_by_ecpay_trade_no(cursor, ecpay_trade_no):
                    u.user_account
             FROM `{BRANCH_C_ORDER_TABLE}` o
             JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
-            WHERE o.ecpay_trade_no = ?''',
+            WHERE o.ecpay_trade_no = %s''',
         (ecpay_trade_no,)
     )
     return cursor.fetchone()
@@ -326,8 +326,8 @@ def update_order_payment_status(cursor, order_id, status, ecpay_rtn_code=None):
     """
     cursor.execute(
         f'''UPDATE `{BRANCH_C_ORDER_TABLE}`
-            SET status = ?, ecpay_rtn_code = ?
-            WHERE id = ?''',
+            SET status = %s, ecpay_rtn_code = %s
+            WHERE id = %s''',
         (status, ecpay_rtn_code, order_id)
     )
 
@@ -343,7 +343,7 @@ def get_order_status(cursor, order_id, user_account):
                    o.ecpay_trade_no, o.ecpay_rtn_code
             FROM `{BRANCH_C_ORDER_TABLE}` o
             JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
-            WHERE o.id = ? AND u.user_account = ?''',
+            WHERE o.id = %s AND u.user_account = %s''',
         (order_id, user_account)
     )
     return cursor.fetchone()
@@ -354,7 +354,7 @@ def get_user_order_seq(cursor, user_account, order_id):
         SELECT COUNT(*) as seq
         FROM `{BRANCH_C_ORDER_TABLE}` o
         JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
-        WHERE u.user_account = ? AND o.status = '已完成' AND o.id <= ?
+        WHERE u.user_account = %s AND o.status = '已完成' AND o.id <= %s
     """, (user_account, order_id))
     return cursor.fetchone()['seq']
 
@@ -362,7 +362,7 @@ def get_user_order_seq(cursor, user_account, order_id):
 def insert_order_item(cursor, order_id, product_id, quantity, price):
     # 新增一筆訂單明細，記錄下單當下的價格
     cursor.execute(
-        f'INSERT INTO `{BRANCH_C_ORDER_ITEMS_TABLE}` (order_id, product_id, quantity, price) VALUES (?,?,?,?)',
+        f'INSERT INTO `{BRANCH_C_ORDER_ITEMS_TABLE}` (order_id, product_id, quantity, price) VALUES (%s,%s,%s,%s)',
         (order_id, product_id, quantity, price)
     )
     return cursor.lastrowid
@@ -371,7 +371,7 @@ def insert_order_item(cursor, order_id, product_id, quantity, price):
 def get_order_items(cursor, order_id):
     # 取得指定訂單的所有商品明細（商品 id 與數量），取消訂單補回庫存時使用
     cursor.execute(
-        f'SELECT product_id, quantity FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` WHERE order_id = ?',
+        f'SELECT product_id, quantity FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` WHERE order_id = %s',
         (order_id,)
     )
     return cursor.fetchall()
@@ -384,7 +384,7 @@ def get_order_items_detail(cursor, order_id):
                    p.name, p.product_pic
             FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
             JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON oi.product_id = p.id
-            WHERE oi.order_id = ?''',
+            WHERE oi.order_id = %s''',
         (order_id,)
     )
     return cursor.fetchall()
@@ -395,7 +395,7 @@ def get_all_orders(cursor, user_account):
     cursor.execute(
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
-            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)
             ORDER BY created_at ASC''',
         (user_account,)
     )
@@ -407,7 +407,7 @@ def get_orders(cursor, user_account):
     cursor.execute(
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
-            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)
             AND status != '已取消'
             ORDER BY created_at ASC''',
         (user_account,)
@@ -421,9 +421,9 @@ def search_orders(cursor, user_account, keyword):
     cursor.execute(
         f'''SELECT id, total, payment_method, note, status, created_at
             FROM `{BRANCH_C_ORDER_TABLE}`
-            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            WHERE user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)
             AND status != '已取消'
-            AND status LIKE ?
+            AND status LIKE %s
             ORDER BY created_at DESC''',
         (user_account, like_keyword)
     )
@@ -451,8 +451,8 @@ def get_order(cursor, order_id, user_account):
     """
     cursor.execute(
         f'''SELECT id FROM `{BRANCH_C_ORDER_TABLE}`
-            WHERE id = ?
-            AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = ?)
+            WHERE id = %s
+            AND user_id = (SELECT id FROM `{BRANCH_A_TABLE}` WHERE user_account = %s)
             AND status != '已取消' ''',
         (order_id, user_account)
     )
@@ -462,7 +462,7 @@ def get_order(cursor, order_id, user_account):
 def cancel_order(cursor, order_id):
     # 將指定訂單狀態更新為「已取消」
     cursor.execute(
-        f"UPDATE `{BRANCH_C_ORDER_TABLE}` SET status = '已取消' WHERE id = ?",
+        f"UPDATE `{BRANCH_C_ORDER_TABLE}` SET status = '已取消' WHERE id = %s",
         (order_id,)
     )
 
@@ -470,7 +470,7 @@ def cancel_order(cursor, order_id):
 def deduct_product_stock(cursor, product_id, quantity):
     # 扣減商品庫存，結帳建立訂單後呼叫
     cursor.execute(
-        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity - ? WHERE product_id = ?",
+        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity - %s WHERE product_id = %s",
         (quantity, product_id)
     )
 
@@ -478,7 +478,7 @@ def deduct_product_stock(cursor, product_id, quantity):
 def restore_product_stock(cursor, product_id, quantity):
     # 補回商品庫存，取消訂單後呼叫
     cursor.execute(
-        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity + ? WHERE product_id = ?",
+        f"UPDATE `{BRANCH_B_PRODUCT_STOCK_TABLE}` SET product_quantity = product_quantity + %s WHERE product_id = %s",
         (quantity, product_id)
     )
 
@@ -489,7 +489,7 @@ def add_pending_delivery(cursor, user_account, mc_item_id, quantity, order_id):
     cursor.execute(f"""
         INSERT INTO `{BRANCH_C_PENDING_DELIVERIES_TABLE}`
         (user_account, mc_item_id, quantity, order_id)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (user_account, mc_item_id, quantity, order_id))
 
 @db_transaction
@@ -499,13 +499,13 @@ def get_all_pending_deliveries(cursor):
 
 @db_transaction
 def delete_pending_delivery(cursor, delivery_id):
-    cursor.execute(f"DELETE FROM `{BRANCH_C_PENDING_DELIVERIES_TABLE}` WHERE id = ?", (delivery_id,))
+    cursor.execute(f"DELETE FROM `{BRANCH_C_PENDING_DELIVERIES_TABLE}` WHERE id = %s", (delivery_id,))
 
 
 @db_transaction
 def hard_delete_product(cursor, product_id):
-    cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCT_STOCK_TABLE}` WHERE product_id = ?", (product_id,))
-    cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCTS_TABLE}` WHERE id = ?", (product_id,))
+    cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCT_STOCK_TABLE}` WHERE product_id = %s", (product_id,))
+    cursor.execute(f"DELETE FROM `{BRANCH_B_PRODUCTS_TABLE}` WHERE id = %s", (product_id,))
     
 # ── Minecraft 結帳即時發貨 ────────────────────────────────────────────────
 
@@ -513,7 +513,7 @@ def hard_delete_product(cursor, product_id):
 def get_user_minecraft_name(cursor, user_account):
     # 取得會員綁定的 Minecraft 角色名
     cursor.execute(
-        f"SELECT minecraft_name FROM `{BRANCH_A_TABLE}` WHERE user_account = ?",
+        f"SELECT minecraft_name FROM `{BRANCH_A_TABLE}` WHERE user_account = %s",
         (user_account,)
     )
     row = cursor.fetchone()
@@ -534,7 +534,7 @@ def add_product(cursor, name, original_price, sale_price, description, img_filen
     cursor.execute(f"""
         INSERT INTO `{BRANCH_B_PRODUCTS_TABLE}`
         (`mc_item_id`, `name`, `original_price`, `sale_price`, `description`, `product_pic`, `category`, `is_active`)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
     """, (mc_item_id, name, original_price, sale_price, description, img_filename, category))
     return cursor.lastrowid
 
@@ -543,7 +543,7 @@ def add_product_stock(cursor, product_id, quantity):
     # 為商品建立庫存紀錄（商品入庫）
     cursor.execute("""
         INSERT INTO `product_stock` (product_id, product_quantity)
-        VALUES (?, ?)
+        VALUES (%s, %s)
     """, (product_id, quantity))
 
 @db_transaction
@@ -551,15 +551,15 @@ def set_product_stock(cursor, product_id, quantity):
     # 直接把商品庫存設為指定數量(修改商品時使用)。
     # 若該商品還沒有庫存紀錄,自動建立一筆;否則更新。
     cursor.execute("""
-        SELECT 1 FROM `product_stock` WHERE product_id = ?
+        SELECT 1 FROM `product_stock` WHERE product_id = %s
     """, (product_id,))
     if cursor.fetchone():
         cursor.execute("""
-            UPDATE `product_stock` SET product_quantity = ? WHERE product_id = ?
+            UPDATE `product_stock` SET product_quantity = %s WHERE product_id = %s
         """, (quantity, product_id))
     else:
         cursor.execute("""
-            INSERT INTO `product_stock` (product_id, product_quantity) VALUES (?, ?)
+            INSERT INTO `product_stock` (product_id, product_quantity) VALUES (%s, %s)
         """, (product_id, quantity))
 
 @db_transaction
@@ -567,8 +567,8 @@ def set_product_active(cursor, product_id, is_active):
     # 設定商品上下架狀態，is_active=1 為上架，0 為下架
     cursor.execute(f"""
         UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
-        SET `is_active` = ?
-        WHERE `id` = ?
+        SET `is_active` = %s
+        WHERE `id` = %s
     """, (is_active, product_id))
 
 @db_transaction
@@ -581,11 +581,11 @@ def update_product(cursor, set_: dict, product_id):
     if not set_:
         return
     set_key, set_value = tuple(set_.keys()), tuple(set_.values())
-    set_sql = ", ".join(f"`{key}` = ?" for key in set_key)
+    set_sql = ", ".join(f"`{key}` = %s" for key in set_key)
     cursor.execute(f"""
         UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET {set_sql}
-        WHERE `id` = ?
+        WHERE `id` = %s
     """, set_value + (product_id,))
 
 @db_transaction
@@ -606,7 +606,7 @@ def soft_delete_product(cursor, product_id):
     cursor.execute(f"""
         UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET is_deleted = 1
-        WHERE id = ?
+        WHERE id = %s
     """, (product_id,))
 
 @db_transaction
@@ -615,7 +615,7 @@ def add_log(cursor, admin_account, action, product_id, product_name):
     cursor.execute(f"""
         INSERT INTO {BRANCH_D_MANAGE_LOG_TABLE}
         (admin_account, action, product_id, product_name)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (admin_account, action, product_id, product_name))
 
 @db_transaction
@@ -633,7 +633,7 @@ def restore_product(cursor, product_id):
     cursor.execute(f"""
         UPDATE `{BRANCH_B_PRODUCTS_TABLE}`
         SET is_deleted = 0
-        WHERE id = ?
+        WHERE id = %s
     """, (product_id,))
 
 
@@ -663,7 +663,7 @@ def get_logs_by_month(cursor, month):
     cursor.execute(f"""
         SELECT created_at, admin_account, action, product_id, product_name
         FROM {BRANCH_D_MANAGE_LOG_TABLE}
-        WHERE DATE_FORMAT(created_at, '%Y-%m') = ?
+        WHERE DATE_FORMAT(created_at, '%Y-%m') = %s
         ORDER BY created_at DESC
     """, (month,))
     return cursor.fetchall()
@@ -706,23 +706,23 @@ def search_completed_orders(cursor, user_account=None, target_user=None,
 
     if user_account is not None:
         # 使用者模式:強制只看自己
-        sql += " AND u.user_account = ?"
+        sql += " AND u.user_account = %s"
         params.append(user_account)
     elif target_user:
         # 管理員指定看某人
-        sql += " AND u.user_account = ?"
+        sql += " AND u.user_account = %s"
         params.append(target_user)
 
     if month:
-        sql += " AND DATE_FORMAT(o.created_at, '%Y-%m') = ?"
+        sql += " AND DATE_FORMAT(o.created_at, '%Y-%m') = %s"
         params.append(month)
 
     if min_total is not None:
-        sql += " AND o.total >= ?"
+        sql += " AND o.total >= %s"
         params.append(min_total)
 
     if max_total is not None:
-        sql += " AND o.total <= ?"
+        sql += " AND o.total <= %s"
         params.append(max_total)
 
     sql += " ORDER BY o.created_at ASC"
@@ -742,7 +742,7 @@ def get_order_items_with_user_check(cursor, order_id, user_account=None):
         cursor.execute(f"""
             SELECT 1 FROM `{BRANCH_C_ORDER_TABLE}` o
             JOIN `{BRANCH_A_TABLE}` u ON u.id = o.user_id
-            WHERE o.id = ? AND u.user_account = ? AND o.status = '已完成'
+            WHERE o.id = %s AND u.user_account = %s AND o.status = '已完成'
         """, (order_id, user_account))
         if not cursor.fetchone():
             return None  # 不是你的訂單 / 訂單不存在 / 不是已完成
@@ -750,7 +750,7 @@ def get_order_items_with_user_check(cursor, order_id, user_account=None):
         # 管理員只要驗證訂單存在且已完成
         cursor.execute(f"""
             SELECT 1 FROM `{BRANCH_C_ORDER_TABLE}`
-            WHERE id = ? AND status = '已完成'
+            WHERE id = %s AND status = '已完成'
         """, (order_id,))
         if not cursor.fetchone():
             return None
@@ -760,7 +760,7 @@ def get_order_items_with_user_check(cursor, order_id, user_account=None):
                p.name AS product_name, p.product_pic
         FROM `{BRANCH_C_ORDER_ITEMS_TABLE}` oi
         JOIN `{BRANCH_B_PRODUCTS_TABLE}` p ON p.id = oi.product_id
-        WHERE oi.order_id = ?
+        WHERE oi.order_id = %s
     """, (order_id,))
     return cursor.fetchall()
 
@@ -959,7 +959,7 @@ def get_member_spending_distribution(cursor, limit=10):
     # 再取「其他會員」的消費總和 (排除前 N 名)
     top_accounts = [r["user_account"] for r in result]
     if top_accounts:
-        placeholders = ",".join(["?"] * len(top_accounts))
+        placeholders = ",".join(["%s"] * len(top_accounts))
         cursor.execute(f"""
             SELECT COALESCE(SUM(o.total), 0) AS other_total
             FROM `{BRANCH_C_ORDER_TABLE}` o
