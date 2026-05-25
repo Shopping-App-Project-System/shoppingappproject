@@ -9,6 +9,7 @@ import os
 import re
 import inspect
 from datetime import datetime
+
 # _______________________________________自定義模組_______________________________________
 from models import getUser
 from settings import ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES
@@ -81,54 +82,11 @@ def validateMCUserAccount(user_account):
     pattern = re.compile(r"^[a-zA-Z0-9_]{1,16}$")
     return pattern.search(user_account)
 
-# ── 路徑處理 ──────────────────────────────────────────────────────────────────
-
-def normalize_path(path):
-    if path:
-        path = path.replace("\\", "/")
-        if not path.startswith("/"):
-            path = "/" + path
-        return path
-    return None
-
-def copy_image(src, dst):
-    src = src.lstrip("/")
-    dst = dst.lstrip("/")
-    os.makedirs(os.path.dirname(dst), exist_ok=True)
-    copy(src, dst)
-    return "/" + dst.replace("\\", "/")
-
-def move_image(src, dst):
-    src = src.lstrip("/")
-    dst = dst.lstrip("/")
-    os.makedirs(os.path.dirname(dst), exist_ok=True)
-    move(src, dst)
-    return "/" + dst.replace("\\", "/")
-
-def del_imgae(src):
-    src = src.lstrip("/")
-    if os.path.exists(src):
-        os.remove(src)
-
-def save_image(file, folder, filename=None):
-    if file and '.' in file.filename:
-        ext = file.filename.rsplit('.', 1)[1].lower()
-        if ext in ALLOWED_EXTENSIONS:
-            if filename is None:
-                filename = secure_filename(file.filename)
-            else:
-                filename = f"{filename}.{ext}"
-            os.makedirs(folder, exist_ok=True)
-            file.save(os.path.join(folder, filename))
-            path = os.path.join(folder, filename)
-            return "/" + path.replace("\\", "/")
-    return None
-
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 def get_auth(user_account):
     return {
         "logged_in"  : True,
         "account"    : user_account,
-        "profile_pic": normalize_path(getUser({"user_account": user_account}, "pic_path"))
+        "profile_pic": getUser({"user_account": user_account}, "pic_path")
     }

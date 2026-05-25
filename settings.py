@@ -13,6 +13,11 @@ DB_DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
 MC_RCON_HOST = os.getenv("MC_RCON_HOST")
 MC_RCON_PORT = int(os.getenv("MC_RCON_PORT"))
 MC_RCON_PASSWORD = os.getenv("MC_RCON_PASSWORD")
+
+# ________________________cloudinary______________________
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 # # ________________________POOL__________________________
 # POOL_NAME = "pool"
 # POOL_SIZE = 5

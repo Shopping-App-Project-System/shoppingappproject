@@ -5,9 +5,10 @@ from datetime import datetime, timedelta
 
 # _______________________________________自定義模組_______________________________________
 from models import updateUser,createUser,getUser,getUserList
-from settings import SESSION_AUTHO,MAIL_USERNAME,PROFILE_PIC_PATH,PROFILE_TEMP_PATH,PROFILE_TEMP_FOLDER,CODE_EXPIRE_MINUTES
-from utils import checkUserInput,getVerifyToken,getRandomVerifyCode,move_image,validateEmail,copy_image,save_image,requestParsor,validateMCUserAccount,_is_expired,_mc_mail_html
+from settings import SESSION_AUTHO,MAIL_USERNAME,CODE_EXPIRE_MINUTES
+from utils import checkUserInput,getVerifyToken,getRandomVerifyCode,validateEmail,requestParsor,validateMCUserAccount,_is_expired,_mc_mail_html
 from extension import mail
+from cloudinary_helper import save_image
 # _______________________________________初始化___________________________________________
 
 # ________________________________________services_____________________________________________
@@ -208,19 +209,17 @@ def register_service(account,password,email,profile_pic):
         flash("註冊失敗，請稍後再試","error")
         return render_template("register.html")
 
-    if profile_pic is None or profile_pic.filename == "":
-        ori_pic_path = PROFILE_TEMP_PATH.format("default.png")
-        user_pic_path = PROFILE_TEMP_PATH.format(account + ".png")
-        user_pic_path = copy_image(ori_pic_path, user_pic_path)
+    if profile_pic and profile_pic.filename != "":
+        pic_url = save_image(profile_pic, "profile", filename=account)
     else:
-        user_pic_path = save_image(profile_pic, PROFILE_TEMP_FOLDER, filename=account)
+        pic_url = "https://res.cloudinary.com/dca1ag2yt/image/upload/profile/default"
 
     token = getVerifyToken(32)
     code = getRandomVerifyCode(6)
     expires_at = datetime.now() + timedelta(minutes=CODE_EXPIRE_MINUTES)
 
     updateUser({
-        "pic_path": user_pic_path,
+        "pic_path": pic_url,
         "token": token,
         "code": code,
         "code_expires_at": expires_at
@@ -278,7 +277,7 @@ def verify_register_service(token,code):
         flash("請輸入"+msg,"error")
         return render_template("verify_code.html",token=token,form_action=f"/register/email/{token}/verify/code")
 
-    user = getUser({"token":token},"user_account","code","pic_path","code_expires_at")
+    user = getUser({"token":token},"user_account","code","code_expires_at")
     if _is_expired(user["code_expires_at"]):
         flash("驗證碼已過期，請重新註冊","error")
         return render_template("login.html")
@@ -287,10 +286,6 @@ def verify_register_service(token,code):
         flash("驗證失敗","error")
         return render_template("verify_code.html",token=token,form_action=f"/register/email/{token}/verify/code")
 
-    user_filename = f"{user['user_account']}.{user['pic_path'].rsplit('.',1)[-1]}"
-    new_pic_path = PROFILE_PIC_PATH.format(user_filename)
-    new_pic_path = move_image(user["pic_path"], new_pic_path)
-
-    updateUser({"verify_status":True,"pic_path":new_pic_path},{"token":token})
+    updateUser({"verify_status":True},{"token":token})
     flash("驗證成功","success")
     return render_template("login.html")

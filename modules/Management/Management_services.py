@@ -20,7 +20,8 @@ from models import (
     # hard_delete_product
 )
 from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER,MC_PRODUCT_ITEMS
-from utils import get_auth,save_image,del_imgae,requestParsor
+from utils import get_auth,requestParsor
+from cloudinary_helper import save_image
 # _______________________________________初始化___________________________________________
 
 # _______________________________________services___________________________________________
@@ -114,10 +115,9 @@ def manage_edit_service(product_id, name, original_price, sale_price=None, categ
     }
 
     if image and image.filename != "":
-        old_pic_path = product.get("product_pic")
         new_pic_path = save_image(image, UPLOAD_FOLDER, filename=name)
         update_data["product_pic"] = new_pic_path
-        del_imgae(old_pic_path)
+
 
     update_product(update_data, product_id)
 
@@ -150,9 +150,7 @@ def member_edit_service(profile_pic=None):
         )
 
     if profile_pic and profile_pic.filename != "":
-        old_pic_path = getUser({"user_account": user_account}, "pic_path")
         new_pic_path = save_image(profile_pic, PROFILE_PIC_FOLDER, filename=user_account)
-        del_imgae(old_pic_path)
         updateUser({"pic_path": new_pic_path}, {"user_account": user_account})
 
     flash("資料更新成功", "success")
