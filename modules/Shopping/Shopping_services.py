@@ -291,7 +291,7 @@ def _update_ecpay_trade_no(order_id, ecpay_trade_no):
     @db_transaction
     def _do(cursor, oid, trade_no):
         cursor.execute(
-            f"UPDATE `{BRANCH_C_ORDER_TABLE}` SET ecpay_trade_no = ? WHERE id = ?",
+            f"UPDATE `{BRANCH_C_ORDER_TABLE}` SET ecpay_trade_no = %s WHERE id = %s",
             (trade_no, oid)
         )
     _do(order_id, ecpay_trade_no)
@@ -534,7 +534,7 @@ def payment_result_service(order_id):
     @db_transaction
     def _get_order(cursor, oid):
         cursor.execute(
-            f"SELECT id, total, status, ecpay_trade_no FROM `{BRANCH_C_ORDER_TABLE}` WHERE id = ?",
+            f"SELECT id, total, status, ecpay_trade_no FROM `{BRANCH_C_ORDER_TABLE}` WHERE id = %s",
             (oid,)
         )
         return cursor.fetchone()
