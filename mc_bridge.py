@@ -29,7 +29,7 @@ PASSWORD = MC_RCON_PASSWORD
 def send_mc_command(command: str):
     """送出一個 RCON 指令"""
     try:
-        with MCRcon(HOST, PASSWORD, port=PORT) as mcr:
+        with MCRcon(HOST, PASSWORD, port=PORT, timeout=3) as mcr:
             mcr.command(command)
             return True
     except Exception as e:
