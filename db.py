@@ -8,7 +8,7 @@ def db_transaction(fun):
         conn = pymysql.connect(host=DB_HOST, port=DB_PORT,
                 user=DB_USER, password=DB_PASSWORD,
                 database=DB_DATABASE)
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         try:
             result = fun(cursor,*args,**kwargs)
             conn.commit()
