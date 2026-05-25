@@ -3,3 +3,4 @@ flask-email
 pymysql
 mcrcon
 gunicorn
+dotenv
