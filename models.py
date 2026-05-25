@@ -59,7 +59,7 @@ def getUser(cursor, where: dict, *selections):
     """, where_value)
 
     users = cursor.fetchall()
-    if users != []:
+    if users:
         users = users[0]
         if len(users) == 1:
             return list(users.values())[0]

@@ -14,7 +14,8 @@ from datetime import datetime
 from models import getUser
 from settings import ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES
 import warnings
-# _______________________________________初始化___________________________________________
+# _______________________________________商品___________________________________________
+
 
 # ___________________________________service routine_____________________________________
 def requestParsor(fun):

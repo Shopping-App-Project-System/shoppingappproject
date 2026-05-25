@@ -66,6 +66,8 @@ UPLOAD_FOLDER = os.path.join("static", "uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 # ________________________ECPay 綠界金流____________________
+ECPAY_AIO_CHECKOUT_URL_STAGE = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5"
+ECPAY_AIO_CHECKOUT_URL_PROD  = "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5"
 # 公開測試金鑰（綠界官方文件提供，所有人都能用）：
 #   MerchantID = 3002607
 #   HashKey    = pwFHCqoQZGmho4w6
