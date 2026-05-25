@@ -4,3 +4,4 @@ pymysql
 mcrcon
 gunicorn
 dotenv
+cloudiary
