@@ -21,6 +21,10 @@ CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 # # ________________________POOL__________________________
 # POOL_NAME = "pool"
 # POOL_SIZE = 5
+# ________________________IMAGE___________________________
+PROFILE_DEFAULT_PATH = "https://res.cloudinary.com/dca1ag2yt/image/upload/v1779814173/static/profile/default_profile.png"
+PRODUCT_DEFAULT_PATH = "https://res.cloudinary.com/dca1ag2yt/image/upload/v1779760174/static/product/default_product.png"
+
 # ________________________BRANCH TABLES_________________
 BRANCH_A_TABLE = "user"
 
