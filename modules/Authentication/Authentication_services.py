@@ -143,7 +143,7 @@ def reset_verify_password_service(token,code):
 def login_service(account,password,email,force):
     if request.method == "GET":
         return render_template("login.html")
-
+    force = str(force) == "1"
     msg = checkUserInput(("帳號",account),("密碼",password),("信箱",email))
     if msg:
         flash("請輸入"+msg,"error")
