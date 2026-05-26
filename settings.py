@@ -55,7 +55,7 @@ SESSION_AUTHO = "AUTHO" # 用於儲存使用者登入狀態的KEY 各分支會�
 # ________________________IMAGE TYPE____________________
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 PROFILE_FOLDER = "profile"
-PRODUCT_FOLDER = "uploads"
+PRODUCT_FOLDER = "product"
 
 # ________________________ECPay 綠界金流____________________
 
