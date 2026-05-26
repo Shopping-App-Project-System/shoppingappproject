@@ -161,9 +161,11 @@ a { text-decoration:none; color:inherit; }
 /* ── Flash messages ── */
 .flash-wrapper { margin:20px 0; }
 .flash-message {
-    font-family:var(--font-pixel); font-size:.78rem; line-height:2;
-    padding:14px 18px; border:var(--border-block); margin-bottom:10px; text-align:center; width:100%;
+    font-family:var(--font-pixel); font-size:1rem; line-height:2;
+    padding:18px 24px; border:var(--border-block); margin-bottom:10px;
+    text-align:center; width:100%;
     box-shadow:var(--shadow-inset), 4px 4px 0 #000;
+    text-shadow:2px 2px 0 #000;
     animation: pixelPop .2s steps(4) both;
 }
 @keyframes pixelPop { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
