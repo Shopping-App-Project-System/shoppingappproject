@@ -32,7 +32,7 @@ from flask import request, redirect, render_template, session, url_for, flash, m
 # _______________________________________自定義模組_______________________________________
 from settings import (SESSION_AUTHO,
                       ECPAY_MERCHANT_ID, ECPAY_HASH_KEY, ECPAY_HASH_IV,
-                      ECPAY_AIO_URL, NGROK_URL, LOCAL_URL)
+                      ECPAY_AIO_URL)
 from utils import get_auth, validateCreditCard, requestParsor
 
 # 【修改說明】

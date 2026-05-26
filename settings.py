@@ -52,22 +52,13 @@ APP_PORT = 7775 # FLASK啟用時所用的埠號 預設為8000 可以自行調整
 SESSION_KEY = "MyShoppingAppProject" # 建立SESSION時使用的SESSION KEY
 SESSION_AUTHO = "AUTHO" # 用於儲存使用者登入狀態的KEY 各分支會將以此作為判斷使用者是否登入用的依據(整合後才會用到)
 
-# ________________________PROFILE PIC___________________
-PROFILE_TEMP_FOLDER = os.path.join("static", "profile", "temp")
-PROFILE_PIC_FOLDER = os.path.join("static", "profile")
-PROFILE_TEMP_PATH = os.path.join(PROFILE_TEMP_FOLDER, "{}")
-PROFILE_PIC_PATH = os.path.join(PROFILE_PIC_FOLDER, "{}")
-
-# ________________________PORDUCT PIC___________________
-PRODUCT_PIC_FOLDER = os.path.join("static", "uploads")
-PRODUCT_PIC_PATH = os.path.join(PRODUCT_PIC_FOLDER, "{}")
-# ________________________MANAGE________________________
-UPLOAD_FOLDER = os.path.join("static", "uploads")
+# ________________________IMAGE TYPE____________________
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+PROFILE_FOLDER = "profile"
+PRODUCT_FOLDER = "uploads"
 
 # ________________________ECPay 綠界金流____________________
-ECPAY_AIO_CHECKOUT_URL_STAGE = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5"
-ECPAY_AIO_CHECKOUT_URL_PROD  = "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5"
+
 # 公開測試金鑰（綠界官方文件提供，所有人都能用）：
 #   MerchantID = 3002607
 #   HashKey    = pwFHCqoQZGmho4w6

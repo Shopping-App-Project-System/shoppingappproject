@@ -30,13 +30,10 @@
 import hashlib
 from urllib.parse import quote_plus
 from datetime import datetime
-
-
 # ════════════════════════════════════════════════════════════════
 #   綠界 API 端點
 # ════════════════════════════════════════════════════════════════
-ECPAY_AIO_CHECKOUT_URL_STAGE = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5"
-ECPAY_AIO_CHECKOUT_URL_PROD  = "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5"
+
 
 
 # ════════════════════════════════════════════════════════════════

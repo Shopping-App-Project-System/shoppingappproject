@@ -19,7 +19,7 @@ from models import (
     # 永久刪除功能已停用,連同 hard_delete_product 一起不再 import
     # hard_delete_product
 )
-from settings import SESSION_AUTHO,UPLOAD_FOLDER,PROFILE_PIC_FOLDER,MC_PRODUCT_ITEMS
+from settings import SESSION_AUTHO,PRODUCT_FOLDER,PROFILE_FOLDER,MC_PRODUCT_ITEMS
 from utils import get_auth,requestParsor
 from cloudinary_helper import save_image
 # _______________________________________初始化___________________________________________
@@ -31,9 +31,9 @@ from cloudinary_helper import save_image
 @requestParsor
 def manage_add_service(name, original_price, sale_price, description, image, product_quantity, mc_item_name, category=None):
     sale_price   = sale_price or None
-    img_filename = save_image(image, UPLOAD_FOLDER, filename=name)
+    img_filename = save_image(image, PRODUCT_FOLDER, filename=name)
     if not img_filename:
-        img_filename = "https://res.cloudinary.com/dca1ag2yt/image/upload/uploads/default_product"
+        img_filename = "https://res.cloudinary.com/dca1ag2yt/image/upload/product/default_product"
     # category 和 mc_item_name 都必填
     if not category or not mc_item_name:
         flash("請選擇商品類別與MC道具", "error")
@@ -116,7 +116,7 @@ def manage_edit_service(product_id, name, original_price, sale_price=None, categ
     }
 
     if image and image.filename != "":
-        new_pic_path = save_image(image, UPLOAD_FOLDER, filename=name)
+        new_pic_path = save_image(image, PRODUCT_FOLDER, filename=name)
         update_data["product_pic"] = new_pic_path
 
 
@@ -151,7 +151,7 @@ def member_edit_service(profile_pic=None):
         )
 
     if profile_pic and profile_pic.filename != "":
-        new_pic_path = save_image(profile_pic, PROFILE_PIC_FOLDER, filename=user_account)
+        new_pic_path = save_image(profile_pic, PROFILE_FOLDER, filename=user_account)
         updateUser({"pic_path": new_pic_path}, {"user_account": user_account})
 
     flash("資料更新成功", "success")
