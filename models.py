@@ -100,6 +100,21 @@ def getUserList(cursor, *selections):
     """)
     return cursor.fetchall()
 
+@db_transaction
+def updateSessionToken(cursor, session_token, session_expires_at, account):
+    cursor.execute(f"""
+        UPDATE {BRANCH_A_TABLE}
+        SET session_token = %s, session_expires_at = %s
+        WHERE user_account = %s
+    """, (session_token, session_expires_at, account))
+    
+@db_transaction
+def clearSessionToken(cursor, account):
+    cursor.execute(f"""
+        UPDATE {BRANCH_A_TABLE}
+        SET session_token = NULL, session_expires_at = NULL
+        WHERE user_account = %s
+    """, (account,))
 
 # ── Branch B：商品卡陳列 ──────────────────────────────────────────────────────────
 

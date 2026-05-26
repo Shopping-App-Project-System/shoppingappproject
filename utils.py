@@ -1,5 +1,5 @@
 # __________________________________________內部模組_____________________________________
-from flask import request,render_template
+from flask import request,render_template,session,flash,redirect,url_for
 from werkzeug.utils import secure_filename
 from secrets import token_urlsafe
 from random import randint
@@ -8,11 +8,11 @@ from shutil import move,copy
 import os
 import re
 import inspect
-from datetime import datetime
+from datetime import datetime,timedelta
 
 # _______________________________________自定義模組_______________________________________
-from models import getUser
-from settings import ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES
+from models import getUser,updateUser
+from settings import ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES,SESSION_EXPIRE_HOURS,SESSION_AUTHO
 import warnings
 # _______________________________________商品___________________________________________
 
@@ -48,6 +48,41 @@ def _is_expired(expires_at):
     if expires_at is None:
         return True
     return datetime.now() > expires_at
+
+def _validate_session(account):
+    """
+    驗證 session token 是否有效，並刷新過期時間。
+    回傳 True 表示有效，False 表示無效（需強制登出）
+    """
+    session_token = session.get("session_token")
+    if not session_token:
+        return False
+
+    user = getUser({"user_account": account}, "session_token", "session_expires_at")
+    if not user:
+        return False
+
+    # 比對 token
+    if user["session_token"] != session_token:
+        return False
+
+    # 檢查是否過期
+    if user["session_expires_at"] is None or datetime.now() > user["session_expires_at"]:
+        return False
+
+    # 刷新過期時間 (sliding session)
+    new_expires_at = datetime.now() + timedelta(hours=SESSION_EXPIRE_HOURS)
+    updateUser({"session_expires_at": new_expires_at}, {"user_account": account})
+
+    return True
+
+def _force_logout():
+    """強制清除 session"""
+    session.pop(SESSION_AUTHO, None)
+    session.pop("session_token", None)
+    flash("登入已過期或帳號在其他裝置登入，請重新登入", "error")
+    return redirect(url_for("A.login"))
+
 
 # ── Minecraft 風格驗證信 ───────────────────────────────────────────────────────
 

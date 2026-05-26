@@ -4,8 +4,8 @@ from flask_mail import Message
 from datetime import datetime, timedelta
 
 # _______________________________________自定義模組_______________________________________
-from models import updateUser,createUser,getUser,getUserList
-from settings import SESSION_AUTHO,MAIL_USERNAME,CODE_EXPIRE_MINUTES,PROFILE_FOLDER,PROFILE_DEFAULT_PATH
+from models import updateUser,createUser,getUser,getUserList,updateSessionToken,clearSessionToken
+from settings import SESSION_AUTHO,MAIL_USERNAME,CODE_EXPIRE_MINUTES,PROFILE_FOLDER,PROFILE_DEFAULT_PATH,SESSION_EXPIRE_HOURS
 from utils import checkUserInput,getVerifyToken,getRandomVerifyCode,validateEmail,requestParsor,validateMCUserAccount,_is_expired,_mc_mail_html
 from extension import mail
 from cloudinary_helper import save_image
@@ -140,7 +140,7 @@ def reset_verify_password_service(token,code):
 
 
 @requestParsor
-def login_service(account,password,email):
+def login_service(account,password,email,force):
     if request.method == "GET":
         return render_template("login.html")
 
@@ -161,8 +161,18 @@ def login_service(account,password,email):
     if not user["verify_status"]:
         flash("此帳號尚未通過驗證，請透過信箱中的驗證信，進行驗證","error")
         return render_template("login.html")
-
+    user_session = getUser({"user_account": account}, "session_token")
+    if user_session:
+        if not force:
+            flash("此帳號已在其他裝置登入，請確認後強制登入", "error")
+            return render_template("login.html", show_force=True, account=account, password=password, email=email)
+    
+    token = getVerifyToken(32)
+    expires_at = datetime.now() + timedelta(hours=SESSION_EXPIRE_HOURS)
+    updateSessionToken(token, expires_at, account)
+        
     session[SESSION_AUTHO] = user["user_account"]
+    session["session_token"] = token
     if user["user_account"] == "admin":
         return redirect(url_for("D.manage"))
     flash(f"welcome {user['user_account']} !","success")
@@ -170,8 +180,12 @@ def login_service(account,password,email):
 
 
 def logout_service():
-    session.pop(SESSION_AUTHO,None)
-    flash("已登出","success")
+    account = session.get(SESSION_AUTHO)
+    if account:
+        clearSessionToken(account)
+    session.pop(SESSION_AUTHO, None)
+    session.pop("session_token", None)
+    flash("已登出", "success")
     return redirect(url_for("B.index"))
 
 

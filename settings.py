@@ -9,6 +9,8 @@ DB_USER     = os.getenv("DB_USER")  # 從環境變數取得資料庫登入帳號
 DB_PASSWORD = os.getenv("DB_PASSWORD")  # 從環境變數取得資料庫登入密碼
 DB_DATABASE = os.getenv("DB_DATABASE")  # 從環境變數取得資料庫名稱
 
+# ________________________EXPIRED TIME__________________
+SESSION_EXPIRE_HOURS = 3
 # ________________________M.C.__________________________
 MC_RCON_HOST = os.getenv("MC_RCON_HOST")
 MC_RCON_PORT = int(os.getenv("MC_RCON_PORT"))
