@@ -32,7 +32,8 @@ from cloudinary_helper import save_image
 def manage_add_service(name, original_price, sale_price, description, image, product_quantity, mc_item_name, category=None):
     sale_price   = sale_price or None
     img_filename = save_image(image, UPLOAD_FOLDER, filename=name)
-
+    if not img_filename:
+        img_filename = "https://res.cloudinary.com/dca1ag2yt/image/upload/uploads/default_product"
     # category 和 mc_item_name 都必填
     if not category or not mc_item_name:
         flash("請選擇商品類別與MC道具", "error")
