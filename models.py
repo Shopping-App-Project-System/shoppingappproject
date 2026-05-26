@@ -646,7 +646,7 @@ def get_log_months(cursor):
     回傳格式: [{"month": "2025-11", "log_count": 8}, ...]
     """
     cursor.execute(f"""
-        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month,
+        SELECT DATE_FORMAT(created_at, '%%Y-%%m') AS month,
                COUNT(*) AS log_count
         FROM {BRANCH_D_MANAGE_LOG_TABLE}
         GROUP BY month
@@ -714,7 +714,7 @@ def search_completed_orders(cursor, user_account=None, target_user=None,
         params.append(target_user)
 
     if month:
-        sql += " AND DATE_FORMAT(o.created_at, '%Y-%m') = %s"
+        sql += " AND DATE_FORMAT(o.created_at, '%%Y-%%m') = %s"
         params.append(month)
 
     if min_total is not None:
