@@ -663,7 +663,7 @@ def get_logs_by_month(cursor, month):
     cursor.execute(f"""
         SELECT created_at, admin_account, action, product_id, product_name
         FROM {BRANCH_D_MANAGE_LOG_TABLE}
-        WHERE DATE_FORMAT(created_at, '%Y-%m') = %s
+        WHERE DATE_FORMAT(created_at, '%%Y-%%m') = %s
         ORDER BY created_at DESC
     """, (month,))
     return cursor.fetchall()
