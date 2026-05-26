@@ -162,7 +162,7 @@ a { text-decoration:none; color:inherit; }
 .flash-wrapper { margin:20px 0; }
 .flash-message {
     font-family:var(--font-pixel); font-size:.78rem; line-height:2;
-    padding:14px 18px; border:var(--border-block); margin-bottom:10px; text-align:center;
+    padding:14px 18px; border:var(--border-block); margin-bottom:10px; text-align:center; width:100%;
     box-shadow:var(--shadow-inset), 4px 4px 0 #000;
     animation: pixelPop .2s steps(4) both;
 }
