@@ -590,7 +590,7 @@ def order_items_service(order_id):
 def start_delivery_worker():
     def _worker():
         while True:
-            time.sleep(30)
+            time.sleep(180)
             try:
                 pending = get_all_pending_deliveries()
                 if not pending:
