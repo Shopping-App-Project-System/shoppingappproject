@@ -108,6 +108,7 @@ MC_PRODUCT_ITEMS = {
         "翡翠塊": "minecraft:emerald_block",
         "青金石塊": "minecraft:lapis_block",
         "紅石塊": "minecraft:redstone_block",
+        "綠寶石塊": "minecraft:emerald_block",
         "銅塊": "minecraft:copper_block",
         "下界合金塊": "minecraft:netherite_block",
         "煤炭塊": "minecraft:coal_block",
