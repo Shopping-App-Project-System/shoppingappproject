@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 # _______________________________________自定義模組_______________________________________
 from models import updateUser,createUser,getUser,getUserList
-from settings import SESSION_AUTHO,MAIL_USERNAME,CODE_EXPIRE_MINUTES,PROFILE_FOLDER
+from settings import SESSION_AUTHO,MAIL_USERNAME,CODE_EXPIRE_MINUTES,PROFILE_FOLDER,PROFILE_DEFAULT_PATH
 from utils import checkUserInput,getVerifyToken,getRandomVerifyCode,validateEmail,requestParsor,validateMCUserAccount,_is_expired,_mc_mail_html
 from extension import mail
 from cloudinary_helper import save_image
@@ -212,7 +212,7 @@ def register_service(account,password,email,profile_pic):
     if profile_pic and profile_pic.filename != "":
         pic_url = save_image(profile_pic, PROFILE_FOLDER, filename=account)
     else:
-        pic_url = "https://res.cloudinary.com/dca1ag2yt/image/upload/profile/default"
+        pic_url = PROFILE_DEFAULT_PATH
 
     token = getVerifyToken(32)
     code = getRandomVerifyCode(6)

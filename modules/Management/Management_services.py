@@ -19,7 +19,7 @@ from models import (
     # 永久刪除功能已停用,連同 hard_delete_product 一起不再 import
     # hard_delete_product
 )
-from settings import SESSION_AUTHO,PRODUCT_FOLDER,PROFILE_FOLDER,MC_PRODUCT_ITEMS
+from settings import SESSION_AUTHO,PRODUCT_FOLDER,PROFILE_FOLDER,MC_PRODUCT_ITEMS,PRODUCT_DEFAULT_PATH
 from utils import get_auth,requestParsor
 from cloudinary_helper import save_image
 # _______________________________________初始化___________________________________________
@@ -33,7 +33,7 @@ def manage_add_service(name, original_price, sale_price, description, image, pro
     sale_price   = sale_price or None
     img_filename = save_image(image, PRODUCT_FOLDER, filename=name)
     if not img_filename:
-        img_filename = "https://res.cloudinary.com/dca1ag2yt/image/upload/product/default_product"
+        img_filename = PRODUCT_DEFAULT_PATH
     # category 和 mc_item_name 都必填
     if not category or not mc_item_name:
         flash("請選擇商品類別與MC道具", "error")
