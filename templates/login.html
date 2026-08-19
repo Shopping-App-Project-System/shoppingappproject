@@ -34,6 +34,23 @@
         .register-row span{font-family:var(--font-pixel);font-size:.65rem;color:#ccc;text-shadow:1px 1px 0 #000;}
         .register-row a{font-family:var(--font-pixel);font-size:.7rem;color:var(--diamond);text-shadow:1px 1px 0 #000;text-decoration:underline;}
         @media(max-width:500px){.helper-links{grid-template-columns:1fr;}}
+
+        /* 強制登入區塊：沿用方塊風格，改用紅石色以示警告 */
+        .force-form{margin-top:14px;padding-top:14px;border-top:2px solid #000;}
+        .force-note{
+            font-family:var(--font-pixel);font-size:.6rem;line-height:1.9;
+            color:#ffb0a0;text-shadow:1px 1px 0 #000;margin-bottom:10px;
+        }
+        .btn-force{
+            width:100%;
+            font-family:var(--font-pixel);font-size:.8rem;
+            color:var(--white-mc);text-shadow:1px 1px 0 #000;
+            background:repeating-linear-gradient(180deg,#8a1a1a 0,#8a1a1a 6px,#5a0d0d 6px,#5a0d0d 12px);
+            border:var(--border-block);padding:13px;cursor:pointer;
+            box-shadow:var(--shadow-block);transition:transform .08s steps(2),box-shadow .08s steps(2);
+        }
+        .btn-force:hover{filter:brightness(1.25);transform:translateY(-3px);box-shadow:var(--shadow-inset),3px 8px 0 #000;}
+        .btn-force:active{transform:translateY(3px);box-shadow:var(--shadow-inset),1px 1px 0 #000;}
     </style>
 </head>
 <body>
@@ -95,6 +112,19 @@
                 </div>
                 <button type="submit" class="btn-main">▶ 登入</button>
             </form>
+            {# 此帳號已在其他裝置登入時，後端會帶 show_force=True 回來。
+               少了這一段，使用者只會看到「請確認後強制登入」的提示，
+               卻沒有任何可以按的東西，等於被鎖到 session 過期（3 小時）為止。 #}
+            {% if show_force %}
+            <form method="POST" action="/login" class="force-form">
+                <input type="hidden" name="account"  value="{{ account }}">
+                <input type="hidden" name="password" value="{{ password }}">
+                <input type="hidden" name="email"    value="{{ email }}">
+                <input type="hidden" name="force"    value="1">
+                <div class="force-note">此帳號目前在其他裝置登入中，強制登入會將該裝置登出。</div>
+                <button type="submit" class="btn-force">⚠ 強制登入</button>
+            </form>
+            {% endif %}
             <div class="helper-panel">
                 <div class="helper-title">🔑 登入協助</div>
                 <div class="helper-links">
