@@ -109,9 +109,14 @@ PRODUCT_DEFAULT_PATH = f"https://res.cloudinary.com/dca1ag2yt/image/upload/v1779
 # ────────────────────────── ECPay 綠界金流 ──────────────────────────
 # 預設值為綠界官方文件公開的測試金鑰，任何人都能直接用來跑測試流程。
 # 要換成自己的測試商店，把這三個值寫進 .env 即可。
-ECPAY_MERCHANT_ID = _env_str("ECPAY_MERCHANT_ID", "3002607")
-ECPAY_HASH_KEY    = _env_str("ECPAY_HASH_KEY", "pwFHCqoQZGmho4w6")
-ECPAY_HASH_IV     = _env_str("ECPAY_HASH_IV", "EkRm7iFT261dpevs")
+#
+# 注意：原本用的另一組公開測試商店 3002607（測試帳號三）實測會回
+# 「10200074 找不到加密金鑰」，改用 2000132（綠界測試店家）可正常結帳。
+# 這類公開測試帳號是全世界開發者共用的，狀態有可能隨時改變；
+# 若哪天這組也失效，到綠界官方文件查最新的測試金鑰替換即可。
+ECPAY_MERCHANT_ID = _env_str("ECPAY_MERCHANT_ID", "2000132")
+ECPAY_HASH_KEY    = _env_str("ECPAY_HASH_KEY", "5294y06JbISpM5x9")
+ECPAY_HASH_IV     = _env_str("ECPAY_HASH_IV", "v77hoKGq4kWxNNIS")
 
 # 綠界 AIO 結帳端點
 #   測試環境：https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5
