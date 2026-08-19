@@ -1,7 +1,20 @@
+# 執行環境：Python 3.12
+# 安裝：pip install -r requirements.txt
+
+# ── Web 框架 ──
 flask
-flask-mail
-pymysql
-mcrcon
-gunicorn
-dotenv
-cloudinary
+werkzeug          # secure_filename（utils.py 直接使用，明列避免相依變動時失效）
+flask-mail        # 驗證信寄送
+
+# ── 資料庫 ──
+pymysql           # MySQL / MariaDB 連線
+
+# ── 設定 ──
+python-dotenv     # 提供 dotenv 模組；原本誤寫成 dotenv（PyPI 上是另一個套件）
+
+# ── 外部服務 ──
+cloudinary        # 圖片託管
+mcrcon            # Minecraft 伺服器 RCON 連線
+
+# ── 部署 ──
+gunicorn          # Heroku Procfile 使用

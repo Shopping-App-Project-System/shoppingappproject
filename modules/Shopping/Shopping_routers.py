@@ -37,7 +37,7 @@
 ==========================================================
 '''
 # __________________________________________內部模組_____________________________________
-from flask import Blueprint
+from flask import Blueprint, request
 
 # _______________________________________自定義模組_______________________________________
 from AuthDecorator import userRequired
@@ -73,7 +73,6 @@ bp = Blueprint("C", __name__)
 # 這樣使用者原本的 cookie 不會被覆蓋，登入狀態保留。
 @bp.after_request
 def _protect_session_on_ecpay_routes(response):
-    from flask import request
     # 只攔截綠界相關路由
     if request.path.startswith('/payment/ecpay/'):
         # 移除 Flask 加上的 session cookie（避免覆蓋使用者既有登入）

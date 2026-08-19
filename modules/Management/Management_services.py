@@ -1,5 +1,5 @@
 # __________________________________________內部模組_____________________________________
-from flask import request,redirect,render_template,session,url_for,flash
+from flask import request,redirect,render_template,session,url_for,flash,jsonify
 
 # _______________________________________自定義模組_______________________________________
 from models import (
@@ -397,7 +397,6 @@ def manage_dashboard_data_service():
         "selected_year":   2026 or None,        # 目前查詢的年份 (None 代表「全部」)
       }
     """
-    from flask import jsonify, request
 
     # 處理 year 參數
     year_param = request.args.get("year", "").strip()

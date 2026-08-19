@@ -27,13 +27,15 @@
 # __________________________________________內部模組_____________________________________
 import threading
 import time
-from flask import request, redirect, render_template, session, url_for, flash, make_response
+from flask import request, redirect, render_template, session, url_for, flash, make_response, jsonify
 
 # _______________________________________自定義模組_______________________________________
 from settings import (SESSION_AUTHO,
+                      BRANCH_C_ORDER_TABLE,
                       ECPAY_MERCHANT_ID, ECPAY_HASH_KEY, ECPAY_HASH_IV,
                       ECPAY_AIO_URL)
 from utils import get_auth, validateCreditCard, requestParsor
+from db import db_transaction
 
 # 【修改說明】
 # notify_player 和 give_item 原本從 models import，
@@ -242,8 +244,6 @@ def _start_ecpay_payment(user_account, rows, total, note):
     merchant_trade_no = gen_merchant_trade_no(order_id)
     update_order_payment_status(order_id, '待付款', None)
     # 注意：上面 update 沒帶 ecpay_trade_no，要單獨更新一次
-    from models import db_transaction
-    from settings import BRANCH_C_ORDER_TABLE
     _update_ecpay_trade_no(order_id, merchant_trade_no)
 
     # 3. 組 ItemName：綠界用 # 分隔多筆商品
@@ -285,8 +285,6 @@ def _update_ecpay_trade_no(order_id, ecpay_trade_no):
     這是個小工具，因為 update_order_payment_status 只更新狀態跟代碼，
     沒辦法更新 ecpay_trade_no。
     """
-    from db import db_transaction
-    from settings import BRANCH_C_ORDER_TABLE
 
     @db_transaction
     def _do(cursor, oid, trade_no):
@@ -350,18 +348,15 @@ def ecpay_notify_service():
             return "1|OK"
 
         # 重建 order_items + 扣庫存 + 發道具
-        from models import (insert_order_item as _insert_item,
-                            deduct_product_stock as _deduct,
-                            get_product_by_id as _get_p)
 
         online = is_player_online(user_account)
         items_list = []
         pending_list = []
 
         for row in rows:
-            _insert_item(order["id"], row["product_id"], row['quantity'], row['price'])
-            _deduct(row["product_id"], row['quantity'])
-            product = _get_p(row["product_id"])
+            insert_order_item(order["id"], row["product_id"], row['quantity'], row['price'])
+            deduct_product_stock(row["product_id"], row['quantity'])
+            product = get_product_by_id(row["product_id"])
             mc_item_id = product.get("mc_item_id") if product else None
             if mc_item_id:
                 if online:
@@ -388,18 +383,6 @@ def ecpay_notify_service():
     return "1|OK"
 
 
-# ── 綠界瀏覽器回跳 ──
-# 對應路由：POST /payment/ecpay/return
-def ecpay_return_service():
-    """
-    綠界刷完卡會用瀏覽器 POST 跳回這裡，目的是「顯示結果給使用者看」。
-    重要：訂單狀態的權威來源是 ecpay_notify_service，不是這裡。
-
-    【session 保護機制】
-    這個路由由 cross-site POST 觸發，Flask 看到的 session 是空的。
-    保護機制在 Shopping_routers.py 的 @bp.after_request 裡，會自動
-    過濾掉 session Set-Cookie，避免覆蓋使用者既有登入狀態。
-    """
 # ── 綠界瀏覽器回跳（也兼任訂單成立處理）──
 # 對應路由：POST /payment/ecpay/return
 def ecpay_return_service():
@@ -420,6 +403,11 @@ def ecpay_return_service():
 
     【安全性】
     依然驗證 CheckMacValue，使用者無法偽造綠界回傳資料。
+
+    【session 保護機制】
+    這個路由由 cross-site POST 觸發，Flask 看到的 session 是空的。
+    保護機制在 Shopping_routers.py 的 @bp.after_request 裡，會自動
+    過濾掉 session Set-Cookie，避免覆蓋使用者既有登入狀態。
     """
     params = request.form.to_dict()
     print(f"[ECPay] 瀏覽器跳回: {params}")
@@ -528,8 +516,6 @@ def payment_result_service(order_id):
     """
     # 直接從 DB 查訂單（不查 session，不檢查擁有者）
     # 這頁面只會 callback 後馬上看到，沒人能猜中別人的 order_id
-    from models import db_transaction
-    from settings import BRANCH_C_ORDER_TABLE
 
     @db_transaction
     def _get_order(cursor, oid):
@@ -570,7 +556,6 @@ def payment_result_service(order_id):
 # 對應路由：GET /order/<order_id>/items
 def order_items_service(order_id):
     # 回傳指定訂單的商品清單，供前端動態顯示訂單明細使用
-    from flask import jsonify
     rows = get_order_items_detail(order_id)
     result = [
         {
