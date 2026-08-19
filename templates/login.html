@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入｜MineMarket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/mc-common.css">
+    <style>
+        body {
+            min-height:100vh;
+            background:
+                linear-gradient(#fff 0,#fff 100%) 5% 20px/120px 24px no-repeat,
+                linear-gradient(#fff 0,#fff 100%) 3% 32px/80px 24px no-repeat,
+                linear-gradient(#fff 0,#fff 100%) 9% 12px/160px 24px no-repeat,
+                linear-gradient(#fff 0,#fff 100%) 55% 22px/100px 24px no-repeat,
+                linear-gradient(#fff 0,#fff 100%) 80% 18px/90px 24px no-repeat,
+                linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bot) 60%,#a0d060 60%,#5D9E3F 63%,#8B5E3C 63%,#5C3A1E 100%);
+        }
+
+        /* helper panel 特殊樣式 */
+        .helper-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        .helper-links a{
+            font-family:var(--font-pixel);font-size:.65rem;
+            display:block;text-align:center;padding:12px 8px;
+            border:var(--border-block);color:var(--white-mc);text-shadow:1px 1px 0 #000;
+            background:repeating-linear-gradient(180deg,var(--stone-light) 0,var(--stone-light) 6px,var(--stone) 6px,var(--stone) 12px);
+            box-shadow:var(--shadow-block);
+            transition:transform .08s steps(2),filter .1s;
+        }
+        .helper-links a:hover{filter:brightness(1.25);transform:translateY(-2px);}
+        .register-row{margin-top:16px;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
+        .register-row span{font-family:var(--font-pixel);font-size:.65rem;color:#ccc;text-shadow:1px 1px 0 #000;}
+        .register-row a{font-family:var(--font-pixel);font-size:.7rem;color:var(--diamond);text-shadow:1px 1px 0 #000;text-decoration:underline;}
+        @media(max-width:500px){.helper-links{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+
+<div class="ground-strip"></div>
+<header class="topbar">
+    <div class="container topbar-inner">
+        <a href="/" class="logo"><div class="logo-gem"></div>MineMarket</a>
+        <nav class="nav-links">
+            <a href="/">⛏ 主頁</a>
+            <a href="/member">👤 會員中心</a>
+            <a href="/cart">🎒 購物車</a>
+        </nav>
+        <button class="nav-toggle" id="navToggle" aria-label="選單"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="nav-drawer" id="navDrawer">
+        <a href="/">▶ 主頁</a><a href="/member">▶ 會員中心</a><a href="/cart">▶ 購物車</a>
+    </nav>
+</header>
+
+<main class="auth-layout">
+    <div class="auth-card">
+        <div class="auth-visual">
+            <div class="visual-chars">
+                <div class="pixel-char char-steve">
+                    <div class="pc-head"></div>
+                    <div class="pc-body"></div>
+                    <div class="pc-legs"><div class="pc-leg"></div><div class="pc-leg"></div></div>
+                </div>
+                <div class="pixel-char char-alex">
+                    <div class="pc-head"></div>
+                    <div class="pc-body"></div>
+                    <div class="pc-legs"><div class="pc-leg"></div><div class="pc-leg"></div></div>
+                </div>
+            </div>
+            <h2>{{ visual_title or '歡迎回來' }}</h2>
+            <p>{{ visual_text or '登入後可查看購物車、會員資料與訂單紀錄，若登入時遇到問題，也可以透過下方登入協助快速處理。' }}</p>
+        </div>
+        <div class="auth-form">
+            <h1 class="form-title">⚔ 會員登入</h1>
+            <p class="form-subtitle">請輸入帳號、密碼與信箱完成登入</p>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}
+                {% if category == "success" %}<div class="success-msg">{{ message }}</div>
+                {% else %}<div class="flash">{{ message }}</div>{% endif %}
+            {% endfor %}{% endif %}{% endwith %}
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label for="account">帳號</label>
+                    <input type="text" id="account" name="account" placeholder="玩家帳號" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" name="password" placeholder="輸入密碼" autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label for="email">信箱</label>
+                    <input type="text" id="email" name="email" placeholder="註冊信箱" autocomplete="email">
+                </div>
+                <button type="submit" class="btn-main">▶ 登入</button>
+            </form>
+            <div class="helper-panel">
+                <div class="helper-title">🔑 登入協助</div>
+                <div class="helper-links">
+                    <a href="/login/find/password">忘記密碼</a>
+                    <a href="/login/find/account">忘記帳號</a>
+                </div>
+            </div>
+            <div class="register-row">
+                <span>還沒有帳號？</span>
+                <a href="/register">立即註冊 ▶</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="dirt-divider"></div>
+<footer class="mc-footer">
+    <div class="footer-inner">
+        <div class="footer-contact">
+            <div class="footer-contact-title">聯絡我們</div>
+            <ul class="footer-contact-list">
+                <li>電話：02-2345-6789</li>
+                <li>傳真：02-2345-6790</li>
+                <li>Line ID：@minemarket</li>
+                <li>Email：support@minemarket.tw</li>
+                <li>地址：台北市信義區信義路五段7號</li>
+                <li>服務時間：週一至週五 09:00–18:00</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p class="footer-copyright">© 2025 MineMarket Inc. 版權所有，翻印必究。<br>本站所有商品圖文，未經授權不得轉載。</p>
+    </div>
+</footer>
+
+<script src="/static/js/mc-common.js"></script>
+</body>
+</html>
