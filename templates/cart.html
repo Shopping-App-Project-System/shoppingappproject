@@ -250,7 +250,7 @@
                          data-stock="{{ item.stock }}">
 
                     <div class="cart-item-image">
-                        <img src="{{ item.image or '/static/default.png' }}" alt="{{ item.name }}">
+                        <img src="{{ item.image or PRODUCT_DEFAULT_PATH }}" alt="{{ item.name }}">
                     </div>
 
                     <div class="cart-item-info">

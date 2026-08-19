@@ -537,7 +537,7 @@
 
                         <a href="{{ url_for('B.product_detail', product_id=product.id) }}">
                             <div class="product-image">
-                                <img src="{{ product.product_pic or '/static/default.png' }}" alt="{{ product.name }}">
+                                <img src="{{ product.product_pic or PRODUCT_DEFAULT_PATH }}" alt="{{ product.name }}">
                                 <div class="examine">[ 點擊查看 ]</div>
                                 {% if not product.product_quantity or product.product_quantity <= 0 %}
                                 <span class="badge-sold">售完</span>
