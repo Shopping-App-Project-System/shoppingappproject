@@ -12,7 +12,8 @@ from datetime import datetime,timedelta
 
 # _______________________________________自定義模組_______________________________________
 from models import getUser,updateUser
-from settings import ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES,SESSION_EXPIRE_HOURS,SESSION_AUTHO
+from settings import (ALLOWED_EXTENSIONS,APP_PORT,CODE_EXPIRE_MINUTES,SESSION_EXPIRE_HOURS,
+                      SESSION_AUTHO,PROFILE_DEFAULT_PATH)
 import warnings
 # _______________________________________商品___________________________________________
 
@@ -121,8 +122,13 @@ def validateMCUserAccount(user_account):
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 def get_auth(user_account):
+    # pic_path 沒設定時要回退到預設頭像。
+    # 少了這層回退，Jinja 會把 None 直接印成字串 "None"，
+    # 變成 <img src="None">，每頁都會多一筆 404（實測首頁、購物車、
+    # 會員中心都有）。註冊流程本來就會塞 PROFILE_DEFAULT_PATH，
+    # 但直接從資料庫建立或早期資料的帳號不會有值。
     return {
         "logged_in"  : True,
         "account"    : user_account,
-        "profile_pic": getUser({"user_account": user_account}, "pic_path")
+        "profile_pic": getUser({"user_account": user_account}, "pic_path") or PROFILE_DEFAULT_PATH
     }

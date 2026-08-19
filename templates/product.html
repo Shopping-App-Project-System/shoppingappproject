@@ -109,7 +109,7 @@
             <!-- 左側圖片 -->
             <div class="image-gallery">
                 <div class="main-image">
-                    <img id="mainProductImage" src="{{ product.product_pic }}" alt="{{ product.name }}">
+                    <img id="mainProductImage" src="{{ product.product_pic or PRODUCT_DEFAULT_PATH }}" alt="{{ product.name }}">
                 </div>
                 <div class="sub-images">
                     {% for pic in extra_pics %}
